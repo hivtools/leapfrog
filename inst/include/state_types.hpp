@@ -30,43 +30,7 @@ struct BaseModelState {
   TensorFixedSize <real_type, Sizes<pAG<ModelVariant>, NS<ModelVariant>>> p_hiv_deaths;
 
   BaseModelState(const Parameters<ModelVariant, real_type> &pars) {
-    constexpr auto ss = StateSpace<ModelVariant>().base;
-    for (int g = 0; g < ss.NS; ++g) {
-      for (int a = 0; a < ss.pAG; ++a) {
-        p_total_pop(a, g) = pars.base.demography.base_pop(a, g);
-      }
-    }
-    p_total_pop_natural_deaths.setZero();
-    p_hiv_pop.setZero();
-    p_hiv_pop_natural_deaths.setZero();
-    h_hiv_adult.setZero();
-    h_art_adult.setZero();
-    births = 0;
-    h_hiv_deaths_no_art.setZero();
-    p_infections.setZero();
-    h_hiv_deaths_art.setZero();
-    h_art_initiation.setZero();
-    p_hiv_deaths.setZero();
-  }
-
-  void set_initial_state(const Parameters<ModelVariant, real_type> &pars) {
-    constexpr auto ss = StateSpace<ModelVariant>().base;
-    for (int g = 0; g < ss.NS; ++g) {
-      for (int a = 0; a < ss.pAG; ++a) {
-        p_total_pop(a, g) = pars.base.demography.base_pop(a, g);
-      }
-    }
-    p_total_pop_natural_deaths.setZero();
-    p_hiv_pop.setZero();
-    p_hiv_pop_natural_deaths.setZero();
-    h_hiv_adult.setZero();
-    h_art_adult.setZero();
-    births = 0;
-    h_hiv_deaths_no_art.setZero();
-    p_infections.setZero();
-    h_hiv_deaths_art.setZero();
-    h_art_initiation.setZero();
-    p_hiv_deaths.setZero();
+    reset();
   }
 
   void reset() {
@@ -89,8 +53,6 @@ template<typename ModelVariant, typename real_type>
 struct ChildModelState {
   ChildModelState(const Parameters<ModelVariant, real_type> &pars) {}
 
-  void set_initial_state(const Parameters<ModelVariant, real_type> &pars) {}
-
   void reset() {}
 };
 
@@ -108,10 +70,6 @@ struct ChildModelState<ChildModel, real_type> {
   real_type hc_art_num;
 
   ChildModelState(const Parameters<ChildModel, real_type> &pars) {
-    reset();
-  }
-
-  void set_initial_state(const Parameters<ChildModel, real_type> &pars) {
     reset();
   }
 
@@ -136,11 +94,6 @@ struct State {
   State(const Parameters<ModelVariant, real_type> &pars) :
       base(pars),
       children(pars) {}
-
-  void set_initial_state(const Parameters<ChildModel, real_type> &pars) {
-    base.set_initial_state();
-    children.set_initial_state();
-  }
 
   void reset() {
     base.reset();
