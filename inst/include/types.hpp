@@ -190,6 +190,15 @@ struct Children {
   TensorMap2<real_type> breastfeeding_duration_art;
   TensorMap2<real_type> breastfeeding_duration_no_art;
 
+  //input maternal transmission
+  TensorMap1<real_type> mat_hiv_births;
+  TensorMap1<int> mat_prev_input;
+
+  //cotrim
+  TensorMap1<real_type> ctx_coverage_is_number;
+
+
+
 };
 
 template<typename ModelVariant, typename real_type>
@@ -518,6 +527,8 @@ struct ChildModelIntermediateData<ChildModel, real_type> {
   real_type percent_no_treatment;
   real_type percent_on_treatment;
   TensorFixedSize <real_type, Sizes<hBF_coarse<ChildModel>>> bf_transmission_rate;
+  real_type ctx_coverage;
+  real_type need_cotrim;
 
 
   ChildModelIntermediateData() {};
@@ -577,6 +588,8 @@ struct ChildModelIntermediateData<ChildModel, real_type> {
     percent_no_treatment = 0.0;
     percent_on_treatment = 0.0;
     bf_transmission_rate.setZero();
+    ctx_coverage = 0.0;
+    need_cotrim = 0.0;
   };
 };
 
