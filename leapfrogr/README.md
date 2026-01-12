@@ -19,7 +19,7 @@ You can install the development version of leapfrog from
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("mrc-ide/leapfrog", subdir = "leapfrogr")
+remotes::install_github("hivtools/leapfrog", subdir = "leapfrogr")
 ```
 
 ## Simulation model

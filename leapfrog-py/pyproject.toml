@@ -14,9 +14,9 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/mrc-ide/leapfrog#readme"
-Issues = "https://github.com/mrc-ide/leapfrog/issues"
-Source = "https://github.com/mrc-ide/leapfrog"
+Documentation = "https://github.com/hivtools/leapfrog#readme"
+Issues = "https://github.com/hivtools/leapfrog/issues"
+Source = "https://github.com/hivtools/leapfrog"
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
