@@ -61,8 +61,10 @@ struct SSMixer<ModelVariant, SSPair<false, T>, Ts...>: public SSMixer<ModelVaria
 
 template<MV ModelVariant, typename ...Ts>
 struct SSMixer<ModelVariant, SSPair<true, Sp>, Ts...>: public SSMixer<ModelVariant, Ts...> {
+
   static void collect_ss(SSCollector& collector) {
     SSMixer<ModelVariant, Ts...>::collect_ss(collector);
+
   }
 };
 
@@ -112,6 +114,7 @@ struct SSMixer<ModelVariant, SSPair<true, Hc>, Ts...>: public SSMixer<ModelVaria
     collector.add("hVT", hVT);
     collector.add("hBF", hBF);
     collector.add("hBF_coarse", hBF_coarse);
+    collector.add("hcAG_coarse", hcAG_coarse);
     collector.add("hAB_ind", hAB_ind);
     collector.add("hAG_fert", hAG_fert);
     collector.add("mtct_source", mtct_source);
@@ -195,6 +198,7 @@ using SSMixed = SSMixer<
   SSPair<ModelVariant::run_hiv_simulation, Ha>,
   SSPair<ModelVariant::run_demographic_projection, Dp>
 >;
+
 } // namespace internal
 
 template<internal::MV ModelVariant>
