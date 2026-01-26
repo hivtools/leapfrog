@@ -36,8 +36,7 @@ Imports:
     dplyr,
     hdf5r,
     magrittr,
-    Rcpp,
-    tidyr
+    Rcpp
 Suggests:
     abind,
     docopt,
