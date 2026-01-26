@@ -8,6 +8,7 @@
 #include <Rcpp.h>
 
 #include "../config_mixer.hpp"
+#include "../state_space.hpp"
 
 namespace leapfrog {
 namespace internal {
@@ -743,4 +744,33 @@ struct SpAdapter<Language::R, real_type, ModelVariant> {
 };
 
 } // namespace internal
+
+template<internal::MV ModelVariant>
+Rcpp::List get_ss_r() {
+  auto ss = get_ss<ModelVariant>();
+  Rcpp::List out;
+
+  for (const auto& [name, value] : ss) {
+    std::visit([&](auto&& v) {
+      using T = std::decay_t<decltype(v)>;
+
+      if constexpr (std::is_same_v<T, std::vector<std::vector<double>>>) {
+        // Convert to matrix
+        const size_t nrow = v.size();
+        const size_t ncol = nrow ? v[0].size() : 0;
+
+        Rcpp::NumericMatrix m(nrow, ncol);
+        for (size_t i = 0; i < nrow; ++i)
+          for (size_t j = 0; j < ncol; ++j)
+            m(i, j) = v[i][j];
+
+        out[name] = m;
+      } else {
+        out[name] = v;
+      }
+    }, value);
+  }
+
+  return out;
+}
 } // namespace leapfrog

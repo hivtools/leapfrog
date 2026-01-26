@@ -4,12 +4,21 @@
 \alias{process_pjnz}
 \title{Prepare inputs from Spectrum PJNZ}
 \usage{
-process_pjnz(pjnz, use_coarse_age_groups = FALSE, bypass_adult = FALSE)
+process_pjnz(
+  pjnz,
+  use_coarse_age_groups = FALSE,
+  extract_child_params = FALSE,
+  bypass_adult = FALSE
+)
 }
 \arguments{
 \item{pjnz}{path to PJNZ file}
 
 \item{use_coarse_age_groups}{use the coarse age stratification}
+
+\item{extract_child_params}{If TRUE, then child parameters required
+to run the child model will be extracted. If FALSE, only adult parameters
+will be extracted from the PJNZ.}
 
 \item{bypass_adult}{produce parameters that will bypass the adult
 model when running the child model variant}
