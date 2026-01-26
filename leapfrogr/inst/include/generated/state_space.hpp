@@ -8,6 +8,7 @@
 #include <array>
 
 #include "concepts.hpp"
+#include "../state_space_collector.hpp"
 
 namespace leapfrog {
 namespace internal {
@@ -42,13 +43,27 @@ struct SSMixer<ModelVariant>: public BaseSS {
   static constexpr int p_fertility_age_groups = 35;
   static constexpr int p_idx_hiv_first_adult = 15;
   static constexpr int hIDX_15PLUS = 0;
+
+  static void collect_ss(SSCollector& collector) {
+    collector.add("p_idx_fertility_first", p_idx_fertility_first);
+    collector.add("p_fertility_age_groups", p_fertility_age_groups);
+    collector.add("p_idx_hiv_first_adult", p_idx_hiv_first_adult);
+    collector.add("hIDX_15PLUS", hIDX_15PLUS);
+  }
 };
 
 template<MV ModelVariant, ConfigsAndOverrides T, typename ...Ts>
-struct SSMixer<ModelVariant, SSPair<false, T>, Ts...>: public SSMixer<ModelVariant, Ts...> {};
+struct SSMixer<ModelVariant, SSPair<false, T>, Ts...>: public SSMixer<ModelVariant, Ts...> {
+  static void collect_ss(SSCollector& collector) {
+    SSMixer<ModelVariant, Ts...>::collect_ss(collector);
+  }
+};
 
 template<MV ModelVariant, typename ...Ts>
 struct SSMixer<ModelVariant, SSPair<true, Sp>, Ts...>: public SSMixer<ModelVariant, Ts...> {
+  static void collect_ss(SSCollector& collector) {
+    SSMixer<ModelVariant, Ts...>::collect_ss(collector);
+  }
 };
 
 template<MV ModelVariant, typename ...Ts>
@@ -77,6 +92,34 @@ struct SSMixer<ModelVariant, SSPair<true, Hc>, Ts...>: public SSMixer<ModelVaria
   static constexpr std::array<int, 15> hc_age_coarse_cd4 = { 0, 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
   static constexpr std::array<std::array<double, 7>, 6> hc1_to_hc2_cd4_transition = {{ { 0.608439, 0.33873387, 0.2004, 0.095, 0.03880388, 0.0186157, 0.0 }, { 0.185181, 0.22262226, 0.2562, 0.1693, 0.09030903, 0.0186157, 0.0014 }, { 0.105789, 0.29352935, 0.3636, 0.3082, 0.27592759, 0.09921774, 0.00990099 }, { 0.055594, 0.09350935, 0.1074, 0.2497, 0.25992599, 0.16506585, 0.00710071 }, { 0.018498, 0.03550355, 0.0579, 0.1449, 0.25572557, 0.36350134, 0.04960496 }, { 0.026499, 0.01610161, 0.0145, 0.0329, 0.07930793, 0.33498366, 0.93199334 } }};
   static constexpr std::array<std::array<double, 6>, 7> hc2_to_ha_cd4_transition = {{ { 1.0, 1, 1, 0, 0, 0 }, { 0, 0, 0, 1.0, 0, 0 }, { 0, 0, 0, 0, 0.6665589, 0 }, { 0, 0, 0, 0, 0.3334411, 0 }, { 0, 0, 0, 0, 0, 0.35 }, { 0, 0, 0, 0, 0, 0.21 }, { 0, 0, 0, 0, 0, 0.44 } }};
+
+  static void collect_ss(SSCollector& collector) {
+    SSMixer<ModelVariant, Ts...>::collect_ss(collector);
+
+    collector.add("hc1DS", hc1DS);
+    collector.add("hc2DS", hc2DS);
+    collector.add("hc2_agestart", hc2_agestart);
+    collector.add("hcAG_end", hcAG_end);
+    collector.add("hc1AG", hc1AG);
+    collector.add("hc1AG_c", hc1AG_c);
+    collector.add("hc2AG", hc2AG);
+    collector.add("hc2AG_c", hc2AG_c);
+    collector.add("hc_infant", hc_infant);
+    collector.add("hcTT", hcTT);
+    collector.add("hcTT_expanded", hcTT_expanded);
+    collector.add("hPS", hPS);
+    collector.add("hVT_dropout", hVT_dropout);
+    collector.add("hVT", hVT);
+    collector.add("hBF", hBF);
+    collector.add("hBF_coarse", hBF_coarse);
+    collector.add("hAB_ind", hAB_ind);
+    collector.add("hAG_fert", hAG_fert);
+    collector.add("mtct_source", mtct_source);
+    collector.add("hc_age_coarse", hc_age_coarse);
+    collector.add("hc_age_coarse_cd4", hc_age_coarse_cd4);
+    collector.add("hc1_to_hc2_cd4_transition", hc1_to_hc2_cd4_transition);
+    collector.add("hc2_to_ha_cd4_transition", hc2_to_ha_cd4_transition);
+  }
 };
 
 template<MV ModelVariant, typename ...Ts>
@@ -85,6 +128,15 @@ struct SSMixer<ModelVariant, SSPair<true, HaOverride0>, Ts...>: public SSMixer<M
   static constexpr int hAG = 9;
   static constexpr int hAG_fertility = 8;
   static constexpr int hAG_15to49 = 8;
+
+  static void collect_ss(SSCollector& collector) {
+    SSMixer<ModelVariant, Ts...>::collect_ss(collector);
+
+    collector.add("hAG_span", hAG_span);
+    collector.add("hAG", hAG);
+    collector.add("hAG_fertility", hAG_fertility);
+    collector.add("hAG_15to49", hAG_15to49);
+  }
 };
 
 template<MV ModelVariant, typename ...Ts>
@@ -100,6 +152,22 @@ struct SSMixer<ModelVariant, SSPair<true, Ha>, Ts...>: public SSMixer<ModelVaria
   static constexpr int hIDX_15to49 = 0;
   static constexpr int hAG_15to49 = 35;
   static constexpr int HIV_STEPS_PER_YEAR = 10;
+
+  static void collect_ss(SSCollector& collector) {
+    SSMixer<ModelVariant, Ts...>::collect_ss(collector);
+
+    collector.add("hAG_span", hAG_span);
+    collector.add("hDS", hDS);
+    collector.add("hTS", hTS);
+    collector.add("hAG", hAG);
+    collector.add("pAG_fertility", pAG_fertility);
+    collector.add("hAG_fertility", hAG_fertility);
+    collector.add("pIDX_15to49", pIDX_15to49);
+    collector.add("pAG_15to49", pAG_15to49);
+    collector.add("hIDX_15to49", hIDX_15to49);
+    collector.add("hAG_15to49", hAG_15to49);
+    collector.add("HIV_STEPS_PER_YEAR", HIV_STEPS_PER_YEAR);
+  }
 };
 
 template<MV ModelVariant, typename ...Ts>
@@ -107,6 +175,14 @@ struct SSMixer<ModelVariant, SSPair<true, Dp>, Ts...>: public SSMixer<ModelVaria
   static constexpr int NS = 2;
   static constexpr int pAG = 81;
   static constexpr int p_fertility_age_groups = 35;
+
+  static void collect_ss(SSCollector& collector) {
+    SSMixer<ModelVariant, Ts...>::collect_ss(collector);
+
+    collector.add("NS", NS);
+    collector.add("pAG", pAG);
+    collector.add("p_fertility_age_groups", p_fertility_age_groups);
+  }
 };
 
 
@@ -119,6 +195,15 @@ using SSMixed = SSMixer<
   SSPair<ModelVariant::run_hiv_simulation, Ha>,
   SSPair<ModelVariant::run_demographic_projection, Dp>
 >;
-
 } // namespace internal
+
+template<internal::MV ModelVariant>
+internal::SSMap get_ss() {
+    using SS = internal::SSMixed<ModelVariant>;
+    internal::SSMap map;
+    internal::SSCollector collector{map};
+    SS::collect_ss(collector);
+    return map;
+}
+
 } // namespace leapfrog
