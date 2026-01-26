@@ -743,7 +743,6 @@ struct SpAdapter<Language::R, real_type, ModelVariant> {
   };
 };
 
-} // namespace internal
 
 struct SSTypeToR {
   Rcpp::List& out;
@@ -780,13 +779,15 @@ struct SSTypeToR {
   }
 };
 
+} // namespace internal
+
 template<internal::MV ModelVariant>
 Rcpp::List get_ss_r() {
   auto ss = get_ss<ModelVariant>();
   Rcpp::List out;
 
   for (const auto& [name, value] : ss) {
-    std::visit(SSTypeToR{out, name}, value);
+    std::visit(internal::SSTypeToR{out, name}, value);
   }
 
   return out;
