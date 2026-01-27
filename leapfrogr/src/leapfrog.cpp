@@ -191,3 +191,45 @@ Rcpp::List run_base_model_single_year(
 ) {
   return sim_model(configuration, parameters, initial_state, simulation_start_year);
 }
+
+//' Get the state space dimensions for a particular model configuration
+//'
+//' @param configuration The configuration to get state space for,
+//'  see [list_model_configurations].
+//'
+//' @return State space as a named list
+//' @export
+// [[Rcpp::export]]
+Rcpp::List get_leapfrog_ss(
+  const std::string configuration
+) {
+  if (configuration == "DemographicProjection") {
+    return leapfrog::get_ss_r<leapfrog::DemographicProjection>();
+  } else if (configuration == "HivFullAgeStratification") {
+    return leapfrog::get_ss_r<leapfrog::HivFullAgeStratification>();
+  } else if (configuration == "HivCoarseAgeStratification") {
+    return leapfrog::get_ss_r<leapfrog::HivCoarseAgeStratification>();
+  } else if (configuration == "ChildModel") {
+    return leapfrog::get_ss_r<leapfrog::ChildModel>();
+  } else if (configuration == "CoarseChildModel") {
+    return leapfrog::get_ss_r<leapfrog::CoarseChildModel>();
+  } else if (configuration == "Spectrum") {
+    return leapfrog::get_ss_r<leapfrog::Spectrum>();
+  } else {
+    const auto available_variants = list_model_configurations();
+    std::ostringstream oss;
+    oss << "Invalid configuration: '" << configuration
+        << "'. It must be one of: ";
+
+    for (size_t i = 0; i < available_variants.size(); ++i) {
+      oss << "'" << available_variants[i] << "'";
+      if (i != available_variants.size() - 1) {
+        oss << ", ";
+      } else {
+        oss << ".";
+      }
+    }
+
+    throw std::runtime_error(oss.str());
+  }
+}

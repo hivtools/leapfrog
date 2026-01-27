@@ -6,6 +6,7 @@
 #include <array>
 
 #include "concepts.hpp"
+#include "../state_space_collector.hpp"
 
 namespace leapfrog {
 namespace internal {
@@ -33,10 +34,20 @@ struct SSMixer<ModelVariant>: public BaseSS {
   {% for name, val in base.overridable.items() %}
   static constexpr {{ get_member_type(val) }} {{ name }} = {{ get_member_value(val) }};
   {% endfor %}
+
+  static void collect_ss(SSCollector& collector) {
+    {% for name, val in base.overridable.items() %}
+    collector.add("{{ name }}", {{ name }});
+    {% endfor %}
+  }
 };
 
 template<MV ModelVariant, ConfigsAndOverrides T, typename ...Ts>
-struct SSMixer<ModelVariant, SSPair<false, T>, Ts...>: public SSMixer<ModelVariant, Ts...> {};
+struct SSMixer<ModelVariant, SSPair<false, T>, Ts...>: public SSMixer<ModelVariant, Ts...> {
+  static void collect_ss(SSCollector& collector) {
+    SSMixer<ModelVariant, Ts...>::collect_ss(collector);
+  }
+};
 
 {% for el in configs_and_overrides %}
 template<MV ModelVariant, typename ...Ts>
@@ -44,6 +55,14 @@ struct SSMixer<ModelVariant, SSPair<true, {{ el.name }}>, Ts...>: public SSMixer
   {% for name, val in el.vars.items() %}
   static constexpr {{ get_member_type(val) }} {{ name }} = {{ get_member_value(val) }};
   {% endfor %}
+
+  static void collect_ss(SSCollector& collector) {
+    SSMixer<ModelVariant, Ts...>::collect_ss(collector);
+
+    {% for name in el.vars.keys() %}
+    collector.add("{{ name }}", {{ name }});
+    {% endfor %}
+  }
 };
 
 {% endfor %}
@@ -57,4 +76,14 @@ using SSMixed = SSMixer<
 >;
 
 } // namespace internal
+
+template<internal::MV ModelVariant>
+internal::SSMap get_ss() {
+    using SS = internal::SSMixed<ModelVariant>;
+    internal::SSMap map;
+    internal::SSCollector collector{map};
+    SS::collect_ss(collector);
+    return map;
+}
+
 } // namespace leapfrog

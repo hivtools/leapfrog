@@ -19,3 +19,10 @@ expect_string <- function(x, err_msg = deparse(substitute(x))) {
   expect_true(!is.na(x) && nzchar(x),
               sprintf("Expected non empty string: %s", err_msg))
 }
+
+expect_named <- function(x, err_msg = deparse(substitute(x))) {
+  expect_true(!is.null(names(x)),
+              sprintf("%s is not named", err_msg))
+  expect_true(!any(duplicated(names(x))),
+              sprintf("%s has duplicate names", err_msg))
+}
