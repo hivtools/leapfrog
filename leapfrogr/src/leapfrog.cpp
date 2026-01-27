@@ -192,6 +192,13 @@ Rcpp::List run_base_model_single_year(
   return sim_model(configuration, parameters, initial_state, simulation_start_year);
 }
 
+//' Get the state space dimensions for a particular model configuration
+//'
+//' @param configuration The configuration to get state space for,
+//'  see [list_model_configurations].
+//'
+//' @return State space as a named list
+//' @export
 // [[Rcpp::export]]
 Rcpp::List get_leapfrog_ss(
   const std::string configuration
