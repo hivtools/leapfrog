@@ -119,6 +119,8 @@ We use [uv](https://docs.astral.sh/uv/) to manage the project:
 * Sync the virtual env `uv sync`
 * Run tests `uv run pytest`
 * Lint `uvx ruff check .`
+* Format `uvx ruff format`
+* Format imports  `uvx ruff check --select I --fix`
 
 uv will rebuild automatically if you make a change to the C++ code however if you need to force recompilation use `--reinstall-package leapfrog-py`.
 

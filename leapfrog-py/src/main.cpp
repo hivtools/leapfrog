@@ -105,7 +105,8 @@ std::vector<std::string> list_model_configurations() {
     "DemographicProjection",
     "HivFullAgeStratification",
     "HivCoarseAgeStratification",
-    "ChildModel"
+    "ChildModel",
+    "Spectrum"
   };
 }
 
@@ -119,6 +120,8 @@ auto sim_model(const std::string configuration, Args&&... args) {
     return simulate_model<leapfrog::HivCoarseAgeStratification>(std::forward<Args>(args)...);
   } else if (configuration == "ChildModel") {
     return simulate_model<leapfrog::ChildModel>(std::forward<Args>(args)...);
+  } else if (configuration == "Spectrum") {
+    return simulate_model<leapfrog::Spectrum>(std::forward<Args>(args)...);
   } else {
     const auto available_variants = list_model_configurations();
     std::ostringstream oss;
@@ -166,6 +169,37 @@ nb::dict run_base_model_single_year(
   return sim_model(configuration, parameters, initial_state, simulation_start_year);
 }
 
+
+nb::dict get_leapfrog_ss(const std::string configuration) {
+  if (configuration == "DemographicProjection") {
+    return leapfrog::get_ss_py<leapfrog::DemographicProjection>();
+  } else if (configuration == "HivFullAgeStratification") {
+    return leapfrog::get_ss_py<leapfrog::HivFullAgeStratification>();
+  } else if (configuration == "HivCoarseAgeStratification") {
+    return leapfrog::get_ss_py<leapfrog::HivCoarseAgeStratification>();
+  } else if (configuration == "ChildModel") {
+    return leapfrog::get_ss_py<leapfrog::ChildModel>();
+  } else if (configuration == "Spectrum") {
+    return leapfrog::get_ss_py<leapfrog::Spectrum>();
+  } else {
+    const auto available_variants = list_model_configurations();
+    std::ostringstream oss;
+    oss << "Invalid configuration: '" << configuration
+        << "'. It must be one of: ";
+
+    for (size_t i = 0; i < available_variants.size(); ++i) {
+      oss << "'" << available_variants[i] << "'";
+      if (i != available_variants.size() - 1) {
+        oss << ", ";
+      } else {
+        oss << ".";
+      }
+    }
+
+    throw std::runtime_error(oss.str());
+  }
+}
+
 NB_MODULE(_core, m) {
   m.doc() = "Leapfrog python interface";
 
@@ -177,5 +211,8 @@ NB_MODULE(_core, m) {
   )pbdoc");
   m.def("run_base_model_single_year", &run_base_model_single_year, R"pbdoc(
       Run the leapfrog model from an initial state for a single year.
+  )pbdoc");
+  m.def("get_leapfrog_ss_py", &get_leapfrog_ss, R"pbdoc(
+    Get the state space dimensions for a specific model variant,
   )pbdoc");
 }
