@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">leapfrog</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.8</span>
       </span>
     </div>
 
@@ -63,7 +63,12 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">process_pjnz</span><span class="op">(</span><span class="va">pjnz</span>, use_coarse_age_groups <span class="op">=</span> <span class="cn">FALSE</span>, bypass_adult <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">process_pjnz</span><span class="op">(</span></span>
+<span>  <span class="va">pjnz</span>,</span>
+<span>  use_coarse_age_groups <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  extract_child_params <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  bypass_adult <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -76,6 +81,12 @@
 
 <dt id="arg-use-coarse-age-groups">use_coarse_age_groups<a class="anchor" aria-label="anchor" href="#arg-use-coarse-age-groups"></a></dt>
 <dd><p>use the coarse age stratification</p></dd>
+
+
+<dt id="arg-extract-child-params">extract_child_params<a class="anchor" aria-label="anchor" href="#arg-extract-child-params"></a></dt>
+<dd><p>If TRUE, then child parameters required
+to run the child model will be extracted. If FALSE, only adult parameters
+will be extracted from the PJNZ.</p></dd>
 
 
 <dt id="arg-bypass-adult">bypass_adult<a class="anchor" aria-label="anchor" href="#arg-bypass-adult"></a></dt>
