@@ -21,6 +21,13 @@ run_base_model_single_year <- function(parameters, configuration, initial_state,
     .Call(`_leapfrog_run_base_model_single_year`, parameters, configuration, initial_state, simulation_start_year)
 }
 
+#' Get the state space dimensions for a particular model configuration
+#'
+#' @param configuration The configuration to get state space for,
+#'  see [list_model_configurations].
+#'
+#' @return State space as a named list
+#' @export
 get_leapfrog_ss <- function(configuration) {
     .Call(`_leapfrog_get_leapfrog_ss`, configuration)
 }
