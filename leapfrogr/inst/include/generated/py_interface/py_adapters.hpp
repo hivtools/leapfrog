@@ -569,4 +569,19 @@ struct SpAdapter<Language::Py, real_type, ModelVariant> {
 };
 
 } // namespace internal
+
+template<internal::MV ModelVariant>
+nb::dict get_ss_py() {
+  auto ss = get_ss<ModelVariant>();
+  nb::dict out;
+
+  for (const auto& [name, value] : ss) {
+    std::visit([&](const auto& v) {
+        out[name.c_str()] = v;
+    }, value);
+  }
+
+  return out;
+}
+
 } // namespace leapfrog

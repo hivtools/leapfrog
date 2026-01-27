@@ -18,5 +18,5 @@ test_that("can get state space info from C++", {
   expect_named(ss_coarse)
   expect_named(ss_full)
   expect_true(ss_full$hAG > ss_coarse$hAG)
-  expect_true(all(ss_full$hAG_span))
+  expect_true(all(ss_full$hAG_span == 1))
 })
