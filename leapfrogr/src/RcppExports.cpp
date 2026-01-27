@@ -62,12 +62,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// get_leapfrog_ss
+Rcpp::List get_leapfrog_ss(const std::string configuration);
+RcppExport SEXP _leapfrog_get_leapfrog_ss(SEXP configurationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string >::type configuration(configurationSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_leapfrog_ss(configuration));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_leapfrog_list_model_configurations", (DL_FUNC) &_leapfrog_list_model_configurations, 0},
     {"_leapfrog_run_base_model", (DL_FUNC) &_leapfrog_run_base_model, 3},
     {"_leapfrog_run_base_model_from_state", (DL_FUNC) &_leapfrog_run_base_model_from_state, 5},
     {"_leapfrog_run_base_model_single_year", (DL_FUNC) &_leapfrog_run_base_model_single_year, 4},
+    {"_leapfrog_get_leapfrog_ss", (DL_FUNC) &_leapfrog_get_leapfrog_ss, 1},
     {NULL, NULL, 0}
 };
 
