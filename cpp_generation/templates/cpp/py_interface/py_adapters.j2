@@ -116,10 +116,10 @@ nb::dict get_ss_py() {
   auto ss = get_ss<ModelVariant>();
   nb::dict out;
 
-  for (const auto& [name, value] : ss) {
+  for (const auto& ss_variable : ss) {
     std::visit([&](const auto& v) {
-        out[name.c_str()] = v;
-    }, value);
+        out[ss_variable.first.c_str()] = v;
+    }, ss_variable.second);
   }
 
   return out;
