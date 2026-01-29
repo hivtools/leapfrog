@@ -6,12 +6,12 @@
 ## Installation
 
 Please install from our
-[r-universe](https://mrc-ide.r-universe.dev/builds):
+[r-universe](https://hivtools.r-universe.dev/builds):
 
 ``` r
 install.packages(
   "leapfrog",
-  repos = c("https://mrc-ide.r-universe.dev", "https://cloud.r-project.org"))
+  repos = c("https://hivtools.r-universe.dev", "https://cloud.r-project.org"))
 ```
 
 You can install the development version of leapfrog from
