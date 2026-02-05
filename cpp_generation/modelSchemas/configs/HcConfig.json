@@ -107,28 +107,6 @@
         "num_type": "real_type",
         "dims": ["SS::p_idx_hiv_first_adult", "opts.proj_steps"]
       },
-      "fert_mult_by_age": {
-        "num_type": "real_type",
-        "dims": ["SS::hAG_fertility", "opts.proj_steps"]
-      },
-      "fert_mult_off_art": {
-        "num_type": "real_type",
-        "dims": ["SS::hDS"],
-        "alias": {
-          "r": "cd4fert_rat"
-        }
-      },
-      "fert_mult_on_art": {
-        "num_type": "real_type",
-        "dims": ["SS::hAG_fertility"]
-      },
-      "total_fertility_rate": {
-        "num_type": "real_type",
-        "dims": ["opts.proj_steps"],
-        "alias": {
-          "r": "tfr"
-        }
-      },
       "PMTCT": {
         "num_type": "real_type",
         "dims": ["SS::hPS", "opts.proj_steps"]
@@ -215,12 +193,6 @@
       },
       "hc_art_start": {
         "num_type": "int"
-      },
-      "local_adj_factor": {
-        "num_type": "real_type",
-        "alias": {
-          "r": "frr_scalar"
-        }
       },
       "hc_age_specific_fertility_rate": {
         "num_type": "real_type",
