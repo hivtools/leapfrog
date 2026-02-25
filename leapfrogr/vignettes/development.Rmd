@@ -101,7 +101,57 @@ To add a new variant. Firstly, in the code generation:
 
 In the C++ code:
 
-1. Add new model code for your variant. At this point I would just add a skeleton with a print line to check your set up works, and fill in actual model code later. Model code should go [here](https://github.com/hivtools/leapfrog/tree/main/leapfrogr/inst/include/models), use one of the other models as an example of structure.
+1. Add new model code for your variant. At this point I would just add a skeleton with a print line to check your set up works, and fill in actual model code later. Model code should go [here](https://github.com/hivtools/leapfrog/tree/main/leapfrogr/inst/include/models). You can use the following snippet as a template
+   ```
+   #pragma once
+
+   #include "../options.hpp"
+   #include "../generated/config_mixer.hpp"
+
+   namespace leapfrog {
+   namespace internal {
+
+   // model_variant_flag1 & 2 need to be in pascal case, can do one of multiple model variant flags required for this model
+   template<typename Config>
+   concept {{ model_name }}Enabled = {{ model_variant_flag1 }}<Config> && {{ model_variant_flag2 }}<Config>;
+
+   template<typename Config>
+   struct {{ model_name }} {
+     {{ model_name }}(...) {};
+   };
+
+   template<{{ model_name }}Enabled Config>
+   struct {{ model_name }}<Config> {
+     using real_type = typename Config::real_type;
+     using ModelVariant = typename Config::ModelVariant;
+     using SS = Config::SS;
+     using Pars = Config::Pars;
+     using State = Config::State;
+     using Intermediate = Config::Intermediate;
+     using Args = Config::Args;
+
+     // function args
+     int t;
+     const Pars& pars;
+     const State& state_curr;
+     State& state_next;
+     Intermediate& intermediate;
+     const Options<real_type>& opts;
+
+     // only exposing the constructor and some methods
+     public:
+     {{ model_name }}(Args& args):
+       t(args.t),
+       pars(args.pars),
+       state_curr(args.state_curr),
+       state_next(args.state_next),
+       intermediate(args.intermediate),
+       opts(args.opts)
+     {};
+
+     void run() { std::cout << "Running new model\n" };
+   };
+   ```
 1. Call your new model variant at the appropriate point in the [`project_year` function](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L116)
 
 You now need to update the wrappers you want to expose the model variant to. For the R wrapper:
