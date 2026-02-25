@@ -40,7 +40,7 @@ To explain what is going on in the model struct we can look at the [adult HIV mo
   * `state_curr` - the state at the current point in time. This is read-only.
   * `state_next` - the state at the next time point. This is what we are currently populating from the previous time step and the parameters.
   * `intermediate` - a place for storing any data used within a single time step. Use this as to store intermediate values for use later in your code. This is reset to all 0s at the end of every time step.
-* A [public function](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L64) that we can call from `project_year`
+* One or more [public functions](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L64) that we can call from `project_year`
 * Zero or more [private functions](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L110) these do the actual work of the model and will never be called from outside the struct. You can create as many or as few as you want, they should be used to organise different parts of the model code as needed.
 
 Note that after each time step the code will do the following
