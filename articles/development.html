@@ -80,7 +80,7 @@
       <h1 data-toc-skip>Developing leapfrog</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/hivtools/leapfrog/blob/v1.0.1/vignettes/development.Rmd" class="external-link"><code>vignettes/development.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/hivtools/leapfrog/blob/main/vignettes/development.Rmd" class="external-link"><code>vignettes/development.Rmd</code></a></small>
       <div class="hidden name"><code>development.Rmd</code></div>
 
     </div>
@@ -103,7 +103,7 @@ it. Or at least document it better.</p>
 <h3 id="model-variants">Model variants<a class="anchor" aria-label="anchor" href="#model-variants"></a>
 </h3>
 <p>Leapfrog has a set of <code>ModelVariant</code>s which can be run.
-See <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/model_variants.hpp" class="external-link"><code>leapfrogr/inst/include/model_variants.hpp</code></a>
+See <a href="https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/ModelVariants.json" class="external-link"><code>leapfrog/cpp_generation/modelSchemas/ModelVariants.json</code></a>
 for details of these. Each model variant is a collection of boolean
 switches or enums. These are used to turn on or off different parts of
 the code when it is run, so that leapfrog can have different extensions
@@ -111,50 +111,67 @@ and we can compose these together in any way we want. These model
 variants are evaluated at compile time. When you compile the code, there
 will be an instance in the compiled binary for each variant your code
 will call. This will cause the binary to be larger but we chose to do it
-this way because we wanted the speed from the compile-time plymorphism.
-We still need to benchmark this to see how much of a gain it actually
-gives.</p>
+this way because we wanted the speed from the compile-time
+polymorphism.</p>
 <p>All model functions are templated on the model variant, and any
 conditional behaviour based upon the model variant should be written as
-an <a href="https://en.cppreference.com/w/cpp/language/if" class="external-link"><code>if constexpr</code></a>.</p>
+an <a href="https://www.learncpp.com/cpp-tutorial/constexpr-if-statements/" class="external-link"><code>if constexpr</code></a>.</p>
 </div>
 <div class="section level3">
-<h3 id="model-functions">Model functions<a class="anchor" aria-label="anchor" href="#model-functions"></a>
+<h3 id="model-variants-1">Model variants<a class="anchor" aria-label="anchor" href="#model-variants-1"></a>
 </h3>
-<p>All model functions should have the same signature e.g.</p>
-<pre><code>template&lt;typename ModelVariant, typename real_type&gt;
-void my_model_function(int proj_step,
-                       const Parameters&lt;ModelVariant, real_type&gt; &amp;pars,
-                       const State&lt;ModelVariant, real_type&gt; &amp;state_curr,
-                       State&lt;ModelVariant, real_type&gt; &amp;state_next,
-                       IntermediateData&lt;ModelVariant, real_type&gt; &amp;intermediate) {</code></pre>
-<p>To explain what is going on here</p>
+<p>All model variants are in the <a href="https://github.com/hivtools/leapfrog/tree/main/leapfrogr/inst/include/models" class="external-link"><code>models</code>
+directory</a>. Every model variant should be created as a struct. We can
+use the struct to alias state space variables or bits of the config to
+make the code more easily readable. The struct should expose at least
+one public function which can then be called from the <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L116" class="external-link"><code>project_year</code></a>
+function.</p>
+<p>To explain what is going on in the model struct we can look at the <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp" class="external-link">adult
+HIV model as an example</a></p>
 <ul>
-<li>Templated on <code>ModelVariant</code> - this is used for any
-conditional behaviour based upon the variant being run see <a href="#model-variants">Model variants</a> for details.</li>
-<li>Templated on <code>real_type</code> - this is used by TMB during
-fitting. Under a normal fit this will be a <code>double</code>.</li>
 <li>
-<code>proj_step</code> - the current time step of the model as an
-index, e.g. if running for 1970:2030, this will start at <code>1</code>
-and loop to <code>61</code>. Any input data you read based on time step
+<a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L9-L18" class="external-link">Templating
+on <code>Config</code></a> - this is used to ensure that the code is not
+compiled when we’re running a variant in which it is disabled.</li>
+<li>We <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L19-43" class="external-link">alias
+parts of the config and define private state space variables</a> so we
+do not need to use fully qualified names later in the code and can
+instead use the shorthand for readability.</li>
+<li>We <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L46-62" class="external-link">define
+args as part of the struct constructor</a> these hold the actual runtime
+data such has
+<ul>
+<li>
+<code>t</code> - the current time step of the model as an index,
+e.g. if running for 1970:2030, this will start at <code>1</code> and
+loop to <code>61</code>. Any input data you read based on time step
 index should have <code>1970</code> at the first index. Index
 <code>1</code> in R and <code>0</code> in C++.</li>
 <li>
 <code>pars</code> - the parameters for this model, these are
 read-only values</li>
 <li>
-<code>state_curr</code> - the state at the current point in time
-i.e. at <code>t = proj_step - 1</code>. This is read-only.</li>
+<code>state_curr</code> - the state at the current point in time.
+This is read-only.</li>
 <li>
-<code>state_next</code> - the state at the next time point, i.e. at
-<code>t = proj_step</code>. This is what we are currently populating
-from the previous time step and the parameters.</li>
+<code>state_next</code> - the state at the next time point. This is
+what we are currently populating from the previous time step and the
+parameters.</li>
 <li>
-<code>intermediate</code> - a palce for storing any data used within
-a single time step. Use this as a place to store intermediate values for
-use later in your code. This is reset to all 0s at the end of every time
+<code>intermediate</code> - a place for storing any data used within
+a single time step. Use this as to store intermediate values for use
+later in your code. This is reset to all 0s at the end of every time
 step.</li>
+</ul>
+</li>
+<li>One or more <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L64" class="external-link">public
+functions</a> that we can call from <code>project_year</code>
+</li>
+<li>Zero or more <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L110" class="external-link">private
+functions</a> these do the actual work of the model and will never be
+called from outside the struct. You can create as many or as few as you
+want, they should be used to organise different parts of the model code
+as needed.</li>
 </ul>
 <p>Note that after each time step the code will do the following</p>
 <ul>
@@ -176,185 +193,194 @@ you can specify which years you want to output data for. By default it
 will output for all time steps, but if say you are only interested in
 the last time step. You can return this by running e.g.</p>
 <pre><code><span><span class="fu"><a href="../reference/run_model.html">run_model</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">parameters</span>, <span class="fl">1970</span><span class="op">:</span><span class="fl">2030</span>, <span class="fl">10</span>, <span class="fl">2030</span><span class="op">)</span></span></code></pre>
-<p>This time output is managed by the state saver see <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/state_saver.hpp" class="external-link"><code>leapfrogr/inst/include/state_saver.hpp</code></a></p>
+<p>This time output is managed by the internal <code>OutputState</code>
+struct see e.g. <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L110" class="external-link"><code>leapfrogr/inst/include/leapfrog.hpp</code></a></p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="adding-new-input-output-or-intermediate-data">Adding new input, output or intermediate data<a class="anchor" aria-label="anchor" href="#adding-new-input-output-or-intermediate-data"></a>
+<h2 id="modifying-config-to-add-new-input-output-or-intermediate-data">Modifying config to add new input, output or intermediate data<a class="anchor" aria-label="anchor" href="#modifying-config-to-add-new-input-output-or-intermediate-data"></a>
 </h2>
 <p>Leapfrog uses code generation to write the code for wiring up the
 input and output data. This is to reduce the number of locations you
 need to make changes when you add new input data or return new data from
-the model. In short it amounts to:</p>
-<ul>
-<li>Add new input data - modify <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/cpp_generation/model_input.csv" class="external-link"><code>leapfrogr/inst/cpp_generation/model_input.csv</code></a>
-and run <a href="https://github.com/hivtools/leapfrog/blob/main/scripts/generate" class="external-link"><code>scripts/generate</code></a>
-</li>
-<li>Add new model output - modify <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/cpp_generation/model_output.csv" class="external-link"><code>leapfrogr/inst/cpp_generation/model_output.csv</code></a>
-and run <a href="https://github.com/hivtools/leapfrog/blob/main/scripts/generate" class="external-link"><code>scripts/generate</code></a>
-</li>
-</ul>
+the model. In short it amounts to updating one of the configs at <a href="https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/configs" class="external-link"><code>leapfrogr/inst/cpp_generation/modelSchemas/configs</code></a>
+and running <a href="https://github.com/hivtools/leapfrog/blob/main/scripts/generate" class="external-link"><code>scripts/generate</code></a></p>
 <div class="section level3">
-<h3 id="input-data">Input data<a class="anchor" aria-label="anchor" href="#input-data"></a>
+<h3 id="config-structure">Config structure<a class="anchor" aria-label="anchor" href="#config-structure"></a>
 </h3>
-<p>Input data is generated from csv file in <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/model_input.hpp" class="external-link"><code>leapfrogr/inst/include/model_input.hpp</code></a>,
-the columns in this file are</p>
+<p>The config is JSON, it has the following sections:</p>
 <ol style="list-style-type: decimal">
 <li>
-<code>r_name</code> - The name of the data in R, from either
-<code>data</code> or <code>parameters</code> struct passed to
-<code>run_model</code>
+<code>name</code> - The name of this model variant type, it should
+be short. It is used in C++ code for the type which holds the state
+space, input data, intermediate data and output data associated with
+this variant.</li>
+<li>
+<code>long_name</code> - A long name for the model variant, at the
+moment used on for Delphi interface (to distinguish between 2 digit
+module codes used by Avenir internally)</li>
+<li>
+<code>namespace</code> - The name of an instance of the model
+variant, used in C++ code.</li>
+<li>
+<code>enable_if</code> - A conditional for when the model variant
+should be active. This is a compile time conditional based on model
+variant booleans. When the condition is true, the input data must be
+supplied and output data will be returned.</li>
+<li>
+<code>state_space</code> - An object containing named integers.
+These are the dimensions for the statically allocated input,
+intermediate and output data. A variant can use state space parameters
+from other variants.</li>
+<li>
+<code>pars</code> - The inputs to the model used in this variant.
+You can use parameters supplied by other variants. Each parameter can
+define:
+<ol style="list-style-type: decimal">
+<li>A “num_type” which should be “int” or “real_type”. “real_type” is
+used by TMB but for normal running is just a <code>double</code>.</li>
+<li>(optionally) “dims” - which is an array of sizes, it can use values
+from the state space, options or expressions
+e.g. <code>opts.proj_steps * opts.hts_per_year</code>. If no “dims” are
+set, assumed this is a scalar value.</li>
+<li>(optionally) “alias” - a named list of aliases for the different
+language interfaces, at the moment only “r” is used and should be
+removed in the future. This should not be used for new parameters.</li>
+</ol>
 </li>
 <li>
-<code>cpp_name</code> - The name of the data in C++, the label you
-will use to refer to the data within the leapfrog model. Use a name
-which adheres to the naming convention rules in the README.</li>
+<code>intermediate</code> - use to define any intermediate bits of
+data used during the model run. We define them here because then they
+can be statically allocated instead of allocated every iteration of the
+time loop. These are automatically set to 0 at the end of every time
+step. Each piece of intermediate data needs a “num_type” and
+“dims”.</li>
 <li>
-<code>type</code> - The type of data, <code>real_type</code> or
-<code>int</code>. <code>real_type</code> is a templated type. Under
-normal usage it will be a <code>double</code> but is used by TMB for
-model fitting.</li>
-<li>
-<code>input_when</code> - An expression which evaluates to a boolean
-to control when this input data is used. For example
-<code>ModelVariant::run_child_model</code> to include only in the child
-model. If blank, this is always input.</li>
-<li>
-<code>value</code> - If you want to initialise this data as a
-constant value array, enter the value here. Note that if using this
-column then no value should be in the <code>r_name</code> column.</li>
-<li>
-<code>convert_base</code> - Set to <code>TRUE</code> for any array
-of indexes, these will be converted from 1-based numbering (for R) to
-0-based numbering (for C++).</li>
-<li>
-<code>dims</code> - The number of dimensions for this input (max
-4)</li>
-<li>
-<code>dim1</code> - The size of the first dimension</li>
-<li>
-<code>dim2</code> - The size of the second dimension, can by
-blank</li>
-<li>
-<code>dim3</code> - The size of the third dimension, can be
-blank</li>
-<li>
-<code>dim4</code> - The size of the fourth dimension, can be
-blank</li>
+<code>state</code> - data output from the model. Defined as a JSON
+object, these are the results filled in during a model run. Each item
+needs a “num_type” and (optionally) “dims”. When a model is run the
+output is a named list/dictionary with keys matching from the JSON
+object and values corresponding to the “dims” with an additional time
+dimension. So if the state defines <code>p_totpop</code> with dims
+<code>["SS::pAG", "SS::NS"]</code> the output will have
+<code>p_totpop</code> with 3 dimensions of lengths pAG, NS and number of
+output years.</li>
 </ol>
-<p>Note that the dims can be any of the state space sizes or
-<code>proj_years</code> for the number of years in the projection. See
-the <a href="https://hivtools.github.io/leapfrog/#state-space" class="external-link">README</a> for
-valid state space sizes.</p>
-<p>After making changes to the <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/cpp_generation/model_input.csv" class="external-link"><code>model_input.csv</code></a>,
+<p>After making changes to the <a href="https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/configs" class="external-link">config</a>,
 run the generate script <a href="https://github.com/hivtools/leapfrog/blob/main/scripts/generate" class="external-link"><code>scripts/generate</code></a>.
-This update file <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/model_input.hpp" class="external-link"><code>leapfrogr/inst/include/model_input.hpp</code></a>.
-Note that this file should never be changed manually as the generate
-script will completely rewrite it.</p>
+Note that this will update several of the generated files. The generated
+files should never be manually changed as the generate script will
+completely rewrite it.</p>
 <p>After regenerating the code, rebuild the project and you are ready to
 use the new input data in C++.</p>
-</div>
-<div class="section level3">
-<h3 id="model-outputs">Model outputs<a class="anchor" aria-label="anchor" href="#model-outputs"></a>
-</h3>
-<p>Model outputs are generated in a similar way to inputs. To modify an
-existing or add new output update the file
-[<code>leapfrogr/inst/cpp_generation/model_output.csv</code>](<a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/cpp_generation/model_" class="external-link uri">https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/cpp_generation/model_</a>.
-The columns in this file are:</p>
-<ol style="list-style-type: decimal">
-<li>
-<code>r_name</code> - The name of the output in the list output from
-<code>run_model</code>
-</li>
-<li>
-<code>cpp_name</code> - The name of the output as it is referred to
-in C++</li>
-<li>
-<code>r_type</code> - The <code>R</code> type mapping function to
-use to convert this to an R-type number e.g. <code>REAL</code> to create
-a real typed number</li>
-<li>
-<code>output_when</code> - Conditional expression for when to output
-this from the model. For example
-<code>ModelVariant::run_child_model</code> to return only from the child
-model. If blank, this is always returned.</li>
-<li>
-<code>dims</code> - The number of dimensions of this output (max
-5)</li>
-<li>
-<code>dim1</code> - The size of the first dimension</li>
-<li>
-<code>dim2</code> - The size of the second dimension</li>
-<li>
-<code>dim3</code> - The size of the third dimension</li>
-<li>
-<code>dim4</code> - The size of the fourth dimension</li>
-<li>
-<code>dim5</code> - The size of the fifth dimension</li>
-</ol>
-<p>Note that the dims can be any of the state space sizes or
-<code>proj_years</code> for the number of years in the projection. See
-the <a href="https://hivtools.github.io/leapfrog/#state-space" class="external-link">README</a> for
-valid state space sizes.</p>
-</div>
-<div class="section level3">
-<h3 id="intermediate-data">Intermediate data<a class="anchor" aria-label="anchor" href="#intermediate-data"></a>
-</h3>
-<p>Intermediate data is used as a place to store The intermediate data
-is not handled by code generation as it only requires changes in one
-place. You can make modifications by adding new data into the struct in
-<a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/types.hpp" class="external-link"><code>leapfrogr/inst/include/types.hpp</code></a>,
-making sure to set its default value in the <code>reset</code> function
-on the struct.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="adding-a-new-model-variant">Adding a new model variant<a class="anchor" aria-label="anchor" href="#adding-a-new-model-variant"></a>
 </h2>
-<p>To add a new variant, requires work over a few areas. There are two
-types of model variants at the moment: 1. A flag which turns a section
-of code on or off, this will come with additional model inputs and
-outputs 1. A flag which changes the dimensions of some model input or
-outputs</p>
+<p>There are two types of model variants at the moment:</p>
+<ol style="list-style-type: decimal">
+<li>A flag which turns a section of code on or off, this will come with
+additional model inputs and outputs</li>
+<li>A flag which changes the dimensions of some model input or
+outputs</li>
+</ol>
 <p>The required changes will be different depending on if your new
 variant is one of the first types, which brings additional input/output
 or the second type which does not bring additional data.</p>
 <p>To add a new variant. Firstly, in the code generation:</p>
 <ol style="list-style-type: decimal">
-<li>Add any new input or output data in <a href="https://github.com/hivtools/leapfrog/blob/main/inst/cpp_generation/model_input.csv" class="external-link"><code>leapfrogr/inst/include/model_input.csv</code></a>
-or <a href="https://github.com/hivtools/leapfrogr/blob/main/inst/cpp_generation/model_output.csv" class="external-link"><code>leapfrogr/inst/include/model_output.csv</code></a>
-</li>
-<li>If you have new input data, add a specialism for the new variant
-into the state_types template in <a href="https://github.com/hivtools/leapfrog/blob/main/inst/cpp_generation/state_types.hpp.in" class="external-link"><code>inst/cpp_generation/state_types.hpp.in</code></a>
-</li>
+<li>Add a new flag and variant in <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/cpp_generation/modelSchemas/ModelVariants.json" class="external-link"><code>cpp_generation/modelSchemas/ModelVariants.json</code></a>.
+Make sure the new flag is set to true or false in all other model
+variants.</li>
+<li>If you have new input data or output data for this variant, add a
+new config file in the <a href="https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/configs" class="external-link"><code>configs dir</code></a>
+and fill in the details as required</li>
 <li>Run the generate script</li>
 </ol>
 <p>In the C++ code:</p>
 <ol style="list-style-type: decimal">
-<li>Add your new variant in <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/model_variants.hpp" class="external-link"><code>leapfrogr/inst/include/model_variants.hpp</code></a>
+<li>
+<p>Add new model code for your variant. At this point I would just
+add a skeleton with a print line to check your set up works, and fill in
+actual model code later. Model code should go <a href="https://github.com/hivtools/leapfrog/tree/main/leapfrogr/inst/include/models" class="external-link">here</a>.
+You can use the following snippet as a template</p>
+<pre><code>#pragma once
+
+#include "../options.hpp"
+#include "../generated/config_mixer.hpp"
+
+namespace leapfrog {
+namespace internal {
+
+// model_variant_flag1 &amp; 2 need to be in pascal case, can do one of multiple model variant flags required for this model
+template&lt;typename Config&gt;
+concept {{ model_name }}Enabled = {{ model_variant_flag1 }}&lt;Config&gt; &amp;&amp; {{ model_variant_flag2 }}&lt;Config&gt;;
+
+template&lt;typename Config&gt;
+struct {{ model_name }} {
+  {{ model_name }}(...) {};
+};
+
+template&lt;{{ model_name }}Enabled Config&gt;
+struct {{ model_name }}&lt;Config&gt; {
+  using real_type = typename Config::real_type;
+  using ModelVariant = typename Config::ModelVariant;
+  using SS = Config::SS;
+  using Pars = Config::Pars;
+  using State = Config::State;
+  using Intermediate = Config::Intermediate;
+  using Args = Config::Args;
+
+  // function args
+  int t;
+  const Pars&amp; pars;
+  const State&amp; state_curr;
+  State&amp; state_next;
+  Intermediate&amp; intermediate;
+  const Options&lt;real_type&gt;&amp; opts;
+
+  // only exposing the constructor and some methods
+  public:
+  {{ model_name }}(Args&amp; args):
+    t(args.t),
+    pars(args.pars),
+    state_curr(args.state_curr),
+    state_next(args.state_next),
+    intermediate(args.intermediate),
+    opts(args.opts)
+  {};
+
+  void run() { std::cout &lt;&lt; "Running new model\n" };
+};</code></pre>
 </li>
-<li>Add a struct for the new state space in <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/state_space.hpp" class="external-link"><code>leapfrogr/inst/include/state_space.hpp</code></a>
-</li>
-<li>If your model has new input data, add parameters for this variant in
-<a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/parameters.hpp" class="external-link"><code>leapfrogr/inst/include/parameters.hpp</code></a>.
-Parameter types will be generated, you need to add those types to the
-appropriate template specialisation</li>
-<li>If your model has new output data, add a new specialisation in <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/state_saver.hpp" class="external-link"><code>leapfrogr/inst/include/state_saver.hpp</code></a>
-</li>
+<li><p>Call your new model variant at the appropriate point in the <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L116" class="external-link"><code>project_year</code>
+function</a></p></li>
 </ol>
-<p>You now need to update the R wrapper to be able to call this new
-variant:</p>
+<p>You now need to update the wrappers you want to expose the model
+variant to. For the R wrapper:</p>
 <ol style="list-style-type: decimal">
-<li>In <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/R/run_model.R" class="external-link"><code>R/run_model.R</code></a>
-add a new flag to the <code>run_model</code> interface for using your
-new variant</li>
-<li>Update the conditionals to build the <code>model_variant</code>
-string based upon your new flag</li>
+<li>Add the variant in the available <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/src/leapfrog.cpp#L15" class="external-link">model
+configurations</a>.</li>
 <li>Add mapping from the string to the model variant struct in Rcpp
-wrapper code in <a href="https://github.com/hivtools/leapfrog/blob/leapfrogr/main/src/leapfrog.cpp" class="external-link"><code>src/leapfrog.cpp</code></a>.
-Note use a <code>constexpr</code> for the state space to ensure it is
-evaluated at compile time.</li>
+wrapper code in <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/src/leapfrog.cpp#L133" class="external-link"><code>src/leapfrog.cpp</code></a>.</li>
+<li>Add a mapping from the string to the model variant struct in <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrogr/src/leapfrog.cpp#L203" class="external-link">get_leapfrog_ss
+function</a>.</li>
+<li>Add a test which calls your new model variant, to make sure
+everything is wired up correctly.</li>
 </ol>
+<p>For the Python wrapper:</p>
+<ol style="list-style-type: decimal">
+<li>Add the variant in the available <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrog-py/src/main.cpp#L103" class="external-link">model
+configurations</a>.</li>
+<li>Add mapping from the string to the model variant struct in the <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrog-py/src/main.cpp#L114" class="external-link">wrapper
+code</a>.</li>
+<li>Add a mapping fromt he string to the model variant struct in the <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrog-py/src/main.cpp#L173" class="external-link">get_leapfrog_ss
+function</a>.</li>
+</ol>
+<p>The C/Delphi interface and C++ interface have more specific usages so
+we probably don’t need to expose new variants via these interfaces. But
+if we do, speak to Rob for help with how to do this.</p>
 </div>
   </div>
 
