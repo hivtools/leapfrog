@@ -22,32 +22,26 @@ The overall aim of this is to allow researchers to write these model extensions 
 
 ### Model variants
 
-Leapfrog has a set of `ModelVariant`s which can be run. See [`leapfrogr/inst/include/model_variants.hpp`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/model_variants.hpp) for details of these. Each model variant is a collection of boolean switches or enums. These are used to turn on or off different parts of the code when it is run, so that leapfrog can have different extensions and we can compose these together in any way we want. These model variants are evaluated at compile time. When you compile the code, there will be an instance in the compiled binary for each variant your code will call. This will cause the binary to be larger but we chose to do it this way because we wanted the speed from the compile-time plymorphism. We still need to benchmark this to see how much of a gain it actually gives.
+Leapfrog has a set of `ModelVariant`s which can be run. See [`leapfrog/cpp_generation/modelSchemas/ModelVariants.json`](https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/ModelVariants.json) for details of these. Each model variant is a collection of boolean switches or enums. These are used to turn on or off different parts of the code when it is run, so that leapfrog can have different extensions and we can compose these together in any way we want. These model variants are evaluated at compile time. When you compile the code, there will be an instance in the compiled binary for each variant your code will call. This will cause the binary to be larger but we chose to do it this way because we wanted the speed from the compile-time polymorphism.
 
-All model functions are templated on the model variant, and any conditional behaviour based upon the model variant should be written as an [`if constexpr`](https://en.cppreference.com/w/cpp/language/if).
+All model functions are templated on the model variant, and any conditional behaviour based upon the model variant should be written as an [`if constexpr`](https://www.learncpp.com/cpp-tutorial/constexpr-if-statements/).
 
-### Model functions
+### Model variants
 
-All model functions should have the same signature e.g.
+All model variants are in the [`models` directory](https://github.com/hivtools/leapfrog/tree/main/leapfrogr/inst/include/models). Every model variant should be created as a struct. We can use the struct to alias state space variables or bits of the config to make the code more easily readable. The struct should expose at least one public function which can then be called from the [`project_year`](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L116) function.
 
-```
-template<typename ModelVariant, typename real_type>
-void my_model_function(int proj_step,
-                       const Parameters<ModelVariant, real_type> &pars,
-                       const State<ModelVariant, real_type> &state_curr,
-                       State<ModelVariant, real_type> &state_next,
-                       IntermediateData<ModelVariant, real_type> &intermediate) {
-```
+To explain what is going on in the model struct we can look at the [adult HIV model as an example](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp)
 
-To explain what is going on here
-
-* Templated on `ModelVariant` - this is used for any conditional behaviour based upon the variant being run see [Model variants] for details.
-* Templated on `real_type` - this is used by TMB during fitting. Under a normal fit this will be a `double`.
-* `proj_step` - the current time step of the model as an index, e.g. if running for 1970:2030, this will start at `1` and loop to `61`. Any input data you read based on time step index should have `1970` at the first index. Index `1` in R and `0` in C++.
-* `pars` - the parameters for this model, these are read-only values
-* `state_curr` - the state at the current point in time i.e. at `t = proj_step - 1`. This is read-only.
-* `state_next` - the state at the next time point, i.e. at `t = proj_step`. This is what we are currently populating from the previous time step and the parameters.
-* `intermediate` - a palce for storing any data used within a single time step. Use this as a place to store intermediate values for use later in your code. This is reset to all 0s at the end of every time step.
+* [Templating on `Config`](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L9-L18) - this is used to ensure that the code is not compiled when we're running a variant in which it is disabled.
+* We [alias parts of the config and define private state space variables](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L19-43) so we do not need to use fully qualified names later in the code and can instead use the shorthand for readability.
+* We [define args as part of the struct constructor](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L46-62) these hold the actual runtime data such has
+   * `t` - the current time step of the model as an index, e.g. if running for 1970:2030, this will start at `1` and loop to `61`. Any input data you read based on time step index should have `1970` at the first index. Index `1` in R and `0` in C++.
+  * `pars` - the parameters for this model, these are read-only values
+  * `state_curr` - the state at the current point in time. This is read-only.
+  * `state_next` - the state at the next time point. This is what we are currently populating from the previous time step and the parameters.
+  * `intermediate` - a place for storing any data used within a single time step. Use this as to store intermediate values for use later in your code. This is reset to all 0s at the end of every time step.
+* One or more [public functions](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L64) that we can call from `project_year`
+* Zero or more [private functions](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp#L110) these do the actual work of the model and will never be called from outside the struct. You can create as many or as few as you want, they should be used to organise different parts of the model code as needed.
 
 Note that after each time step the code will do the following
 
@@ -64,62 +58,36 @@ Leapfrog runs a top-level loop over the time step. At the end of each time step,
 run_model(data, parameters, 1970:2030, 10, 2030)
 ```
 
-This time output is managed by the state saver see [`leapfrogr/inst/include/state_saver.hpp`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/state_saver.hpp)
+This time output is managed by the internal `OutputState` struct see e.g. [`leapfrogr/inst/include/leapfrog.hpp`](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L110)
 
-## Adding new input, output or intermediate data
+## Modifying config to add new input, output or intermediate data
 
-Leapfrog uses code generation to write the code for wiring up the input and output data. This is to reduce the number of locations you need to make changes when you add new input data or return new data from the model. In short it amounts to:
+Leapfrog uses code generation to write the code for wiring up the input and output data. This is to reduce the number of locations you need to make changes when you add new input data or return new data from the model. In short it amounts to updating one of the configs at [`leapfrogr/inst/cpp_generation/modelSchemas/configs`](https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/configs) and running  [`scripts/generate`](https://github.com/hivtools/leapfrog/blob/main/scripts/generate)
 
-* Add new input data - modify [`leapfrogr/inst/cpp_generation/model_input.csv`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/cpp_generation/model_input.csv) and run [`scripts/generate`](https://github.com/hivtools/leapfrog/blob/main/scripts/generate)
-* Add new model output - modify [`leapfrogr/inst/cpp_generation/model_output.csv`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/cpp_generation/model_output.csv) and run [`scripts/generate`](https://github.com/hivtools/leapfrog/blob/main/scripts/generate)
+### Config structure
 
-### Input data
+The config is JSON, it has the following sections:
 
-Input data is generated from csv file in [`leapfrogr/inst/include/model_input.hpp`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/model_input.hpp), the columns in this file are
+1. `name` - The name of this model variant type, it should be short. It is used in C++ code for the type which holds the state space, input data, intermediate data and output data associated with this variant.
+1. `long_name` - A long name for the model variant, at the moment used on for Delphi interface (to distinguish between 2 digit module codes used by Avenir internally)
+1. `namespace` - The name of an instance of the model variant, used in C++ code.
+1. `enable_if` - A conditional for when the model variant should be active. This is a compile time conditional based on model variant booleans. When the condition is true, the input data must be supplied and output data will be returned.
+1. `state_space` - An object containing named integers. These are the dimensions for the statically allocated input, intermediate and output data. A variant can use state space parameters from other variants.
+1. `pars` - The inputs to the model used in this variant. You can use parameters supplied by other variants. Each parameter can define:
+   1. A "num_type" which should be "int" or "real_type". "real_type" is used by TMB but for normal running is just a `double`.
+   1. (optionally) "dims" - which is an array of sizes, it can use values from the state space, options or expressions e.g. `opts.proj_steps * opts.hts_per_year`. If no "dims" are set, assumed this is a scalar value.
+   1. (optionally) "alias" - a named list of aliases for the different language interfaces, at the moment only "r" is used and should be removed in the future. This should not be used for new parameters.
+1. `intermediate` - use to define any intermediate bits of data used during the model run. We define them here because then they can be statically allocated instead of allocated every iteration of the time loop. These are automatically set to 0 at the end of every time step. Each piece of intermediate data needs a "num_type" and "dims".
+1. `state` - data output from the model. Defined as a JSON object, these are the results filled in during a model run. Each item needs a "num_type" and (optionally) "dims". When a model is run the output is a named list/dictionary with keys matching from the JSON object and values corresponding to the "dims" with an additional time dimension. So if the state defines `p_totpop` with dims `["SS::pAG", "SS::NS"]` the output will have `p_totpop` with 3 dimensions of lengths pAG, NS and number of output years.
 
-1. `r_name` - The name of the data in R, from either `data` or `parameters` struct passed to `run_model`
-1. `cpp_name` - The name of the data in C++, the label you will use to refer to the data within the leapfrog model. Use a name which adheres to the naming convention rules in the README.
-1. `type` - The type of data, `real_type` or `int`. `real_type` is a templated type. Under normal usage it will be a `double` but is used by TMB for model fitting.
-1. `input_when` - An expression which evaluates to a boolean to control when this input data is used. For example `ModelVariant::run_child_model` to include only in the child model. If blank, this is always input.
-1. `value` - If you want to initialise this data as a constant value array, enter the value here. Note that if using this column then no value should be in the `r_name` column.
-1. `convert_base` - Set to `TRUE` for any array of indexes, these will be converted from 1-based numbering (for R) to 0-based numbering (for C++).
-1. `dims` - The number of dimensions for this input (max 4)
-1. `dim1` - The size of the first dimension
-1. `dim2` - The size of the second dimension, can by blank
-1. `dim3` - The size of the third dimension, can be blank
-1. `dim4` - The size of the fourth dimension, can be blank
-
-Note that the dims can be any of the state space sizes or `proj_years` for the number of years in the projection. See the [README](https://hivtools.github.io/leapfrog/#state-space) for valid state space sizes.
-
-After making changes to the [`model_input.csv`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/cpp_generation/model_input.csv), run the generate script [`scripts/generate`](https://github.com/hivtools/leapfrog/blob/main/scripts/generate). This update file [`leapfrogr/inst/include/model_input.hpp`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/model_input.hpp). Note that this file should never be changed manually as the generate script will completely rewrite it.
+After making changes to the [config](https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/configs), run the generate script [`scripts/generate`](https://github.com/hivtools/leapfrog/blob/main/scripts/generate). Note that this will update several of the generated files. The generated files should never be manually changed as the generate script will completely rewrite it.
 
 After regenerating the code, rebuild the project and you are ready to use the new input data in C++.
 
-### Model outputs
-
-Model outputs are generated in a similar way to inputs. To modify an existing or add new output update the file [`leapfrogr/inst/cpp_generation/model_output.csv`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/cpp_generation/model_. The columns in this file are:
-
-1. `r_name` - The name of the output in the list output from `run_model`
-1. `cpp_name` - The name of the output as it is referred to in C++
-1. `r_type` - The `R` type mapping function to use to convert this to an R-type number e.g. `REAL` to create a real typed number
-1. `output_when` - Conditional expression for when to output this from the model. For example `ModelVariant::run_child_model` to return only from the child model. If blank, this is always returned.
-1. `dims` - The number of dimensions of this output (max 5)
-1. `dim1` - The size of the first dimension
-1. `dim2` - The size of the second dimension
-1. `dim3` - The size of the third dimension
-1. `dim4` - The size of the fourth dimension
-1. `dim5` - The size of the fifth dimension
-
-Note that the dims can be any of the state space sizes or `proj_years` for the number of years in the projection. See the [README](https://hivtools.github.io/leapfrog/#state-space) for valid state space sizes.
-
-### Intermediate data
-
-Intermediate data is used as a place to store
-The intermediate data is not handled by code generation as it only requires changes in one place. You can make modifications by adding new data into the struct in [`leapfrogr/inst/include/types.hpp`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/types.hpp), making sure to set its default value in the `reset` function on the struct.
-
 ## Adding a new model variant
 
-To add a new variant, requires work over a few areas. There are two types of model variants at the moment:
+There are two types of model variants at the moment:
+
 1. A flag which turns a section of code on or off, this will come with additional model inputs and outputs
 1. A flag which changes the dimensions of some model input or outputs
 
@@ -127,19 +95,76 @@ The required changes will be different depending on if your new variant is one o
 
 To add a new variant. Firstly, in the code generation:
 
-1. Add any new input or output data in [`leapfrogr/inst/include/model_input.csv`](https://github.com/hivtools/leapfrog/blob/main/inst/cpp_generation/model_input.csv) or [`leapfrogr/inst/include/model_output.csv`](https://github.com/hivtools/leapfrogr/blob/main/inst/cpp_generation/model_output.csv)
-1. If you have new input data, add a specialism for the new variant into the state_types template in [`inst/cpp_generation/state_types.hpp.in`](https://github.com/hivtools/leapfrog/blob/main/inst/cpp_generation/state_types.hpp.in)
+1. Add a new flag and variant in [`cpp_generation/modelSchemas/ModelVariants.json`](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/cpp_generation/modelSchemas/ModelVariants.json). Make sure the new flag is set to true or false in all other model variants.
+1. If you have new input data or output data for this variant, add a new config file in the [`configs dir`](https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/configs) and fill in the details as required
 1. Run the generate script
 
 In the C++ code:
 
-1. Add your new variant in [`leapfrogr/inst/include/model_variants.hpp`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/model_variants.hpp)
-1. Add a struct for the new state space in [`leapfrogr/inst/include/state_space.hpp`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/state_space.hpp)
-1. If your model has new input data, add parameters for this variant in [`leapfrogr/inst/include/parameters.hpp`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/parameters.hpp). Parameter types will be generated, you need to add those types to the appropriate template specialisation
-1. If your model has new output data, add a new specialisation in [`leapfrogr/inst/include/state_saver.hpp`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/inst/include/state_saver.hpp)
+1. Add new model code for your variant. At this point I would just add a skeleton with a print line to check your set up works, and fill in actual model code later. Model code should go [here](https://github.com/hivtools/leapfrog/tree/main/leapfrogr/inst/include/models). You can use the following snippet as a template
+   ```
+   #pragma once
 
-You now need to update the R wrapper to be able to call this new variant:
+   #include "../options.hpp"
+   #include "../generated/config_mixer.hpp"
 
-1. In [`R/run_model.R`](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/R/run_model.R) add a new flag to the `run_model` interface for using your new variant
-1. Update the conditionals to build the `model_variant` string based upon your new flag
-1. Add mapping from the string to the model variant struct in Rcpp wrapper code in [`src/leapfrog.cpp`](https://github.com/hivtools/leapfrog/blob/leapfrogr/main/src/leapfrog.cpp). Note use a `constexpr` for the state space to ensure it is evaluated at compile time.
+   namespace leapfrog {
+   namespace internal {
+
+   // model_variant_flag1 & 2 need to be in pascal case, can do one of multiple model variant flags required for this model
+   template<typename Config>
+   concept {{ model_name }}Enabled = {{ model_variant_flag1 }}<Config> && {{ model_variant_flag2 }}<Config>;
+
+   template<typename Config>
+   struct {{ model_name }} {
+     {{ model_name }}(...) {};
+   };
+
+   template<{{ model_name }}Enabled Config>
+   struct {{ model_name }}<Config> {
+     using real_type = typename Config::real_type;
+     using ModelVariant = typename Config::ModelVariant;
+     using SS = Config::SS;
+     using Pars = Config::Pars;
+     using State = Config::State;
+     using Intermediate = Config::Intermediate;
+     using Args = Config::Args;
+
+     // function args
+     int t;
+     const Pars& pars;
+     const State& state_curr;
+     State& state_next;
+     Intermediate& intermediate;
+     const Options<real_type>& opts;
+
+     // only exposing the constructor and some methods
+     public:
+     {{ model_name }}(Args& args):
+       t(args.t),
+       pars(args.pars),
+       state_curr(args.state_curr),
+       state_next(args.state_next),
+       intermediate(args.intermediate),
+       opts(args.opts)
+     {};
+
+     void run() { std::cout << "Running new model\n" };
+   };
+   ```
+1. Call your new model variant at the appropriate point in the [`project_year` function](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L116)
+
+You now need to update the wrappers you want to expose the model variant to. For the R wrapper:
+
+1. Add the variant in the available [model configurations](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/src/leapfrog.cpp#L15).
+1. Add mapping from the string to the model variant struct in Rcpp wrapper code in [`src/leapfrog.cpp`](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/src/leapfrog.cpp#L133).
+1. Add a mapping from the string to the model variant struct in [get_leapfrog_ss function](https://github.com/hivtools/leapfrog/blob/main/leapfrogr/src/leapfrog.cpp#L203).
+1. Add a test which calls your new model variant, to make sure everything is wired up correctly.
+
+For the Python wrapper:
+
+1. Add the variant in the available [model configurations](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrog-py/src/main.cpp#L103).
+1. Add mapping from the string to the model variant struct in the [wrapper code](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrog-py/src/main.cpp#L114).
+1. Add a mapping fromt he string to the model variant struct in the [get_leapfrog_ss function](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrog-py/src/main.cpp#L173).
+
+The C/Delphi interface and C++ interface have more specific usages so we probably don't need to expose new variants via these interfaces. But if we do, speak to Rob for help with how to do this.
