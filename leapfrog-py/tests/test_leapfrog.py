@@ -150,3 +150,13 @@ def test_can_get_leapfrog_state_space():
 
     assert ss_full["hAG"] > ss_coarse["hAG"]
     assert all(val == 1 for val in ss_full["hAG_span"])
+
+
+def test_spectrum_model():
+    parameters = read_h5_file(
+        "../leapfrogr/tests/testthat/testdata/spectrum_params.h5"
+    )
+    ret = run_model(parameters, "Spectrum")
+    returned_vars = list(ret.keys())
+    # Just test 1 of the expected spectrum outputs is returned
+    assert("p_deaths_nonaids_artpop" in returned_vars)
