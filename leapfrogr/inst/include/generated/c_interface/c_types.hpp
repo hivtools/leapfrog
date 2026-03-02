@@ -221,8 +221,6 @@ struct HcParams {
   int ctx_effect_length;
   int hc_art_start;
   int hc_art_start_length;
-  real_type local_adj_factor;
-  int local_adj_factor_length;
   real_type* hc_age_specific_fertility_rate;
   int hc_age_specific_fertility_rate_length;
 };
@@ -277,6 +275,18 @@ struct SpOut {
   int p_excess_deaths_nonaids_on_art_length;
   real_type* p_excess_deaths_nonaids_no_art;
   int p_excess_deaths_nonaids_no_art_length;
+  real_type* p5_infections;
+  int p5_infections_length;
+  real_type* p5_hiv_deaths;
+  int p5_hiv_deaths_length;
+  real_type* p5_deaths;
+  int p5_deaths_length;
+  real_type* median_cd4_init;
+  int median_cd4_init_length;
+  real_type* p5_plhiv;
+  int p5_plhiv_length;
+  real_type* p5_art;
+  int p5_art_length;
 };
 
 template<typename real_type>
