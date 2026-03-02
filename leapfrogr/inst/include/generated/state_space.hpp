@@ -61,10 +61,12 @@ struct SSMixer<ModelVariant, SSPair<false, T>, Ts...>: public SSMixer<ModelVaria
 
 template<MV ModelVariant, typename ...Ts>
 struct SSMixer<ModelVariant, SSPair<true, Sp>, Ts...>: public SSMixer<ModelVariant, Ts...> {
+  static constexpr int pAG_5yr = 17;
 
   static void collect_ss(SSCollector& collector) {
     SSMixer<ModelVariant, Ts...>::collect_ss(collector);
 
+    collector.add("pAG_5yr", pAG_5yr);
   }
 };
 
