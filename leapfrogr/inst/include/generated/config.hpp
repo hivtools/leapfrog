@@ -916,7 +916,6 @@ struct HcConfig {
     >;
     nda::array_ref<real_type, shape_ctx_effect> ctx_effect;
     int hc_art_start;
-    real_type local_adj_factor;
     using shape_hc_age_specific_fertility_rate = nda::shape<
       nda::dim<0, SS::hAG_fertility, 1>,
       nda::dim<0, nda::dynamic, (SS::hAG_fertility)>
@@ -1521,12 +1520,44 @@ struct SpConfig {
       nda::dim<0, SS::NS, (SS::pAG)>
     >;
     nda::array<real_type, shape_p_excess_deaths_nonaids_no_art> p_excess_deaths_nonaids_no_art;
+    using shape_p5_infections = nda::shape<
+      nda::dim<0, SS::pAG_5yr, 1>,
+      nda::dim<0, SS::NS, (SS::pAG_5yr)>
+    >;
+    nda::array<real_type, shape_p5_infections> p5_infections;
+    using shape_p5_hiv_deaths = nda::shape<
+      nda::dim<0, SS::pAG_5yr, 1>,
+      nda::dim<0, SS::NS, (SS::pAG_5yr)>
+    >;
+    nda::array<real_type, shape_p5_hiv_deaths> p5_hiv_deaths;
+    using shape_p5_deaths = nda::shape<
+      nda::dim<0, SS::pAG_5yr, 1>,
+      nda::dim<0, SS::NS, (SS::pAG_5yr)>
+    >;
+    nda::array<real_type, shape_p5_deaths> p5_deaths;
+    real_type median_cd4_init;
+    using shape_p5_plhiv = nda::shape<
+      nda::dim<0, SS::pAG_5yr, 1>,
+      nda::dim<0, SS::NS, (SS::pAG_5yr)>
+    >;
+    nda::array<real_type, shape_p5_plhiv> p5_plhiv;
+    using shape_p5_art = nda::shape<
+      nda::dim<0, SS::pAG_5yr, 1>,
+      nda::dim<0, SS::NS, (SS::pAG_5yr)>
+    >;
+    nda::array<real_type, shape_p5_art> p5_art;
 
     void reset() {
       p_deaths_nonaids_artpop.for_each_value([](real_type& x) { x = 0; });
       p_deaths_nonaids_hivpop.for_each_value([](real_type& x) { x = 0; });
       p_excess_deaths_nonaids_on_art.for_each_value([](real_type& x) { x = 0; });
       p_excess_deaths_nonaids_no_art.for_each_value([](real_type& x) { x = 0; });
+      p5_infections.for_each_value([](real_type& x) { x = 0; });
+      p5_hiv_deaths.for_each_value([](real_type& x) { x = 0; });
+      p5_deaths.for_each_value([](real_type& x) { x = 0; });
+      median_cd4_init = 0;
+      p5_plhiv.for_each_value([](real_type& x) { x = 0; });
+      p5_art.for_each_value([](real_type& x) { x = 0; });
     };
   };
 
@@ -1555,17 +1586,63 @@ struct SpConfig {
       nda::dim<0, nda::dynamic, (SS::pAG) * (SS::NS)>
     >;
     nda::array<real_type, shape_p_excess_deaths_nonaids_no_art> p_excess_deaths_nonaids_no_art;
+    using shape_p5_infections = nda::shape<
+      nda::dim<0, SS::pAG_5yr, 1>,
+      nda::dim<0, SS::NS, (SS::pAG_5yr)>,
+      nda::dim<0, nda::dynamic, (SS::pAG_5yr) * (SS::NS)>
+    >;
+    nda::array<real_type, shape_p5_infections> p5_infections;
+    using shape_p5_hiv_deaths = nda::shape<
+      nda::dim<0, SS::pAG_5yr, 1>,
+      nda::dim<0, SS::NS, (SS::pAG_5yr)>,
+      nda::dim<0, nda::dynamic, (SS::pAG_5yr) * (SS::NS)>
+    >;
+    nda::array<real_type, shape_p5_hiv_deaths> p5_hiv_deaths;
+    using shape_p5_deaths = nda::shape<
+      nda::dim<0, SS::pAG_5yr, 1>,
+      nda::dim<0, SS::NS, (SS::pAG_5yr)>,
+      nda::dim<0, nda::dynamic, (SS::pAG_5yr) * (SS::NS)>
+    >;
+    nda::array<real_type, shape_p5_deaths> p5_deaths;
+    using shape_median_cd4_init = nda::shape<
+      nda::dim<0, nda::dynamic, 1>
+    >;
+    nda::array<real_type, shape_median_cd4_init> median_cd4_init;
+    using shape_p5_plhiv = nda::shape<
+      nda::dim<0, SS::pAG_5yr, 1>,
+      nda::dim<0, SS::NS, (SS::pAG_5yr)>,
+      nda::dim<0, nda::dynamic, (SS::pAG_5yr) * (SS::NS)>
+    >;
+    nda::array<real_type, shape_p5_plhiv> p5_plhiv;
+    using shape_p5_art = nda::shape<
+      nda::dim<0, SS::pAG_5yr, 1>,
+      nda::dim<0, SS::NS, (SS::pAG_5yr)>,
+      nda::dim<0, nda::dynamic, (SS::pAG_5yr) * (SS::NS)>
+    >;
+    nda::array<real_type, shape_p5_art> p5_art;
 
     OutputState(int output_years):
       p_deaths_nonaids_artpop(shape_p_deaths_nonaids_artpop(SS::pAG, SS::NS, output_years)),
       p_deaths_nonaids_hivpop(shape_p_deaths_nonaids_hivpop(SS::pAG, SS::NS, output_years)),
       p_excess_deaths_nonaids_on_art(shape_p_excess_deaths_nonaids_on_art(SS::pAG, SS::NS, output_years)),
-      p_excess_deaths_nonaids_no_art(shape_p_excess_deaths_nonaids_no_art(SS::pAG, SS::NS, output_years))
+      p_excess_deaths_nonaids_no_art(shape_p_excess_deaths_nonaids_no_art(SS::pAG, SS::NS, output_years)),
+      p5_infections(shape_p5_infections(SS::pAG_5yr, SS::NS, output_years)),
+      p5_hiv_deaths(shape_p5_hiv_deaths(SS::pAG_5yr, SS::NS, output_years)),
+      p5_deaths(shape_p5_deaths(SS::pAG_5yr, SS::NS, output_years)),
+      median_cd4_init(shape_median_cd4_init(output_years)),
+      p5_plhiv(shape_p5_plhiv(SS::pAG_5yr, SS::NS, output_years)),
+      p5_art(shape_p5_art(SS::pAG_5yr, SS::NS, output_years))
     {
       p_deaths_nonaids_artpop.for_each_value([](real_type& x) { x = 0; });
       p_deaths_nonaids_hivpop.for_each_value([](real_type& x) { x = 0; });
       p_excess_deaths_nonaids_on_art.for_each_value([](real_type& x) { x = 0; });
       p_excess_deaths_nonaids_no_art.for_each_value([](real_type& x) { x = 0; });
+      p5_infections.for_each_value([](real_type& x) { x = 0; });
+      p5_hiv_deaths.for_each_value([](real_type& x) { x = 0; });
+      p5_deaths.for_each_value([](real_type& x) { x = 0; });
+      median_cd4_init.for_each_value([](real_type& x) { x = 0; });
+      p5_plhiv.for_each_value([](real_type& x) { x = 0; });
+      p5_art.for_each_value([](real_type& x) { x = 0; });
     };
 
     void save_state(const size_t i, const State &state) {
@@ -1585,10 +1662,31 @@ struct SpConfig {
       nda::for_each_index(chip_p_excess_deaths_nonaids_no_art.shape(), [&](auto idx) -> void {
         chip_p_excess_deaths_nonaids_no_art[idx] = state.p_excess_deaths_nonaids_no_art[idx];
       });
+      auto chip_p5_infections = p5_infections(nda::_, nda::_, i);
+      nda::for_each_index(chip_p5_infections.shape(), [&](auto idx) -> void {
+        chip_p5_infections[idx] = state.p5_infections[idx];
+      });
+      auto chip_p5_hiv_deaths = p5_hiv_deaths(nda::_, nda::_, i);
+      nda::for_each_index(chip_p5_hiv_deaths.shape(), [&](auto idx) -> void {
+        chip_p5_hiv_deaths[idx] = state.p5_hiv_deaths[idx];
+      });
+      auto chip_p5_deaths = p5_deaths(nda::_, nda::_, i);
+      nda::for_each_index(chip_p5_deaths.shape(), [&](auto idx) -> void {
+        chip_p5_deaths[idx] = state.p5_deaths[idx];
+      });
+      median_cd4_init(i) = state.median_cd4_init;
+      auto chip_p5_plhiv = p5_plhiv(nda::_, nda::_, i);
+      nda::for_each_index(chip_p5_plhiv.shape(), [&](auto idx) -> void {
+        chip_p5_plhiv[idx] = state.p5_plhiv[idx];
+      });
+      auto chip_p5_art = p5_art(nda::_, nda::_, i);
+      nda::for_each_index(chip_p5_art.shape(), [&](auto idx) -> void {
+        chip_p5_art[idx] = state.p5_art[idx];
+      });
     };
   };
 
-  static constexpr int output_count = 4;
+  static constexpr int output_count = 10;
   static int get_build_output_size(int prev_size) {
     return prev_size + output_count;
   };
