@@ -159,7 +159,6 @@ struct HcAdapter<Language::Cpp, real_type, ModelVariant> {
       .total_births = { owned_pars.hc.total_births.data(), owned_pars.hc.total_births.shape() },
       .ctx_effect = { owned_pars.hc.ctx_effect.data(), owned_pars.hc.ctx_effect.shape() },
       .hc_art_start = owned_pars.hc.hc_art_start,
-      .local_adj_factor = owned_pars.hc.local_adj_factor,
       .hc_age_specific_fertility_rate = { owned_pars.hc.hc_age_specific_fertility_rate.data(), owned_pars.hc.hc_age_specific_fertility_rate.shape() }
     };
   };
@@ -203,7 +202,7 @@ struct SpAdapter<Language::Cpp, real_type, ModelVariant> {
     };
   };
 
-  static constexpr int output_count = 4;
+  static constexpr int output_count = 10;
 
   static int build_output(
     int index,
@@ -214,6 +213,12 @@ struct SpAdapter<Language::Cpp, real_type, ModelVariant> {
     write_data<real_type, typename Config::OutputState::shape_p_deaths_nonaids_hivpop>(output_file, "p_deaths_nonaids_hivpop", state.p_deaths_nonaids_hivpop);
     write_data<real_type, typename Config::OutputState::shape_p_excess_deaths_nonaids_on_art>(output_file, "p_excess_deaths_nonaids_on_art", state.p_excess_deaths_nonaids_on_art);
     write_data<real_type, typename Config::OutputState::shape_p_excess_deaths_nonaids_no_art>(output_file, "p_excess_deaths_nonaids_no_art", state.p_excess_deaths_nonaids_no_art);
+    write_data<real_type, typename Config::OutputState::shape_p5_infections>(output_file, "p5_infections", state.p5_infections);
+    write_data<real_type, typename Config::OutputState::shape_p5_hiv_deaths>(output_file, "p5_hiv_deaths", state.p5_hiv_deaths);
+    write_data<real_type, typename Config::OutputState::shape_p5_deaths>(output_file, "p5_deaths", state.p5_deaths);
+    write_data<real_type, typename Config::OutputState::shape_median_cd4_init>(output_file, "median_cd4_init", state.median_cd4_init);
+    write_data<real_type, typename Config::OutputState::shape_p5_plhiv>(output_file, "p5_plhiv", state.p5_plhiv);
+    write_data<real_type, typename Config::OutputState::shape_p5_art>(output_file, "p5_art", state.p5_art);
     return index + output_count;
   };
 };

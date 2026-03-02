@@ -578,8 +578,6 @@ struct HcOwnedPars {
 
     int hc_art_start;
 
-    real_type local_adj_factor;
-
     using shape_hc_age_specific_fertility_rate = nda::shape<
     nda::dim<0, SS::hAG_fertility, 1>,
     nda::dim<0, nda::dynamic, (SS::hAG_fertility)>
@@ -630,7 +628,6 @@ struct HcOwnedPars {
       .total_births = read_data<real_type, typename Pars::shape_total_births>(params_file, "total_births", { nda::dim<>(0, opts.proj_steps, 1) }),
       .ctx_effect = read_data<real_type, typename Pars::shape_ctx_effect>(params_file, "ctx_effect", { nda::dim<>(0, 3, 1) }),
       .hc_art_start = read_data_scalar<int>(params_file, "hc_art_start"),
-      .local_adj_factor = read_data_scalar<real_type>(params_file, "frr_scalar"),
       .hc_age_specific_fertility_rate = read_data<real_type, typename Pars::shape_hc_age_specific_fertility_rate>(params_file, "hc_age_specific_fertility_rate", { nda::dim<>(0, SS::hAG_fertility, 1), nda::dim<>(0, opts.proj_steps, (SS::hAG_fertility)) })
     };
   };

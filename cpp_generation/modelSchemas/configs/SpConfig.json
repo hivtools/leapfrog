@@ -4,7 +4,9 @@
   "namespace": "sp",
   "enable_if": "run_spectrum_model",
   "state_space": {
-    "default": {}
+    "default": {
+      "pAG_5yr": 17
+    }
   },
   "pars": {
   },
@@ -35,6 +37,29 @@
     "p_excess_deaths_nonaids_no_art": {
       "num_type": "real_type",
       "dims": ["SS::pAG", "SS::NS"]
+    },
+    "p5_infections": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG_5yr", "SS::NS"]
+    },
+    "p5_hiv_deaths": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG_5yr", "SS::NS"]
+    },
+    "p5_deaths": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG_5yr", "SS::NS"]
+    },
+    "median_cd4_init": {
+      "num_type": "real_type"
+    },
+    "p5_plhiv": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG_5yr", "SS::NS"]
+    },
+    "p5_art": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG_5yr", "SS::NS"]
     }
   }
 }

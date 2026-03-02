@@ -354,7 +354,6 @@ struct HcAdapter<Language::Py, real_type, ModelVariant> {
       .total_births = parse_data<real_type, 1>(data, "total_births", { nda::dim<>(0, opts.proj_steps, 1) }),
       .ctx_effect = parse_data<real_type, 1>(data, "ctx_effect", { nda::dim<>(0, 3, 1) }),
       .hc_art_start = nb::cast<int>(data["hc_art_start"]),
-      .local_adj_factor = nb::cast<real_type>(data["frr_scalar"]),
       .hc_age_specific_fertility_rate = parse_data<real_type, 2>(data, "hc_age_specific_fertility_rate", { nda::dim<>(0, SS::hAG_fertility, 1), nda::dim<>(0, opts.proj_steps, (SS::hAG_fertility)) })
     };
   };
@@ -517,10 +516,16 @@ struct SpAdapter<Language::Py, real_type, ModelVariant> {
     fill_initial_state<real_type, typename Config::State::shape_p_deaths_nonaids_hivpop>(data, "p_deaths_nonaids_hivpop", state.p_deaths_nonaids_hivpop);
     fill_initial_state<real_type, typename Config::State::shape_p_excess_deaths_nonaids_on_art>(data, "p_excess_deaths_nonaids_on_art", state.p_excess_deaths_nonaids_on_art);
     fill_initial_state<real_type, typename Config::State::shape_p_excess_deaths_nonaids_no_art>(data, "p_excess_deaths_nonaids_no_art", state.p_excess_deaths_nonaids_no_art);
+    fill_initial_state<real_type, typename Config::State::shape_p5_infections>(data, "p5_infections", state.p5_infections);
+    fill_initial_state<real_type, typename Config::State::shape_p5_hiv_deaths>(data, "p5_hiv_deaths", state.p5_hiv_deaths);
+    fill_initial_state<real_type, typename Config::State::shape_p5_deaths>(data, "p5_deaths", state.p5_deaths);
+    state.median_cd4_init = nb::cast<real_type>(data["median_cd4_init"]);
+    fill_initial_state<real_type, typename Config::State::shape_p5_plhiv>(data, "p5_plhiv", state.p5_plhiv);
+    fill_initial_state<real_type, typename Config::State::shape_p5_art>(data, "p5_art", state.p5_art);
     return state;
   };
 
-  static constexpr int output_count = 4;
+  static constexpr int output_count = 10;
 
   static int build_output(
     int index,
@@ -540,6 +545,24 @@ struct SpAdapter<Language::Py, real_type, ModelVariant> {
     const int py_rank_p_excess_deaths_nonaids_no_art = 3;
     size_t py_dims_p_excess_deaths_nonaids_no_art[py_rank_p_excess_deaths_nonaids_no_art] = { SS::pAG, SS::NS, output_years };
     ret["p_excess_deaths_nonaids_no_art"] = py_array<real_type>(state.p_excess_deaths_nonaids_no_art.data(), py_rank_p_excess_deaths_nonaids_no_art, py_dims_p_excess_deaths_nonaids_no_art);
+    const int py_rank_p5_infections = 3;
+    size_t py_dims_p5_infections[py_rank_p5_infections] = { SS::pAG_5yr, SS::NS, output_years };
+    ret["p5_infections"] = py_array<real_type>(state.p5_infections.data(), py_rank_p5_infections, py_dims_p5_infections);
+    const int py_rank_p5_hiv_deaths = 3;
+    size_t py_dims_p5_hiv_deaths[py_rank_p5_hiv_deaths] = { SS::pAG_5yr, SS::NS, output_years };
+    ret["p5_hiv_deaths"] = py_array<real_type>(state.p5_hiv_deaths.data(), py_rank_p5_hiv_deaths, py_dims_p5_hiv_deaths);
+    const int py_rank_p5_deaths = 3;
+    size_t py_dims_p5_deaths[py_rank_p5_deaths] = { SS::pAG_5yr, SS::NS, output_years };
+    ret["p5_deaths"] = py_array<real_type>(state.p5_deaths.data(), py_rank_p5_deaths, py_dims_p5_deaths);
+    const int py_rank_median_cd4_init = 1;
+    size_t py_dims_median_cd4_init[py_rank_median_cd4_init] = { output_years };
+    ret["median_cd4_init"] = py_array<real_type>(state.median_cd4_init.data(), py_rank_median_cd4_init, py_dims_median_cd4_init);
+    const int py_rank_p5_plhiv = 3;
+    size_t py_dims_p5_plhiv[py_rank_p5_plhiv] = { SS::pAG_5yr, SS::NS, output_years };
+    ret["p5_plhiv"] = py_array<real_type>(state.p5_plhiv.data(), py_rank_p5_plhiv, py_dims_p5_plhiv);
+    const int py_rank_p5_art = 3;
+    size_t py_dims_p5_art[py_rank_p5_art] = { SS::pAG_5yr, SS::NS, output_years };
+    ret["p5_art"] = py_array<real_type>(state.p5_art.data(), py_rank_p5_art, py_dims_p5_art);
     return index + output_count;
   };
 
@@ -560,6 +583,22 @@ struct SpAdapter<Language::Py, real_type, ModelVariant> {
     const int py_rank_p_excess_deaths_nonaids_no_art = 2;
     size_t py_dims_p_excess_deaths_nonaids_no_art[py_rank_p_excess_deaths_nonaids_no_art] = { SS::pAG, SS::NS };
     ret["p_excess_deaths_nonaids_no_art"] = py_array<real_type>(state.p_excess_deaths_nonaids_no_art.data(), py_rank_p_excess_deaths_nonaids_no_art, py_dims_p_excess_deaths_nonaids_no_art);
+    const int py_rank_p5_infections = 2;
+    size_t py_dims_p5_infections[py_rank_p5_infections] = { SS::pAG_5yr, SS::NS };
+    ret["p5_infections"] = py_array<real_type>(state.p5_infections.data(), py_rank_p5_infections, py_dims_p5_infections);
+    const int py_rank_p5_hiv_deaths = 2;
+    size_t py_dims_p5_hiv_deaths[py_rank_p5_hiv_deaths] = { SS::pAG_5yr, SS::NS };
+    ret["p5_hiv_deaths"] = py_array<real_type>(state.p5_hiv_deaths.data(), py_rank_p5_hiv_deaths, py_dims_p5_hiv_deaths);
+    const int py_rank_p5_deaths = 2;
+    size_t py_dims_p5_deaths[py_rank_p5_deaths] = { SS::pAG_5yr, SS::NS };
+    ret["p5_deaths"] = py_array<real_type>(state.p5_deaths.data(), py_rank_p5_deaths, py_dims_p5_deaths);
+    ret["median_cd4_init"] = state.median_cd4_init;
+    const int py_rank_p5_plhiv = 2;
+    size_t py_dims_p5_plhiv[py_rank_p5_plhiv] = { SS::pAG_5yr, SS::NS };
+    ret["p5_plhiv"] = py_array<real_type>(state.p5_plhiv.data(), py_rank_p5_plhiv, py_dims_p5_plhiv);
+    const int py_rank_p5_art = 2;
+    size_t py_dims_p5_art[py_rank_p5_art] = { SS::pAG_5yr, SS::NS };
+    ret["p5_art"] = py_array<real_type>(state.p5_art.data(), py_rank_p5_art, py_dims_p5_art);
     return index + output_count;
   };
 };
