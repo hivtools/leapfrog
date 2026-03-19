@@ -1,5 +1,5 @@
 [project]
-name = "cpp_generation"
+name = "codegen"
 version = "0.0.1"
 description = ''
 readme = "README.md"

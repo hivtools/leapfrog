@@ -11,3 +11,8 @@ README.html
 model-outputs
 leapfrogr/tests/testthat/testdata/*.h5
 leapfrogr/tests/testthat/testdata/*.rds
+leapfrog-core/include/generated
+leapfrogr/inst/include
+leapfrogr/src/Makevars
+leapfrogr/src/Makevars.win
+leapfrog.Rcheck

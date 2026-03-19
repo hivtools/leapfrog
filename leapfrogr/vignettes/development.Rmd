@@ -28,7 +28,7 @@ All model functions are templated on the model variant, and any conditional beha
 
 ### Model variants
 
-All model variants are in the [`models` directory](https://github.com/hivtools/leapfrog/tree/main/leapfrogr/inst/include/models). Every model variant should be created as a struct. We can use the struct to alias state space variables or bits of the config to make the code more easily readable. The struct should expose at least one public function which can then be called from the [`project_year`](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L116) function.
+All model variants are in the [`models` directory](https://github.com/hivtools/leapfrog/tree/main/leapfrog-core/include/models). Every model variant should be created as a struct. We can use the struct to alias state space variables or bits of the config to make the code more easily readable. The struct should expose at least one public function which can then be called from the [`project_year`](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L116) function.
 
 To explain what is going on in the model struct we can look at the [adult HIV model as an example](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/models/adult_hiv_model_simulation.hpp)
 
@@ -58,7 +58,7 @@ Leapfrog runs a top-level loop over the time step. At the end of each time step,
 run_model(data, parameters, 1970:2030, 10, 2030)
 ```
 
-This time output is managed by the internal `OutputState` struct see e.g. [`leapfrogr/inst/include/leapfrog.hpp`](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L110)
+This time output is managed by the internal `OutputState` struct see e.g. [`leapfrog-core/include/leapfrog.hpp`](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L110)
 
 ## Modifying config to add new input, output or intermediate data
 
@@ -101,7 +101,7 @@ To add a new variant. Firstly, in the code generation:
 
 In the C++ code:
 
-1. Add new model code for your variant. At this point I would just add a skeleton with a print line to check your set up works, and fill in actual model code later. Model code should go [here](https://github.com/hivtools/leapfrog/tree/main/leapfrogr/inst/include/models). You can use the following snippet as a template
+1. Add new model code for your variant. At this point I would just add a skeleton with a print line to check your set up works, and fill in actual model code later. Model code should go [here](https://github.com/hivtools/leapfrog/tree/main/leapfrog-core/include/models). You can use the following snippet as a template
    ```
    #pragma once
 

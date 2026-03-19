@@ -1,9 +1,8 @@
 version = 1
-revision = 1
 requires-python = ">=3.10"
 
 [[package]]
-name = "cpp-generation"
+name = "codegen"
 version = "0.0.1"
 source = { virtual = "." }
 dependencies = [
