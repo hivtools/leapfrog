@@ -1,0 +1,16 @@
+name: 'Generate C++ headers'
+description: 'Runs codegen to produce generated C++ headers from model schemas'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: "codegen/uv.lock"
+
+    - name: Generate C++ headers
+      shell: bash
+      working-directory: codegen
+      run: uv run src/main.py

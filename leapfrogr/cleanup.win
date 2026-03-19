@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo "Cleaning up Makevars"
+rm src/Makevars
+rm src/Makevars.win

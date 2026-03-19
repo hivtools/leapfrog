@@ -325,8 +325,6 @@ type
     ctxEffectLength: Integer;
     hcArtStart: Integer;
     hcArtStartLength: Integer;
-    localAdjFactor: Double;
-    localAdjFactorLength: Integer;
     hcAgeSpecificFertilityRate: PDouble;
     hcAgeSpecificFertilityRateLength: Integer;
 end;
@@ -371,7 +369,6 @@ type
     totalBirths: TGBFixedArray<Double>;
     ctxEffect: TGBFixedArray<Double>;
     hcArtStart: Integer;
-    localAdjFactor: Double;
     hcAgeSpecificFertilityRate: TGBFixedArray<Double>;
     function getView(): LeapfrogHivChildParamsView;
     procedure writeToDisk(dir: string);
@@ -852,8 +849,6 @@ begin;
   Result.ctxEffectLength := ctxEffect.GetLength();
   Result.hcArtStart := hcArtStart;
   Result.hcArtStartLength := 1;
-  Result.localAdjFactor := localAdjFactor;
-  Result.localAdjFactorLength := 1;
   Result.hcAgeSpecificFertilityRate := PDouble(hcAgeSpecificFertilityRate.data);
   Result.hcAgeSpecificFertilityRateLength := hcAgeSpecificFertilityRate.GetLength();
 end;

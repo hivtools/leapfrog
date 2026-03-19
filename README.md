@@ -49,7 +49,7 @@ pip install leapfrog-py
 ## Simulation model
 
 The simulation model is implemented in a header-only C++ library located
-in [`leapfrogr/inst/include/leapfrog.hpp`](leapfrogr/inst/include/leapfrog.hpp). This location
+in [`leapfrog-core/include/leapfrog.hpp`](leapfrog-core/include/leapfrog.hpp). This location
 allows the C++ code to be imported in other R packages via specifying
 `LinkingTo: leapfrog` in the `DESCRIPTION` file.
 
@@ -63,7 +63,7 @@ See the [R README](leapfrogr/README.md) for details of running the model from R.
 ### Simulation model
 
 The simulation model is implemented as templated C++ code in
-`leapfrogr/inst/include/leapfrog.hpp`. This is so the simulation model may be
+`leapfrog-core/include/leapfrog.hpp`. This is so the simulation model may be
 developed as a standalone C++ library that can be called by other
 software without requiring R-specific code features. The code uses
 header-only open source libraries to maximize portability.

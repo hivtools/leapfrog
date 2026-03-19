@@ -14,6 +14,7 @@ void run_initial_year_calculations(
   using Cfg = internal::Config<L, real_type, ModelVariant>;
   using SS = Cfg::SS;
 
+
   // Initialise initial year ouputs
   const auto& p_dp = pars.dp;
   auto& is_dp = initial_state.dp;

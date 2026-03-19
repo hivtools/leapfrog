@@ -30,7 +30,7 @@ Python and C. Note the R package is in a subdirectory `leapfrogr` but
 the installed package is called `leapfrog`.
 
 The simulation model is implemented in a header-only C++ library located
-in [`leapfrogr/inst/include/`](leapfrogr/inst/include/). This location
+in [`leapfrog-core/include/`](leapfrog-core/include/). This location
 allows the C++ code to be imported in other R packages via specifying
 `LinkingTo: leapfrog` in the `DESCRIPTION` file.
 
@@ -71,6 +71,18 @@ pjnz <- system.file("pjnz/bwa_aim-adult-art-no-special-elig_v6.13_2022-04-18.PJN
                     package = "leapfrog", mustWork = TRUE)
 
 parameters <- process_pjnz(pjnz)
+#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
+#> found in DP for adult_non_aids_excess_mort, returning NULL
+#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
+#> found in DP for incidence_input, returning NULL
+#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
+#> found in DP for adult_art_adj_factor, returning NULL
+#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
+#> found in DP for adult_art_adj_factor_flag, returning NULL
+#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
+#> found in DP for adult_pats_alloc_to_from_other_region, returning NULL
+#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
+#> found in DP for nosocomial_infections, returning NULL
 ```
 
 Simulate adult ‘full’ age group (single-year age) model from 1970 to
@@ -85,6 +97,18 @@ groups). You need to first prepare the coarse age group parameters
 
 ``` r
 params_coarse <- process_pjnz(pjnz, use_coarse_age_groups = TRUE)
+#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
+#> found in DP for adult_non_aids_excess_mort, returning NULL
+#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
+#> found in DP for incidence_input, returning NULL
+#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
+#> found in DP for adult_art_adj_factor, returning NULL
+#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
+#> found in DP for adult_art_adj_factor_flag, returning NULL
+#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
+#> found in DP for adult_pats_alloc_to_from_other_region, returning NULL
+#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
+#> found in DP for nosocomial_infections, returning NULL
 lsimC <- run_model(params_coarse, "HivCoarseAgeStratification", 1970:2030)
 ```
 
@@ -103,7 +127,7 @@ plot(1970:2030, prevF, type = "l", main = "Prevalence 15-49")
 lines(1970:2030, prevC, col = 2)
 ```
 
-<img src="man/figures/README-sim_prev-1.png" width="100%" />
+<img src="man/figures/README-sim_prev-1.png" alt="" width="100%" />
 
 ``` r
 
@@ -111,7 +135,7 @@ plot(1970:2030, deathsF, type = "l", main = "AIDS Deaths 50+ years")
 lines(1970:2030, deathsC, col = 2)
 ```
 
-<img src="man/figures/README-sim_prev-2.png" width="100%" />
+<img src="man/figures/README-sim_prev-2.png" alt="" width="100%" />
 
 ## Benchmarking
 
@@ -129,7 +153,7 @@ lintr::lint_package()
 Lint C++ code with [cpplint](https://github.com/cpplint/cpplint)
 
 ``` console
-cpplint leapfrogr/inst/include/*
+cpplint leapfrog-core/include/*
 ```
 
 ## Code design
@@ -141,6 +165,22 @@ simulation via [Rcpp](http://dirk.eddelbuettel.com/code/rcpp.html) and
 [RcppEigen](http://dirk.eddelbuettel.com/code/rcpp.eigen.html).
 
 ## Development notes
+
+### Package loading
+
+The C++ header library lives outside of the package, which brings a
+couple of to package installation.
+
+`devtools::load_all()` should work as expected, but before you install
+the package you need to set `LEAPFROG_INCLUDE` env var to point to the
+`leapfrog-core/include` directory. There is a helper script for this in
+`leapfrogr` directory, run
+
+    ./scripts/setup_dev_env.R
+
+Note that this won’t work for CRAN, CRAN needs a tarball which includes
+all sources, if and when we build for CRAN we’ll need to add a release
+script which copies the sources into place.
 
 ### Testing
 
@@ -157,12 +197,13 @@ test data
     ./inst/standalone_model/extract_data
 
 If you want to update the test data, it should be updated in the
-`../scripts/create_test_data.R` script so that we know how it was created
-and we can do it again fairly easily. Steps are 1. Update the script and
-generate the test data 1. Update the standalone data which is built from
-this `./scripts/update_standalone_data`. You might need to add a new
-mapping from R to serialized name if you are adding new input data 1.
-Unzip this for automated tests `./inst/standalone_model/extract_data`
+`../scripts/create_test_data.R` script so that we know how it was
+created and we can do it again fairly easily. Steps are 1. Update the
+script and generate the test data 1. Update the standalone data which is
+built from this `./scripts/update_standalone_data`. You might need to
+add a new mapping from R to serialized name if you are adding new input
+data 1. Unzip this for automated tests
+`./inst/standalone_model/extract_data`
 
 ## License
 

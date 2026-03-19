@@ -41,7 +41,7 @@ remotes::install_github("hivtools/leapfrog", subdir = "leapfrogr")
 
 The "leapfrog" R package is an R interface around the "leapfrog" simulation model. The model is written in C++ and has interfaces in R, Python and C. Note the R package is in a subdirectory `leapfrogr` but the installed package is called `leapfrog`.
 
-The simulation model is implemented in a header-only C++ library located in [`leapfrogr/inst/include/`](leapfrogr/inst/include/). This location allows the C++ code to be imported in other R packages via specifying `LinkingTo: leapfrog` in the `DESCRIPTION` file.
+The simulation model is implemented in a header-only C++ library located in [`leapfrog-core/include/`](leapfrog-core/include/). This location allows the C++ code to be imported in other R packages via specifying `LinkingTo: leapfrog` in the `DESCRIPTION` file.
 
 ```{=html}
 > [!IMPORTANT]
@@ -124,7 +124,7 @@ lintr::lint_package()
 Lint C++ code with [cpplint](https://github.com/cpplint/cpplint)
 
 ```console
-cpplint leapfrogr/inst/include/*
+cpplint leapfrog-core/include/*
 ```
 
 ## Code design
@@ -136,6 +136,18 @@ via [Rcpp](http://dirk.eddelbuettel.com/code/rcpp.html) and
 [RcppEigen](http://dirk.eddelbuettel.com/code/rcpp.eigen.html).
 
 ## Development notes
+
+### Package loading
+
+The C++ header library lives outside of the package, which brings a couple of to package installation.
+
+`devtools::load_all()` should work as expected, but before you install the package you need to set `LEAPFROG_INCLUDE` env var to point to the `leapfrog-core/include` directory. There is a helper script for this in `leapfrogr` directory, run
+
+```
+./scripts/setup_dev_env.R
+```
+
+Note that this won't work for CRAN, CRAN needs a tarball which includes all sources, if and when we build for CRAN we'll need to add a release script which copies the sources into place.
 
 ### Testing
 
