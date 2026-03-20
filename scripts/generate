@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -e
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 if ! uv --version >> /dev/null 2>&1; then
   echo -n "Couldn't find uv on your system, would you like to install uv? (y/n) "
   read user_response
@@ -22,7 +26,7 @@ fi
 
 echo "Generating C++..."
 
-cd cpp_generation; uv run src/main.py
+(cd $here/../codegen && uv run src/main.py)
 
 cat << "EOF"
 

@@ -33,7 +33,7 @@ You can install the development version of leapfrog from
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("hivtools/leapfrog", subdir = "leapfrogr")
+remotes::install_github("hivtools/leapfrog", subdir = "leapfrogr", ref = "r-release")
 ```
 
 ### Python
@@ -72,10 +72,10 @@ header-only open source libraries to maximize portability.
 
 To change what parameters can be passed in from any interface or the structure of
 `Intermediate`, `State` or `OutputState`, please modify json files
-[here](./cpp_generation/modelSchemas/).
+[here](./leapfrog-core/model_schemas/).
 
-Then to run code generation follow
-[cpp\_generation/README.md](./cpp_generation/README.md)
+Then to run code generation run `./scripts/generate`. See
+[codegen/README.md](./codegen/README.md) for more details.
 
 ## Development notes
 
@@ -98,7 +98,7 @@ Then to run code generation follow
 
 ### Testing
 
-To run any of the tests you will need to generate test data. To do this you must have `R` installed, you'll have to change directories to `leapfrog` and run
+To run any of the tests you will need to generate test data. To do this you must have `R` installed, you'll have to change directories to `leapfrogr` and run
 
 ```bash
 ./scripts/create_test_data.R
