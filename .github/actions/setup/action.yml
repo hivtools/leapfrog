@@ -6,7 +6,11 @@ runs:
   steps:
     - name: Set LEAPFROG_INCLUDE
       shell: bash
-      run: echo "LEAPFROG_INCLUDE=$GITHUB_WORKSPACE/leapfrog-core/include" >> $GITHUB_ENV
+      run: |
+        # GITHUB_WORKSPACE uses backslashes on Windows, which break sed substitution.
+        # Normalise to forward slashes before writing to GITHUB_ENV.
+        INCLUDE_PATH=$(echo "$GITHUB_WORKSPACE/leapfrog-core/include" | tr '\\' '/')
+        echo "LEAPFROG_INCLUDE=$INCLUDE_PATH" >> $GITHUB_ENV
 
     - name: Install uv
       uses: astral-sh/setup-uv@v7
