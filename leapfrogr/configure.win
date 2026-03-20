@@ -43,6 +43,11 @@ EOF
   exit 1
 fi
 
+# Normalise to forward slashes — backslashes in Windows paths are interpreted
+# as sed escape sequences (e.g. \l lowercases the next char, \a is BEL),
+# which mangles the path in the Makevars substitution below.
+LEAPFROG_INCLUDE=$(echo "$LEAPFROG_INCLUDE" | tr '\\' '/')
+
 echo "* Writing src/Makevars"
 sed -e "s|@LEAPFROG_INCLUDE@|${LEAPFROG_INCLUDE}|" src/Makevars.in > src/Makevars
 sed -e "s|@LEAPFROG_INCLUDE@|${LEAPFROG_INCLUDE}|" src/Makevars.win.in > src/Makevars.win
