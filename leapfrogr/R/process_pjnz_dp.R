@@ -24,10 +24,10 @@ process_pjnz_dp <- function(dat, pars, dim_vars) {
 
   netmigr_5year <- sweep(pars$migr_age_dist, 2:3, pars$migr_rate, "*")
   netmigr <- array(
-    dim = c(length(dim_vars$a_80plus_no_80), length(dim_vars$g), length(dim_vars$years)),
+    dim = c(length(dim_vars$a_80plus_no_80), length(dim_vars$s), length(dim_vars$years)),
     dimnames = list(
       age = dim_vars$a_80plus_no_80,
-      sex = dim_vars$g,
+      sex = dim_vars$s,
       year = dim_vars$years
     )
   )

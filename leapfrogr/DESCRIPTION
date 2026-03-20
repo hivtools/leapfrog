@@ -38,6 +38,7 @@ Imports:
     beers,
     hdf5r,
     magrittr,
+    pjnz (>= 0.0.2),
     Rcpp
 Suggests:
     abind,

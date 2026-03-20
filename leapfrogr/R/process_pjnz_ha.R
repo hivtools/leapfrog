@@ -1,4 +1,4 @@
-process_pjnz_ha <- function(dat, pars, dim_vars, dp, use_coarse_age_groups = FALSE) {
+process_pjnz_ha <- function(dat, pars, dim_vars, use_coarse_age_groups = FALSE) {
   if (!is.null(pars$incidence_by_fit) && !is.null(pars$incidence_options)) {
     pars$incidinput <- pars$incidence_by_fit[pars$incidence_options + 1, ]
   } else if (!is.null(pars$incidence_input)) {
@@ -30,21 +30,21 @@ process_pjnz_ha <- function(dat, pars, dim_vars, dp, use_coarse_age_groups = FAL
   ## Action: to parse this check that one of these rows 2 or 3 after the <HIVSexRatio MV>
   ## has data, but not both.
   time_idx <- 4:(4 + length(dim_vars$years) - 1)
-  if ("<HIVSexRatio MV>" %in% dp$Tag) {
-    hiv_sex_ratio_idx <- which(dp[, 1] == "<HIVSexRatio MV>")
-    first_entries <- dp[hiv_sex_ratio_idx + 2:3, 4]
+  if ("<HIVSexRatio MV>" %in% dat$dp_raw$Tag) {
+    hiv_sex_ratio_idx <- which(dat$dp_raw[, 1] == "<HIVSexRatio MV>")
+    first_entries <- dat$dp_raw[hiv_sex_ratio_idx + 2:3, 4]
     data_row <- which(first_entries != "" & !is.na(first_entries))
     if (length(data_row) != 1) {
       stop("DP tag <HIVSexRatio MV> not parsed correctly")
     }
     pars$incrr_sex <- array(
-      as.numeric(unlist(dp[hiv_sex_ratio_idx + data_row + 1, time_idx])),
+      as.numeric(unlist(dat$dp_raw[hiv_sex_ratio_idx + data_row + 1, time_idx])),
       dim = length(dim_vars$years),
       dimnames = list(dim_vars$years)
     )
-  } else if ("<SexRatioByEpidPatt MV>" %in% dp$Tag) {
-    sexincrr_idx <- as.integer(dp[which(dp[, 1] == "<IncEpidemicRGIdx MV>") + 2, 4]) # 0 based indexing
-    data <- dp[which(dp[, 1] == "<SexRatioByEpidPatt MV>") + 3:8, time_idx][sexincrr_idx + 1, ]
+  } else if ("<SexRatioByEpidPatt MV>" %in% dat$dp_raw$Tag) {
+    sexincrr_idx <- as.integer(dat$dp_raw[which(dat$dp_raw[, 1] == "<IncEpidemicRGIdx MV>") + 2, 4]) # 0 based indexing
+    data <- dat$dp_raw[which(dat$dp_raw[, 1] == "<SexRatioByEpidPatt MV>") + 3:8, time_idx][sexincrr_idx + 1, ]
     pars$incrr_sex <- array(
       as.numeric(data),
       dim = length(dim_vars$years),

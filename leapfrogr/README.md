@@ -89,18 +89,15 @@ pjnz <- system.file("pjnz/bwa_aim-adult-art-no-special-elig_v6.13_2022-04-18.PJN
                     package = "leapfrog", mustWork = TRUE)
 
 parameters <- process_pjnz(pjnz)
-#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
-#> found in DP for adult_non_aids_excess_mort, returning NULL
-#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
-#> found in DP for incidence_input, returning NULL
-#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
-#> found in DP for adult_art_adj_factor, returning NULL
-#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
-#> found in DP for adult_art_adj_factor_flag, returning NULL
-#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
-#> found in DP for adult_pats_alloc_to_from_other_region, returning NULL
-#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
-#> found in DP for nosocomial_infections, returning NULL
+#> ℹ Some tags were not found in file:
+#> • Tag not found in DP for `adult_non_aids_excess_mort`, returning `NULL`
+#> • Tag not found in DP for `incidence_input`, returning `NULL`
+#> • Tag not found in DP for `adult_art_adj_factor`, returning `NULL`
+#> • Tag not found in DP for `adult_art_adj_factor_flag`, returning `NULL`
+#> • Tag not found in DP for `adult_pats_alloc_to_from_other_region`, returning
+#>   `NULL`
+#> • Tag not found in DP for `nosocomial_infections`, returning `NULL`
+#> This message is displayed once per session.
 ```
 
 Simulate adult ‘full’ age group (single-year age) model from 1970 to
@@ -115,18 +112,6 @@ groups). You need to first prepare the coarse age group parameters
 
 ``` r
 params_coarse <- process_pjnz(pjnz, use_coarse_age_groups = TRUE)
-#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
-#> found in DP for adult_non_aids_excess_mort, returning NULL
-#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
-#> found in DP for incidence_input, returning NULL
-#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
-#> found in DP for adult_art_adj_factor, returning NULL
-#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
-#> found in DP for adult_art_adj_factor_flag, returning NULL
-#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
-#> found in DP for adult_pats_alloc_to_from_other_region, returning NULL
-#> Warning in get_data_from_cfg(name, metadata[[name]], dim_vars, dp): Tag not
-#> found in DP for nosocomial_infections, returning NULL
 lsimC <- run_model(params_coarse, "HivCoarseAgeStratification", 1970:2030)
 ```
 
