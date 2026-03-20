@@ -14,12 +14,12 @@ install.packages(
   repos = c("https://hivtools.r-universe.dev", "https://cloud.r-project.org"))
 ```
 
-You can install the development version of leapfrog from
-[GitHub](https://github.com/) with:
+You can install the latest release from [GitHub](https://github.com/)
+with:
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("hivtools/leapfrog", subdir = "leapfrogr")
+remotes::install_github("hivtools/leapfrog", subdir = "leapfrogr", ref = "r-release")
 ```
 
 ## Simulation model
@@ -178,9 +178,14 @@ the package you need to set `LEAPFROG_INCLUDE` env var to point to the
 
     ./scripts/setup_dev_env.R
 
-Note that this won’t work for CRAN, CRAN needs a tarball which includes
-all sources, if and when we build for CRAN we’ll need to add a release
-script which copies the sources into place.
+Note that `LEAPFROG_INCLUDE` is not needed for
+`remotes::install_github(..., ref = "r-release")` or r-universe installs
+— those use the `r-release` branch which has the C++ headers bundled into
+`inst/include/`. The `r-release` branch is updated automatically on every
+merge to `main`.
+
+For CRAN submission, build the tarball from the `r-release` branch — the
+headers are already present so it will pass `R CMD check`.
 
 ### Testing
 

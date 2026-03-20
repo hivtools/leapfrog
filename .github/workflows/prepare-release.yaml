@@ -1,0 +1,37 @@
+name: Prepare r-release branch
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Generate C++ headers
+        uses: ./.github/actions/setup
+
+      - name: Copy headers into leapfrogr
+        run: |
+          mkdir -p leapfrogr/inst/include
+          cp -r leapfrog-core/include/. leapfrogr/inst/include/
+
+      - name: Stage bundled headers
+        run: |
+          git checkout -B r-release
+          git add -f leapfrogr/inst/include/
+
+      - uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: bundle leapfrog-core headers for release"
+          branch: r-release
+          skip_dirty_check: false

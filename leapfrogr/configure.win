@@ -3,13 +3,47 @@ set -e
 
 echo "* Running leapfrog configure (Windows)"
 
-if [ -n "$LEAPFROG_INCLUDE" ]; then
+# Resolve the absolute path to leapfrog-core headers.
+# configure runs from the package source root before any staging, so the
+# relative path resolves correctly here even if compilation is later staged
+# to a temp directory (which would break a relative path in Makevars).
+# The order of resolution here is as follows:
+# 1. ./inst/include - bundled headers - used for release candidate built on GitHub
+# and potentially CRAN in the future. These should not exist in development.
+# 2. $LEAPFROG_INCLUDE - used for CI and devtools::install when in development
+# 3. ../leapfrog-core/include - used for development devtools::load_all when
+# the env var is not set. This will work fine for load_all, just not when
+# installing the package.
+if [ -d "./inst/include" ]; then
+  LEAPFROG_INCLUDE="$(cd ./inst/include && pwd)"
+  echo "* Using bundled headers at ${LEAPFROG_INCLUDE}"
+elif [ -n "$LEAPFROG_INCLUDE" ]; then
   echo "* Using LEAPFROG_INCLUDE=${LEAPFROG_INCLUDE}"
 elif [ -d "../leapfrog-core/include" ]; then
   LEAPFROG_INCLUDE="$(cd ../leapfrog-core/include && pwd)"
   echo "* Found leapfrog-core at ${LEAPFROG_INCLUDE}"
 else
   cat << "EOF"
+
+         ___      ___
+        /   \----/   \
+       |-----|  |-----|
+       /\_0_/    \_0_/\
+     -|      o  o      |-
+    /  \______________/  \
+    \ \ |   |    |   | / /
+     ww ooooo----ooooo ww
+
+===================================================================
+  THIS IS A PROBLEM!!!!!!!!!!!
+  leapfrog-core not found, if this is in install set
+  LEAPFROG_INCLUDE by running ./scripts/setup_dev_env.R
+===================================================================
+EOF
+  exit 1
+fi
+
+cat << "EOF"
             _____________________
             |###################|
             |###################|
@@ -34,14 +68,10 @@ else
        /  | |                  / | \
       /   |  \                /  |  \
      /.-./.-.|               /.-.|.-.\
-===================================================================
-  THIS IS A PROBLEM!!!!!!!!!!!
-  leapfrog-core not found, if this is in install set
-  LEAPFROG_INCLUDE by running ./scripts/setup_dev_env.R
-===================================================================
+
+  Leapfrog found, proceeding!
+
 EOF
-  exit 1
-fi
 
 # Normalise to forward slashes — backslashes in Windows paths are interpreted
 # as sed escape sequences (e.g. \l lowercases the next char, \a is BEL),

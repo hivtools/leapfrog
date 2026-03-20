@@ -7,7 +7,17 @@ echo "* Running leapfrog configure"
 # configure runs from the package source root before any staging, so the
 # relative path resolves correctly here even if compilation is later staged
 # to a temp directory (which would break a relative path in Makevars).
-if [ -n "$LEAPFROG_INCLUDE" ]; then
+# The order of resolution here is as follows:
+# 1. ./inst/include - bundled headers - used for release candidate built on GitHub
+# and potentially CRAN in the future. These should not exist in development.
+# 2. $LEAPFROG_INCLUDE - used for CI and devtools::install when in development
+# 3. ../leapfrog-core/include - used for development devtools::load_all when
+# the env var is not set. This will work fine for load_all, just not when
+# installing the package.
+if [ -d "./inst/include" ]; then
+  LEAPFROG_INCLUDE="$(cd ./inst/include && pwd)"
+  echo "* Using bundled headers at ${LEAPFROG_INCLUDE}"
+elif [ -n "$LEAPFROG_INCLUDE" ]; then
   echo "* Using LEAPFROG_INCLUDE=${LEAPFROG_INCLUDE}"
 elif [ -d "../leapfrog-core/include" ]; then
   LEAPFROG_INCLUDE="$(cd ../leapfrog-core/include && pwd)"
