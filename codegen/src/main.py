@@ -32,11 +32,14 @@ def assert_path_exists(path: str):
 ROOT = find_project_root()
 LF_ROOT = os.path.abspath(os.path.join(ROOT, ".."))
 SCHEMAS_DIR = os.path.join(LF_ROOT, "leapfrog-core", "model_schemas")
-GENERATED_CPP_DEST = os.path.join(LF_ROOT, "leapfrog-core", "include", "generated")
+LF_CORE_INCLUDE = os.path.join(LF_ROOT, "leapfrog-core", "include")
+GENERATED_CPP_DEST = os.path.join(LF_CORE_INCLUDE, "generated")
 GENERATED_DELPHI_DEST = os.path.join(LF_ROOT, "delphi")
 assert_path_exists(SCHEMAS_DIR)
-assert_path_exists(GENERATED_CPP_DEST)
+assert_path_exists(LF_CORE_INCLUDE)
 assert_path_exists(GENERATED_DELPHI_DEST)
+
+Path(GENERATED_CPP_DEST).mkdir(exist_ok=True)
 
 
 def relative_file_path(*paths):
@@ -59,6 +62,7 @@ def load_children_model_schemas(paths):
 def generate(template_path, dest_path, *args, **kwargs):
   template = env.get_template(template_path)
   output = template.render(*args, **kwargs)
+  Path(os.path.dirname(dest_path)).mkdir(exist_ok=True)
   with open(dest_path, "w") as f:
     f.write(output)
 
@@ -107,6 +111,7 @@ def generate_delphi(template_name, *args, **kwargs):
   template_path = f'delphi/{template_name}.j2'
   dest_path = os.path.join(GENERATED_DELPHI_DEST, f"{template_name}.pas")
   generate(template_path, dest_path, *args, **kwargs)
+
 
 dat = load_json(SCHEMAS_DIR, "FullModel.json")
 dat = { k: load_children_model_schemas(v) for k, v in dat.items() }
