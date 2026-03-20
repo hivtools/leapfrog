@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Generate C++ headers
-        uses: ./.github/actions/codegen
+        uses: ./.github/actions/setup
 
       - name: install valgrind
         run: |
