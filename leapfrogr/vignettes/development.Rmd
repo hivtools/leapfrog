@@ -22,7 +22,7 @@ The overall aim of this is to allow researchers to write these model extensions 
 
 ### Model variants
 
-Leapfrog has a set of `ModelVariant`s which can be run. See [`leapfrog/cpp_generation/modelSchemas/ModelVariants.json`](https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/ModelVariants.json) for details of these. Each model variant is a collection of boolean switches or enums. These are used to turn on or off different parts of the code when it is run, so that leapfrog can have different extensions and we can compose these together in any way we want. These model variants are evaluated at compile time. When you compile the code, there will be an instance in the compiled binary for each variant your code will call. This will cause the binary to be larger but we chose to do it this way because we wanted the speed from the compile-time polymorphism.
+Leapfrog has a set of `ModelVariant`s which can be run. See [`leapfrog-core/model_schemas/ModelVariants.json`](https://github.com/hivtools/leapfrog/blob/main/leapfrog-core/model_schemas/ModelVariants.json) for details of these. Each model variant is a collection of boolean switches or enums. These are used to turn on or off different parts of the code when it is run, so that leapfrog can have different extensions and we can compose these together in any way we want. These model variants are evaluated at compile time. When you compile the code, there will be an instance in the compiled binary for each variant your code will call. This will cause the binary to be larger but we chose to do it this way because we wanted the speed from the compile-time polymorphism.
 
 All model functions are templated on the model variant, and any conditional behaviour based upon the model variant should be written as an [`if constexpr`](https://www.learncpp.com/cpp-tutorial/constexpr-if-statements/).
 
@@ -62,7 +62,7 @@ This time output is managed by the internal `OutputState` struct see e.g. [`leap
 
 ## Modifying config to add new input, output or intermediate data
 
-Leapfrog uses code generation to write the code for wiring up the input and output data. This is to reduce the number of locations you need to make changes when you add new input data or return new data from the model. In short it amounts to updating one of the configs at [`leapfrogr/inst/cpp_generation/modelSchemas/configs`](https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/configs) and running  [`scripts/generate`](https://github.com/hivtools/leapfrog/blob/main/scripts/generate)
+Leapfrog uses code generation to write the code for wiring up the input and output data. This is to reduce the number of locations you need to make changes when you add new input data or return new data from the model. In short it amounts to updating one of the configs at [`leapfrog-core/model_schemas/configs`](https://github.com/hivtools/leapfrog/tree/main/leapfrog-core/model_schemas/configs) and running  [`scripts/generate`](https://github.com/hivtools/leapfrog/blob/main/scripts/generate)
 
 ### Config structure
 
@@ -80,7 +80,7 @@ The config is JSON, it has the following sections:
 1. `intermediate` - use to define any intermediate bits of data used during the model run. We define them here because then they can be statically allocated instead of allocated every iteration of the time loop. These are automatically set to 0 at the end of every time step. Each piece of intermediate data needs a "num_type" and "dims".
 1. `state` - data output from the model. Defined as a JSON object, these are the results filled in during a model run. Each item needs a "num_type" and (optionally) "dims". When a model is run the output is a named list/dictionary with keys matching from the JSON object and values corresponding to the "dims" with an additional time dimension. So if the state defines `p_totpop` with dims `["SS::pAG", "SS::NS"]` the output will have `p_totpop` with 3 dimensions of lengths pAG, NS and number of output years.
 
-After making changes to the [config](https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/configs), run the generate script [`scripts/generate`](https://github.com/hivtools/leapfrog/blob/main/scripts/generate). Note that this will update several of the generated files. The generated files should never be manually changed as the generate script will completely rewrite it.
+After making changes to the [config](https://github.com/hivtools/leapfrog/tree/main/leapfrog-core/model_schemas/configs), run the generate script [`scripts/generate`](https://github.com/hivtools/leapfrog/blob/main/scripts/generate). Note that this will update several of the generated files. The generated files should never be manually changed as the generate script will completely rewrite it.
 
 After regenerating the code, rebuild the project and you are ready to use the new input data in C++.
 
@@ -95,8 +95,8 @@ The required changes will be different depending on if your new variant is one o
 
 To add a new variant. Firstly, in the code generation:
 
-1. Add a new flag and variant in [`cpp_generation/modelSchemas/ModelVariants.json`](https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/cpp_generation/modelSchemas/ModelVariants.json). Make sure the new flag is set to true or false in all other model variants.
-1. If you have new input data or output data for this variant, add a new config file in the [`configs dir`](https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/configs) and fill in the details as required
+1. Add a new flag and variant in [`leapfrog-core/model_schemas/ModelVariants.json`](https://github.com/hivtools/leapfrog/blob/main/leapfrog-core/model_schemas/ModelVariants.json). Make sure the new flag is set to true or false in all other model variants.
+1. If you have new input data or output data for this variant, add a new config file in the [`configs dir`](https://github.com/hivtools/leapfrog/tree/main/leapfrog-core/model_schemas/configs) and fill in the details as required
 1. Run the generate script
 
 In the C++ code:

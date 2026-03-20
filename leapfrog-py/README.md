@@ -73,7 +73,7 @@ run_model_from_state(
 ### Run model for a single year
 
 The previous two functions will return a dictionary with values that are have one more
-dimension (time dimension) than the state specified in the [model config](../cpp_generation/modelSchemas/configs/DpConfig.json). This means if you want to carry on from that initial single year state you would have to use the `get_time_slice` utility at index 1. Example:
+dimension (time dimension) than the state specified in the [model config](../leapfrog-core/model_schemas/configs/DpConfig.json). This means if you want to carry on from that initial single year state you would have to use the `get_time_slice` utility at index 1. Example:
 
 ```python
 from leapfrog_py import run_model, run_model_from_state, get_time_slice

@@ -8,6 +8,7 @@ uv sync
 ```
 
 You can run the code generation via
+
 ```cmd
 uv run src/main.py
 ```

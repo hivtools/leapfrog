@@ -2,6 +2,6 @@
 
 echo "Cleaning up Makevars"
 
-if [ -f "./src/Makevars"] ; then
+if [ -f "./src/Makevars" ] ; then
   rm ./src/Makevars
 fi
