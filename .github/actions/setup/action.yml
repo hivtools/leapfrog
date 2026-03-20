@@ -1,9 +1,13 @@
-name: 'Generate C++ headers'
-description: 'Runs codegen to produce generated C++ headers from model schemas'
+name: 'Setup leapfrog'
+description: 'Sets LEAPFROG_INCLUDE and generates C++ headers from model schemas'
 
 runs:
   using: "composite"
   steps:
+    - name: Set LEAPFROG_INCLUDE
+      shell: bash
+      run: echo "LEAPFROG_INCLUDE=$GITHUB_WORKSPACE/leapfrog-core/include" >> $GITHUB_ENV
+
     - name: Install uv
       uses: astral-sh/setup-uv@v7
       with:
