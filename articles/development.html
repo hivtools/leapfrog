@@ -103,7 +103,7 @@ it. Or at least document it better.</p>
 <h3 id="model-variants">Model variants<a class="anchor" aria-label="anchor" href="#model-variants"></a>
 </h3>
 <p>Leapfrog has a set of <code>ModelVariant</code>s which can be run.
-See <a href="https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/ModelVariants.json" class="external-link"><code>leapfrog/cpp_generation/modelSchemas/ModelVariants.json</code></a>
+See <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrog-core/model_schemas/ModelVariants.json" class="external-link"><code>leapfrog-core/model_schemas/ModelVariants.json</code></a>
 for details of these. Each model variant is a collection of boolean
 switches or enums. These are used to turn on or off different parts of
 the code when it is run, so that leapfrog can have different extensions
@@ -120,7 +120,7 @@ an <a href="https://www.learncpp.com/cpp-tutorial/constexpr-if-statements/" clas
 <div class="section level3">
 <h3 id="model-variants-1">Model variants<a class="anchor" aria-label="anchor" href="#model-variants-1"></a>
 </h3>
-<p>All model variants are in the <a href="https://github.com/hivtools/leapfrog/tree/main/leapfrogr/inst/include/models" class="external-link"><code>models</code>
+<p>All model variants are in the <a href="https://github.com/hivtools/leapfrog/tree/main/leapfrog-core/include/models" class="external-link"><code>models</code>
 directory</a>. Every model variant should be created as a struct. We can
 use the struct to alias state space variables or bits of the config to
 make the code more easily readable. The struct should expose at least
@@ -194,7 +194,7 @@ will output for all time steps, but if say you are only interested in
 the last time step. You can return this by running e.g.</p>
 <pre><code><span><span class="fu"><a href="../reference/run_model.html">run_model</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">parameters</span>, <span class="fl">1970</span><span class="op">:</span><span class="fl">2030</span>, <span class="fl">10</span>, <span class="fl">2030</span><span class="op">)</span></span></code></pre>
 <p>This time output is managed by the internal <code>OutputState</code>
-struct see e.g. <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L110" class="external-link"><code>leapfrogr/inst/include/leapfrog.hpp</code></a></p>
+struct see e.g. <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/leapfrogr/inst/include/leapfrog.hpp#L110" class="external-link"><code>leapfrog-core/include/leapfrog.hpp</code></a></p>
 </div>
 </div>
 <div class="section level2">
@@ -203,7 +203,7 @@ struct see e.g. <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea470
 <p>Leapfrog uses code generation to write the code for wiring up the
 input and output data. This is to reduce the number of locations you
 need to make changes when you add new input data or return new data from
-the model. In short it amounts to updating one of the configs at <a href="https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/configs" class="external-link"><code>leapfrogr/inst/cpp_generation/modelSchemas/configs</code></a>
+the model. In short it amounts to updating one of the configs at <a href="https://github.com/hivtools/leapfrog/tree/main/leapfrog-core/model_schemas/configs" class="external-link"><code>leapfrog-core/model_schemas/configs</code></a>
 and running <a href="https://github.com/hivtools/leapfrog/blob/main/scripts/generate" class="external-link"><code>scripts/generate</code></a></p>
 <div class="section level3">
 <h3 id="config-structure">Config structure<a class="anchor" aria-label="anchor" href="#config-structure"></a>
@@ -266,7 +266,7 @@ dimension. So if the state defines <code>p_totpop</code> with dims
 <code>p_totpop</code> with 3 dimensions of lengths pAG, NS and number of
 output years.</li>
 </ol>
-<p>After making changes to the <a href="https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/configs" class="external-link">config</a>,
+<p>After making changes to the <a href="https://github.com/hivtools/leapfrog/tree/main/leapfrog-core/model_schemas/configs" class="external-link">config</a>,
 run the generate script <a href="https://github.com/hivtools/leapfrog/blob/main/scripts/generate" class="external-link"><code>scripts/generate</code></a>.
 Note that this will update several of the generated files. The generated
 files should never be manually changed as the generate script will
@@ -290,11 +290,11 @@ variant is one of the first types, which brings additional input/output
 or the second type which does not bring additional data.</p>
 <p>To add a new variant. Firstly, in the code generation:</p>
 <ol style="list-style-type: decimal">
-<li>Add a new flag and variant in <a href="https://github.com/hivtools/leapfrog/blob/aa72a70ea4705489325185409223ddfc4aad75ef/cpp_generation/modelSchemas/ModelVariants.json" class="external-link"><code>cpp_generation/modelSchemas/ModelVariants.json</code></a>.
+<li>Add a new flag and variant in <a href="https://github.com/hivtools/leapfrog/blob/main/leapfrog-core/model_schemas/ModelVariants.json" class="external-link"><code>leapfrog-core/model_schemas/ModelVariants.json</code></a>.
 Make sure the new flag is set to true or false in all other model
 variants.</li>
 <li>If you have new input data or output data for this variant, add a
-new config file in the <a href="https://github.com/hivtools/leapfrog/blob/main/cpp_generation/modelSchemas/configs" class="external-link"><code>configs dir</code></a>
+new config file in the <a href="https://github.com/hivtools/leapfrog/tree/main/leapfrog-core/model_schemas/configs" class="external-link"><code>configs dir</code></a>
 and fill in the details as required</li>
 <li>Run the generate script</li>
 </ol>
@@ -303,7 +303,7 @@ and fill in the details as required</li>
 <li>
 <p>Add new model code for your variant. At this point I would just
 add a skeleton with a print line to check your set up works, and fill in
-actual model code later. Model code should go <a href="https://github.com/hivtools/leapfrog/tree/main/leapfrogr/inst/include/models" class="external-link">here</a>.
+actual model code later. Model code should go <a href="https://github.com/hivtools/leapfrog/tree/main/leapfrog-core/include/models" class="external-link">here</a>.
 You can use the following snippet as a template</p>
 <pre><code>#pragma once
 
