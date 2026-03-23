@@ -35,3 +35,4 @@ jobs:
           commit_message: "chore: bundle leapfrog-core headers for release"
           branch: r-release
           skip_dirty_check: false
+          push_options: '--force'
