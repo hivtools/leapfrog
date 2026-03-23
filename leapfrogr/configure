@@ -24,26 +24,6 @@ elif [ -d "../leapfrog-core/include" ]; then
   echo "* Found leapfrog-core at ${LEAPFROG_INCLUDE}"
 else
   cat << "EOF"
-
-         ___      ___
-        /   \----/   \
-       |-----|  |-----|
-       /\_0_/    \_0_/\
-     -|      o  o      |-
-    /  \______________/  \
-    \ \ |   |    |   | / /
-     ww ooooo----ooooo ww
-
-===================================================================
-  THIS IS A PROBLEM!!!!!!!!!!!
-  leapfrog-core not found, if this is in install set
-  LEAPFROG_INCLUDE by running ./scripts/setup_dev_env.R
-===================================================================
-EOF
-  exit 1
-fi
-
-cat << "EOF"
             _____________________
             |###################|
             |###################|
@@ -69,9 +49,16 @@ cat << "EOF"
       /   |  \                /  |  \
      /.-./.-.|               /.-.|.-.\
 
-  Leapfrog found, proceeding!
-
+===================================================================
+  THIS IS A PROBLEM!!!!!!!!!!!
+  leapfrog-core not found, if this is in install set
+  LEAPFROG_INCLUDE by running ./scripts/setup_dev_env.R
+===================================================================
 EOF
+  exit 1
+fi
+
+echo "* Leapfrog found, proceeding!"
 
 echo "* Writing src/Makevars"
 sed -e "s|@LEAPFROG_INCLUDE@|${LEAPFROG_INCLUDE}|" src/Makevars.in > src/Makevars
