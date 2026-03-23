@@ -1,0 +1,58 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+name: leapfrog-core
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    name: build and test
+
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Generate C++ headers
+        uses: ./.github/actions/setup
+
+      - name: Install HDF5
+        run: sudo apt-get install -y libhdf5-dev
+
+      - name: Configure
+        working-directory: leapfrog-core
+        run: cmake --preset ci
+
+      - name: Build
+        working-directory: leapfrog-core
+        run: cmake --build --preset ci
+
+      - name: Test
+        working-directory: leapfrog-core
+        run: ctest --preset ci
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    name: static analysis
+
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Generate C++ headers
+        uses: ./.github/actions/setup
+
+      - name: Install dependencies
+        run: sudo apt-get install -y libhdf5-dev clang-tidy-18 cppcheck
+
+      - name: Configure with static analysis
+        working-directory: leapfrog-core
+        run: cmake --preset dev-tools
+
+      - name: Build (runs clang-tidy and cppcheck alongside compilation)
+        working-directory: leapfrog-core
+        run: cmake --build --preset dev-tools

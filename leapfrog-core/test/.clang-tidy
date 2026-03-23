@@ -1,0 +1,8 @@
+---
+# Inherits root .clang-tidy and disables checks that produce false positives
+# when clang-tidy expands Catch2 test macros (TEST_CASE, REQUIRE, etc.).
+Checks: >
+  *,
+  -cert-err58-cpp,
+  -cppcoreguidelines-avoid-do-while,
+  -misc-use-anonymous-namespace

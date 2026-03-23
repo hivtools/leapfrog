@@ -16,3 +16,4 @@ leapfrogr/inst/include
 leapfrogr/src/Makevars
 leapfrogr/src/Makevars.win
 leapfrog.Rcheck
+leapfrog-core/build

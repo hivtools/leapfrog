@@ -1,0 +1,76 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "dev",
+      "displayName": "Development",
+      "description": "Debug build with compiler warnings and tests",
+      "binaryDir": "${sourceDir}/build/dev",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_TESTING": "ON",
+        "LEAPFROG_WARNINGS_AS_ERRORS": "OFF"
+      }
+    },
+    {
+      "name": "dev-tools",
+      "displayName": "Development with static analysis",
+      "description": "Debug build with clang-tidy and cppcheck enabled",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build/dev-tools",
+      "cacheVariables": {
+        "LEAPFROG_ENABLE_CLANG_TIDY": "ON",
+        "LEAPFROG_ENABLE_CPPCHECK": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Optimised release build",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "ci",
+      "displayName": "CI",
+      "description": "Release build with tests, used in CI",
+      "binaryDir": "${sourceDir}/build/ci",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_TESTING": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "dev",       "configurePreset": "dev" },
+    { "name": "dev-tools", "configurePreset": "dev-tools" },
+    { "name": "release",   "configurePreset": "release" },
+    { "name": "ci",        "configurePreset": "ci" }
+  ],
+  "testPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev",
+      "output": { "outputOnFailure": true },
+      "filter": { "exclude": { "label": "benchmark" } }
+    },
+    {
+      "name": "ci",
+      "configurePreset": "ci",
+      "output": { "outputOnFailure": true },
+      "filter": { "exclude": { "label": "benchmark" } }
+    },
+    {
+      "name": "benchmark",
+      "displayName": "Benchmarks",
+      "description": "Run benchmarks explicitly (excluded from dev/ci presets)",
+      "configurePreset": "release",
+      "output": { "outputOnFailure": true, "verbosity": "verbose" },
+      "filter": { "include": { "label": "benchmark" } }
+    }
+  ]
+}
