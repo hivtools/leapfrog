@@ -31,7 +31,9 @@ Config/testthat/edition: 3
 Config/build/extra-sources:
     configure*,
     ../leapfrog-core/include/*
-Additional_repositories: https://mrc-ide.r-universe.dev
+Additional_repositories:
+    https://hivtools.r-universe.dev,
+    https://mrc-ide.r-universe.dev
 LinkingTo:
     Rcpp
 Imports:
