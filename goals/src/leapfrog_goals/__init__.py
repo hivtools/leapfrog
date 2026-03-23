@@ -4,8 +4,8 @@ import h5py
 import numpy as np
 from h5py._hl.dataset import Dataset
 
-from leapfrog_py._core import (
-    get_leapfrog_ss_py,
+from leapfrog_goals._core import (
+    get_goals_ss_py,
     run_base_model,
     run_base_model_from_state,
     run_base_model_single_year,
@@ -56,36 +56,31 @@ def concat_on_time_dim(state1, state2):
     return {k: np.concatenate((state1[k], state2[k]), axis=-1) for k in state1.keys()}
 
 
-def run_model(
+def run_goals(
     parameters: LeapfrogParameters,
-    configuration: str = "HivFullAgeStratification",
     output_years: LeapfrogRange = range(1970, 2031),
 ):
-    return run_base_model(parameters, configuration, output_years)
+    return run_base_model(parameters, output_years)
 
 
-def run_model_from_state(
+def run_goals_from_state(
     parameters: LeapfrogParameters,
-    configuration: str,
     initial_state: LeapfrogDataSingleYear,
     simulation_start_year: int,
     output_years: LeapfrogRange = range(1970, 2031),
 ):
     return run_base_model_from_state(
-        parameters, configuration, initial_state, simulation_start_year, output_years
+        parameters, initial_state, simulation_start_year, output_years
     )
 
 
-def run_model_single_year(
+def run_goals_single_year(
     parameters: LeapfrogParameters,
-    configuration: str,
     initial_state: LeapfrogDataSingleYear,
     simulation_start_year: int,
 ):
-    return run_base_model_single_year(
-        parameters, configuration, initial_state, simulation_start_year
-    )
+    return run_base_model_single_year(parameters, initial_state, simulation_start_year)
 
 
-def get_leapfrog_ss(configuration: str) -> LeapfrogStateSpace:
-    return get_leapfrog_ss_py(configuration)
+def get_goals_ss(configuration: str) -> LeapfrogStateSpace:
+    return get_goals_ss_py(configuration)
