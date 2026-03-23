@@ -1,6 +1,7 @@
 import json
 import os
 import copy
+from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -11,26 +12,57 @@ import utils.delphi
 import utils.general
 
 
+def find_project_root(marker_file="pyproject.toml"):
+  """Walk up from the current file until a marker file is found."""
+  current = Path(__file__).resolve().parent
+  while current != current.parent:
+    if (current / marker_file).exists():
+      return current
+    current = current.parent
+  err_msg = f"Project root not found, could not find '{marker_file}'"
+  raise FileNotFoundError(err_msg)
+
+
+def assert_path_exists(path: str):
+  if not Path(path).exists():
+    err_msg = f"Path does not exist '{path}'"
+    raise FileNotFoundError(err_msg)
+
+
+ROOT = find_project_root()
+LF_ROOT = os.path.abspath(os.path.join(ROOT, ".."))
+SCHEMAS_DIR = os.path.join(LF_ROOT, "leapfrog-core", "model_schemas")
+LF_CORE_INCLUDE = os.path.join(LF_ROOT, "leapfrog-core", "include")
+GENERATED_CPP_DEST = os.path.join(LF_CORE_INCLUDE, "generated")
+GENERATED_DELPHI_DEST = os.path.join(LF_ROOT, "delphi")
+assert_path_exists(SCHEMAS_DIR)
+assert_path_exists(LF_CORE_INCLUDE)
+assert_path_exists(GENERATED_DELPHI_DEST)
+
+Path(GENERATED_CPP_DEST).mkdir(exist_ok=True)
+
+
 def relative_file_path(*paths):
   dirname = os.path.dirname(__file__)
   return os.path.join(dirname, *paths)
 
 
 def load_json(*paths):
-  with open(relative_file_path(*paths)) as f:
+  with open(os.path.join(*paths)) as f:
     return json.load(f)
 
 
 def load_children_model_schemas(paths):
   if isinstance(paths, str):
-    return load_json("..", "modelSchemas", paths)
+    return load_json(SCHEMAS_DIR, paths)
   else:
-    return [load_json("..", "modelSchemas", p) for p in paths]
+    return [load_json(SCHEMAS_DIR, p) for p in paths]
 
 
 def generate(template_path, dest_path, *args, **kwargs):
   template = env.get_template(template_path)
   output = template.render(*args, **kwargs)
+  Path(os.path.dirname(dest_path)).mkdir(exist_ok=True)
   with open(dest_path, "w") as f:
     f.write(output)
 
@@ -71,17 +103,17 @@ def add_output_year_dim(cfg):
 
 def generate_hpp(template_name, *args, **kwargs):
   template_path = f'cpp/{template_name}.j2'
-  dest_path = relative_file_path("..", "..", "leapfrogr", "inst", "include", "generated", f"{template_name}.hpp")
+  dest_path = os.path.join(GENERATED_CPP_DEST, f"{template_name}.hpp")
   generate(template_path, dest_path, *args, **kwargs)
 
 
 def generate_delphi(template_name, *args, **kwargs):
   template_path = f'delphi/{template_name}.j2'
-  dest_path = relative_file_path("..", "..", "delphi", f"{template_name}.pas")
+  dest_path = os.path.join(GENERATED_DELPHI_DEST, f"{template_name}.pas")
   generate(template_path, dest_path, *args, **kwargs)
 
 
-dat = load_json("..", "modelSchemas", "FullModel.json")
+dat = load_json(SCHEMAS_DIR, "FullModel.json")
 dat = { k: load_children_model_schemas(v) for k, v in dat.items() }
 
 

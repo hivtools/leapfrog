@@ -35,7 +35,10 @@ jobs:
         working-directory: leapfrogr
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+
+      - name: Generate C++ headers
+        uses: ./.github/actions/setup
 
       - uses: r-lib/actions/setup-pandoc@v2
 
@@ -44,7 +47,7 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
-          extra-repositories: https://mrc-ide.r-universe.dev
+          extra-repositories: "https://mrc-ide.r-universe.dev https://hivtools.r-universe.dev"
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:

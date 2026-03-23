@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "* Running leapfrog configure"
+echo "* Running leapfrog configure (Windows)"
 
 # Resolve the absolute path to leapfrog-core headers.
 # configure runs from the package source root before any staging, so the
@@ -60,7 +60,13 @@ fi
 
 echo "* Leapfrog found, proceeding!"
 
+# Normalise to forward slashes — backslashes in Windows paths are interpreted
+# as sed escape sequences (e.g. \l lowercases the next char, \a is BEL),
+# which mangles the path in the Makevars substitution below.
+LEAPFROG_INCLUDE=$(echo "$LEAPFROG_INCLUDE" | tr '\\' '/')
+
 echo "* Writing src/Makevars"
 sed -e "s|@LEAPFROG_INCLUDE@|${LEAPFROG_INCLUDE}|" src/Makevars.in > src/Makevars
+sed -e "s|@LEAPFROG_INCLUDE@|${LEAPFROG_INCLUDE}|" src/Makevars.win.in > src/Makevars.win
 
 echo "* Configure complete"

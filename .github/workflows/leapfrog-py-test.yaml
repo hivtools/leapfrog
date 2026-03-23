@@ -27,16 +27,19 @@ jobs:
         working-directory: leapfrog-py
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+
+      - name: Generate C++ headers
+        uses: ./.github/actions/setup
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: "leapfrog-py/uv.lock"
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.config.py }}
 
@@ -47,7 +50,7 @@ jobs:
         with:
           r-version: release
           use-public-rspm: true
-          extra-repositories: https://mrc-ide.r-universe.dev
+          extra-repositories: "https://mrc-ide.r-universe.dev https://hivtools.r-universe.dev"
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:

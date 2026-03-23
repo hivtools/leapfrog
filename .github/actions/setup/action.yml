@@ -1,0 +1,24 @@
+name: 'Setup leapfrog'
+description: 'Sets LEAPFROG_INCLUDE and generates C++ headers from model schemas'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set LEAPFROG_INCLUDE
+      shell: bash
+      run: |
+        # GITHUB_WORKSPACE uses backslashes on Windows, which break sed substitution.
+        # Normalise to forward slashes before writing to GITHUB_ENV.
+        INCLUDE_PATH=$(echo "$GITHUB_WORKSPACE/leapfrog-core/include" | tr '\\' '/')
+        echo "LEAPFROG_INCLUDE=$INCLUDE_PATH" >> $GITHUB_ENV
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+        cache-dependency-glob: "codegen/uv.lock"
+
+    - name: Generate C++ headers
+      shell: bash
+      working-directory: codegen
+      run: uv run src/main.py

@@ -28,19 +28,25 @@ URL: https://github.com/hivtools/leapfrog
 BugReports: https://github.com/hivtools/leapfrog/issues
 Depends: R (>= 4.3.0)
 Config/testthat/edition: 3
-Additional_repositories: https://mrc-ide.r-universe.dev
+Config/build/extra-sources:
+    configure*,
+    ../leapfrog-core/include/*
+Additional_repositories:
+    https://hivtools.r-universe.dev,
+    https://mrc-ide.r-universe.dev
 LinkingTo:
     Rcpp
 Imports:
     beers,
-    dplyr,
     hdf5r,
     magrittr,
+    pjnz (>= 0.0.2),
     Rcpp
 Suggests:
     abind,
     docopt,
     devtools,
+    dplyr,
     knitr,
     plyr,
     RcppEigen,
