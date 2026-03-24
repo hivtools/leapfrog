@@ -91,11 +91,38 @@
 leapfrog. There are some organisation and structural things about
 leapfrog which were added to enable different researchers to make
 extensions to the model. In a way that we can turn these on or off at
-run time to run different variants of the model.</p>
+compile time to run different variants of the model.</p>
 <p>The overall aim of this is to allow researchers to write these model
 extensions with as little overhead as possible. If you find something
 annoying or difficult, let me know and we can probably try and simplify
 it. Or at least document it better.</p>
+<div class="section level2">
+<h2 id="prerequisite">Prerequisite<a class="anchor" aria-label="anchor" href="#prerequisite"></a>
+</h2>
+<ul>
+<li>
+<a href="https://www.r-project.org/" class="external-link">R</a> for generating test data
+and runnng R wrapper</li>
+<li>
+<a href="https://docs.astral.sh/uv/" class="external-link">uv</a> for codegen and Python
+wrappers</li>
+<li>(Optionally) <a href="https://cmake.org/" class="external-link">CMake</a> (&gt;3.15) if
+running the C++ standalone wrapper or Python wrappers</li>
+</ul>
+<div class="section level3">
+<h3 id="initial-setup">Initial setup<a class="anchor" aria-label="anchor" href="#initial-setup"></a>
+</h3>
+<p>To make changes to Leapfrog you will first need to</p>
+<ol style="list-style-type: decimal">
+<li>Create the test data by running
+<code>./scripts/create_test_data.R</code> from the project root</li>
+<li>Generate the C++ code by running <code>./scripts/generate</code>
+from the project root</li>
+</ol>
+<p>You should then be able to run leapfrog via R, Python, or C++. See
+the <code>README.md</code> in the specific wrappers.</p>
+</div>
+</div>
 <div class="section level2">
 <h2 id="structure">Structure<a class="anchor" aria-label="anchor" href="#structure"></a>
 </h2>
