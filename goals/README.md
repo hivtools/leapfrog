@@ -1,9 +1,9 @@
-# leapfrog-py
+# goals
 
-## Installation
+## Installation (TODO)
 
 ```bash
-pip install leapfrog-py
+pip install leapfrog-goals
 ```
 
 ## Usage
@@ -14,10 +14,16 @@ pip install leapfrog-py
 In the following example you will need parameters - inputs to the model. We have provided utilities to easily get test parameters (we use hdf5 file format to store these). If you already have different parameters in the correct shape you can skip this section.
 
 ```python
-from leapfrog_py import read_h5_file
+from leapfrog_goals import read_h5_file
 
-parameters_adult = read_h5_file("../leapfrogr/tests/testthat/testdata/adult_parms_full.h5")
 parameters_child = read_h5_file("../leapfrogr/tests/testthat/testdata/child_parms_full.h5")
+```
+
+We need to add a good way to import the goals parameters, for now add manually.
+
+```python
+import numpy as np
+parameters_child["ex_input"] = np.full((81, 2), 1)
 ```
 
 
@@ -26,35 +32,29 @@ parameters_child = read_h5_file("../leapfrogr/tests/testthat/testdata/child_parm
 Here are a couple of ways to run the model
 
 ```python
-from leapfrog_py import run_model
+from leapfrog_goals import run_goals
 
-# Default configuration is HivFullAgeStratification and output_years is range(1970, 2031)
-run_model(parameters_adult)
-
-# Can give another configuration but make sure the parameters match it
-run_model(parameters_child, "ChildModel")
+# Run the model
+run_goals(parameters_child)
 
 # Can specify which years to output from the model
-run_model(parameters_child, "ChildModel", [1970, 1971, 2000])
+run_goals(parameters_child, [1970, 1971, 2000])
 ```
 
 
-### Run model from initial state
+### Run model from initial state (TODO)
 
 You can also run the model from an initial state. For example, to run the model in two parts
 
 ```python
-from leapfrog_py import run_model, run_model_from_state, get_time_slice
+from leapfrog_goals import run_goals, run_goals_from_state, get_time_slice
 
 # Run model until year 2000
-ret = run_model(parameters_adult, "HivFullAgeStratification", range(1970, 2001))
+ret = run_goals(parameters_child, range(1970, 2001))
 
-run_model_from_state(
+run_goals_from_state(
     # parameters
-    parameters_adult,
-
-    # configuration
-    "HivFullAgeStratification",
+    parameters_child,
 
     # get the last time slice of the state returned by run model so we
     # can continue from where the model left off
@@ -76,14 +76,13 @@ The previous two functions will return a dictionary with values that are have on
 dimension (time dimension) than the state specified in the [model config](../leapfrog-core/model_schemas/configs/DpConfig.json). This means if you want to carry on from that initial single year state you would have to use the `get_time_slice` utility at index 1. Example:
 
 ```python
-from leapfrog_py import run_model, run_model_from_state, get_time_slice
+from leapfrog_goals import run_goals, run_goals_from_state, get_time_slice
 
-ret_single_year = run_model(parameters_adult, "HivFullAgeStratification", [1970])
+ret_single_year = run_goals(parameters_child, [1970])
 
-for year in range(1970, 2031):
-    ret_single_year = run_model_from_state(
-        parameters_adult,
-        "HivFullAgeStratification",
+for year in range(1970, 2030):
+    ret_single_year = run_goals_from_state(
+        parameters_child,
         get_time_slice(ret_single_year, 0),
         year,
         [year + 1]
@@ -98,14 +97,13 @@ So to make projecting for a single year more ergonomic we decided to create a se
 that returns the time slice for a single year:
 
 ```python
-from leapfrog_py import run_model, run_model_single_year, get_time_slice
+from leapfrog_goals import run_goals, run_goals_single_year, get_time_slice
 
-ret_single_year = get_time_slice(run_model(parameters_adult, "HivFullAgeStratification", [1970]), 0)
+ret_single_year = get_time_slice(run_goals(parameters_child, [1970]), 0)
 
-for year in range(1970, 2031):
-    ret_single_year = run_model_single_year(
-        parameters_adult,
-        "HivFullAgeStratification",
+for year in range(1970, 2030):
+    ret_single_year = run_goals_single_year(
+        parameters_child,
         ret_single_year,
         year
     )
@@ -122,10 +120,10 @@ We use [uv](https://docs.astral.sh/uv/) to manage the project:
 * Format `uvx ruff format`
 * Format imports  `uvx ruff check --select I --fix`
 
-uv will rebuild automatically if you make a change to the C++ code however if you need to force recompilation use `--reinstall-package leapfrog-py`.
+uv will rebuild automatically if you make a change to the C++ code however if you need to force recompilation use `--reinstall-package leapfrog-goals`.
 
 For local installation run `pip install .`
 
 ## License
 
-`leapfrog-py` is distributed under the terms of [MIT](https://spdx.org/licenses/MIT.html) license.
+`leapfrog-goals` is distributed under the terms of [MIT](https://spdx.org/licenses/MIT.html) license.

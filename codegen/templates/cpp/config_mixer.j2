@@ -19,18 +19,10 @@ namespace internal {
 
 template<bool enable, typename T>
 struct Pair;
-
+{% for config in configs +%}
 template<Language L, typename real_type, MV ModelVariant>
-struct DpAdapter;
-
-template<Language L, typename real_type, MV ModelVariant>
-struct HaAdapter;
-
-template<Language L, typename real_type, MV ModelVariant>
-struct HcAdapter;
-
-template<Language L, typename real_type, MV ModelVariant>
-struct SpAdapter;
+struct {{ config.name }}Adapter;
+{% endfor %}
 
 template<Language L, typename ...Ts>
 struct ConfigMixer;

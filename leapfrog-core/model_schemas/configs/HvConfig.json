@@ -1,0 +1,28 @@
+{
+  "name": "Hv",
+  "long_name": "Goals",
+  "namespace": "hv",
+  "enable_if": "run_goals",
+  "state_space": {
+    "default": {
+    }
+  },
+  "pars": {
+    "ex_input": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    }
+  },
+  "intermediate": {
+    "ex_intermediate": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    }
+  },
+  "state": {
+    "ex_output": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    }
+  }
+}

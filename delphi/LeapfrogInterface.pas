@@ -479,17 +479,53 @@ end;
 
 {$ALIGN 8}
 type
+  LeapfrogGoalsParamsView = record
+  private
+    exInput: PDouble;
+    exInputLength: Integer;
+end;
+
+type
+  LeapfrogGoalsParams = class
+  public
+    exInput: TGBFixedArray<Double>;
+    function getView(): LeapfrogGoalsParamsView;
+    procedure writeToDisk(dir: string);
+    Destructor Destroy; override;
+end;
+
+{$ALIGN 8}
+type
+  LeapfrogGoalsStateView = record
+  private
+    exOutput: PDouble;
+    exOutputLength: Integer;
+end;
+
+type
+  LeapfrogGoalsState = class
+  public
+    exOutput: TGBFixedArray<Double>;
+    function getView(): LeapfrogGoalsStateView;
+    procedure writeToDisk(dir: string);
+    Destructor Destroy; override;
+end;
+
+{$ALIGN 8}
+type
   LeapfrogParams = record
   private
     demproj: ^LeapfrogDemProjParamsView;
     hivadult: ^LeapfrogHivAdultParamsView;
     hivchild: ^LeapfrogHivChildParamsView;
     spectrum: ^LeapfrogSpectrumParamsView;
+    goals: ^LeapfrogGoalsParamsView;
   public
     procedure SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);
     procedure SetHivAdultParams(const hivadultParams: LeapfrogHivAdultParamsView);
     procedure SetHivChildParams(const hivchildParams: LeapfrogHivChildParamsView);
     procedure SetSpectrumParams(const spectrumParams: LeapfrogSpectrumParamsView);
+    procedure SetGoalsParams(const goalsParams: LeapfrogGoalsParamsView);
 end;
 
 {$ALIGN 8}
@@ -500,11 +536,13 @@ type
     hivadult: ^LeapfrogHivAdultStateView;
     hivchild: ^LeapfrogHivChildStateView;
     spectrum: ^LeapfrogSpectrumStateView;
+    goals: ^LeapfrogGoalsStateView;
   public
     procedure SetDemProjState(const demprojState: LeapfrogDemProjStateView);
     procedure SetHivAdultState(const hivadultState: LeapfrogHivAdultStateView);
     procedure SetHivChildState(const hivchildState: LeapfrogHivChildStateView);
     procedure SetSpectrumState(const spectrumState: LeapfrogSpectrumStateView);
+    procedure SetGoalsState(const goalsState: LeapfrogGoalsStateView);
 end;
 
 type TCallbackFunction = procedure(Msg: PAnsiChar); stdcall;
@@ -919,6 +957,30 @@ begin;
   Result.pExcessDeathsNonaidsNoArtLength := pExcessDeathsNonaidsNoArt.GetLength();
 end;
 
+destructor LeapfrogGoalsParams.Destroy;
+begin;
+  exInput.Free;
+  inherited;
+end;
+
+destructor LeapfrogGoalsState.Destroy;
+begin;
+  exOutput.Free;
+  inherited;
+end;
+
+function LeapfrogGoalsParams.getView(): LeapfrogGoalsParamsView;
+begin;
+  Result.exInput := PDouble(exInput.data);
+  Result.exInputLength := exInput.GetLength();
+end;
+
+function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
+begin;
+  Result.exOutput := PDouble(exOutput.data);
+  Result.exOutputLength := exOutput.GetLength();
+end;
+
 procedure LeapfrogDemProjParams.writeToDisk(dir: string);
 begin;
   if not DirectoryExists(dir) then
@@ -1067,6 +1129,20 @@ begin;
   pExcessDeathsNonaidsNoArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pExcessDeathsNonaidsNoArt');
 end;
 
+procedure LeapfrogGoalsParams.writeToDisk(dir: string);
+begin;
+  if not DirectoryExists(dir) then
+    ForceDirectories(dir);
+  exInput.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'exInput');
+end;
+
+procedure LeapfrogGoalsState.writeToDisk(dir: string);
+begin;
+  if not DirectoryExists(dir) then
+    ForceDirectories(dir);
+  exOutput.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'exOutput');
+end;
+
 procedure LeapfrogParams.SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);
 begin
   demproj := @demprojParams;
@@ -1105,6 +1181,16 @@ end;
 procedure LeapfrogState.SetSpectrumState(const spectrumState: LeapfrogSpectrumStateView);
 begin
   spectrum := @spectrumState;
+end;
+
+procedure LeapfrogParams.SetGoalsParams(const goalsParams: LeapfrogGoalsParamsView);
+begin
+  goals := @goalsParams;
+end;
+
+procedure LeapfrogState.SetGoalsState(const goalsState: LeapfrogGoalsStateView);
+begin
+  goals := @goalsState;
 end;
 
 end.
