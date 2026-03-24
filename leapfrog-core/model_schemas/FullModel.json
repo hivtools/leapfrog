@@ -5,6 +5,7 @@
     "configs/DpConfig.json",
     "configs/HaConfig.json",
     "configs/HcConfig.json",
-    "configs/SpConfig.json"
+    "configs/SpConfig.json",
+    "configs/HvConfig.json"
   ]
 }

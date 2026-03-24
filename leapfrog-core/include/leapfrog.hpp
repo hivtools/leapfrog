@@ -9,6 +9,7 @@
 #include "models/adult_hiv_model_simulation.hpp"
 #include "models/child_model_simulation.hpp"
 #include "models/spectrum_post_hoc_calculations.hpp"
+#include "models/goals_simulation.hpp"
 #include "options.hpp"
 #include "initial_year.hpp"
 
@@ -119,6 +120,7 @@ struct Leapfrog {
     internal::AdultHivModelSimulation<Cfg> hiv_sim(args);
     internal::ChildModelSimulation<Cfg> child_sim(args);
     internal::SpectrumPostHocCalculations<Cfg> spectrum(args);
+    internal::GoalsSimulation<Cfg> goals_sim(args);
 
     if constexpr (ModelVariant::run_demographic_projection) {
       general_dp.run_general_pop_demographic_projection();
@@ -130,6 +132,10 @@ struct Leapfrog {
 
       if constexpr (ModelVariant::run_child_model) {
         child_sim.run_child_model_simulation();
+      }
+
+      if constexpr (ModelVariant::run_goals) {
+        goals_sim.run_goals_simulation();
       }
 
       if (args.opts.proj_period_int == SS::PROJPERIOD_CALENDAR) {
