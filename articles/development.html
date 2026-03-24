@@ -143,11 +143,7 @@ polymorphism.</p>
 <p>All model functions are templated on the model variant, and any
 conditional behaviour based upon the model variant should be written as
 an <a href="https://www.learncpp.com/cpp-tutorial/constexpr-if-statements/" class="external-link"><code>if constexpr</code></a>.</p>
-</div>
-<div class="section level3">
-<h3 id="model-variants-1">Model variants<a class="anchor" aria-label="anchor" href="#model-variants-1"></a>
-</h3>
-<p>All model variants are in the <a href="https://github.com/hivtools/leapfrog/tree/main/leapfrog-core/include/models" class="external-link"><code>models</code>
+<p>Model variant functions are in the <a href="https://github.com/hivtools/leapfrog/tree/main/leapfrog-core/include/models" class="external-link"><code>models</code>
 directory</a>. Every model variant should be created as a struct. We can
 use the struct to alias state space variables or bits of the config to
 make the code more easily readable. The struct should expose at least
