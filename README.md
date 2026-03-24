@@ -77,7 +77,22 @@ To change what parameters can be passed in from any interface or the structure o
 Then to run code generation run `./scripts/generate`. See
 [codegen/README.md](./codegen/README.md) for more details.
 
-## Development notes
+## Development
+
+### Prerequsites
+
+* [R](https://www.r-project.org/) for generating test data and runnng R wrapper
+* [uv](https://docs.astral.sh/uv/) for codegen and Python wrappers
+* (Optionally) [CMake](https://cmake.org/) (>3.15) if running the C++ standalone wrapper or Python wrappers
+
+### Initial setup
+
+To make changes to Leapfrog you will first need to
+
+1. Create the test data by running `./scripts/create_test_data.R`
+1. Generate the C++ code by running `./scripts/generate`
+
+You should then be able to run leapfrog via R, Python, or C++. See the `README.md` in the specific wrappers and the [development vignette](https://hivtools.github.io/leapfrog/articles/development.html).
 
 ### Simulation model
 
