@@ -1,0 +1,16 @@
+name: Build and upload to PyPI
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+    branches:
+      - main
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/py-package-deploy.yaml
+    with:
+      package_dir: goals
+      pypi_package_name: leapfrog-goals
