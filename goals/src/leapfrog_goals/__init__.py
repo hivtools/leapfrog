@@ -82,5 +82,5 @@ def run_goals_single_year(
     return run_base_model_single_year(parameters, initial_state, simulation_start_year)
 
 
-def get_goals_ss(configuration: str) -> LeapfrogStateSpace:
-    return get_goals_ss_py(configuration)
+def get_goals_ss() -> LeapfrogStateSpace:
+    return get_goals_ss_py()
