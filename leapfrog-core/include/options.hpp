@@ -13,7 +13,7 @@ namespace leapfrog {
 
 namespace internal {
 
-void validate_output_years(const std::vector<int> output_years,
+inline void validate_output_years(const std::vector<int>& output_years,
                            const int proj_start_year) {
   const auto first_year = std::min_element(std::begin(output_years),
                                            std::end(output_years));
@@ -26,35 +26,37 @@ void validate_output_years(const std::vector<int> output_years,
   }
 }
 
-int get_proj_end_year(const std::vector<int>& output_years) {
+inline int get_proj_end_year(const std::vector<int>& output_years) {
   const auto last_year = std::max_element(std::begin(output_years),
                                           std::end(output_years));
   return *last_year;
 }
 
-int get_proj_period_enum(std::string_view projection_period) {
+inline int get_proj_period_enum(std::string_view projection_period) {
   if (projection_period == "midyear") {
     return BaseSS::PROJPERIOD_MIDYEAR;
-  } else if (projection_period == "calendar") {
-    return BaseSS::PROJPERIOD_CALENDAR;
-  } else {
-    throw std::invalid_argument(
-      "Invalid projection period: '" + std::string(projection_period) +
-      "'. Allowed values are: 'midyear' or 'calendar'.");
   }
+
+  if (projection_period == "calendar") {
+    return BaseSS::PROJPERIOD_CALENDAR;
+  }
+
+  throw std::invalid_argument(
+    "Invalid projection period: '" + std::string(projection_period) +
+    "'. Allowed values are: 'midyear' or 'calendar'.");
 }
 
-}
+} // namespace internal
 
 template<typename real_type>
 struct Options {
   int hts_per_year;
   double dt;
-  const int ts_art_start;
-  const int proj_period_int;
-  const int proj_start_year;
-  const int proj_end_year;
-  const int proj_steps;
+  int ts_art_start;
+  int proj_period_int;
+  int proj_start_year;
+  int proj_end_year;
+  int proj_steps;
 
   Options(
     int hts_per_year,
@@ -91,6 +93,6 @@ const Options<real_type> get_opts(
     proj_end_year
   };
   return opts;
-};
+}
 
 } // namespace leapfrog

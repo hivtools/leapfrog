@@ -1,5 +1,5 @@
 #include "H5Cpp.h"
-#include "array/array.h"
+#include "array.h"
 #include <iostream>
 #include <filesystem>
 #include <vector>
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
                 << std::endl;
     }
   } else {
-    std::cout << "Writing to existing output directory " << std::string{output_abs} << "'"
+    std::cout << "Writing to existing output directory '" << std::string{output_abs} << "'"
               << std::endl;
   }
 

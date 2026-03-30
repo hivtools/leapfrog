@@ -34,6 +34,7 @@ struct GoalsSimulation<Config> {
   static constexpr auto hAG_span = SS::hAG_span;
   static constexpr int pAG = SS::pAG;
   static constexpr int p_idx_hiv_first_adult = SS::p_idx_hiv_first_adult;
+  static constexpr int ex = SS::ex;
 
   // function args
   int t;
@@ -72,6 +73,10 @@ struct GoalsSimulation<Config> {
 
         n_hv.ex_output(a, s) = c_dp.p_totpop(a, s) + p_hv.ex_input(a, s);
       }
+    }
+
+    for (int e = 0; e < ex; ++e) {
+      n_hv.new_output(e) = p_hv.transition_rate(e) + 1;
     }
   };
 
