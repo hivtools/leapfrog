@@ -17,5 +17,5 @@ template<typename Config>
 concept {{ name.replace("_", " ").title().replace(" ", "") }} = MV<typename Config::ModelVariant> && Config::ModelVariant::{{ name }};
 {% endfor %}
 
-} // namespace internal
-} // namespace leapfrog
+}  // namespace internal
+}  // namespace leapfrog

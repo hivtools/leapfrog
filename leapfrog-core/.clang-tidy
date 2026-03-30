@@ -18,7 +18,6 @@ Checks: "*,\
   -modernize-use-trailing-return-type,\
   -bugprone-easily-swappable-parameters"
 FormatStyle: google
-ExcludeHeaderFilterRegex: '.*/generated/.*'
 WarningsAsErrors: ''
 CheckOptions:
   - key: 'bugprone-argument-comment.StrictMode'

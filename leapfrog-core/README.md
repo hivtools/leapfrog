@@ -121,6 +121,12 @@ The `dev` preset enables developer mode. Additional build targets:
 | `docs` | Doxygen + m.css documentation (requires `BUILD_MCSS_DOCS`) |
 | `format-check` / `format-fix` | clang-format |
 
+To run these pass an addition `-t <target> flag` e.g.
+
+```sh
+cmake --build --preset=dev -t format-fix
+```
+
 ## Installing
 
 ```sh

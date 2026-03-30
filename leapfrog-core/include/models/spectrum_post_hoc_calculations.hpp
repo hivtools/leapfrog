@@ -1,13 +1,15 @@
 #pragma once
 
-#include "../options.hpp"
 #include "../generated/config_mixer.hpp"
+#include "../options.hpp"
 
 namespace leapfrog {
 namespace internal {
 
 template<typename Config>
-concept SpectrumPostHocCalculationsEnabled = RunDemographicProjection<Config> && RunHivSimulation<Config> && RunChildModel<Config> && RunSpectrumModel<Config>;
+concept SpectrumPostHocCalculationsEnabled =
+    RunDemographicProjection<Config> && RunHivSimulation<Config>
+    && RunChildModel<Config> && RunSpectrumModel<Config>;
 
 template<typename Config>
 struct SpectrumPostHocCalculations {
@@ -25,7 +27,7 @@ struct SpectrumPostHocCalculations<Config> {
   using Args = Config::Args;
 
   // private members of this struct
-  private:
+private:
   // state space
   static constexpr int NS = SS::NS;
   static constexpr int hDS = SS::hDS;
@@ -44,15 +46,14 @@ struct SpectrumPostHocCalculations<Config> {
   const Options<real_type>& opts;
 
   // only exposing the constructor and some methods
-  public:
-  SpectrumPostHocCalculations(Args& args):
-    t(args.t),
-    pars(args.pars),
-    state_curr(args.state_curr),
-    state_next(args.state_next),
-    intermediate(args.intermediate),
-    opts(args.opts)
-  {};
+public:
+  SpectrumPostHocCalculations(Args& args) :
+      t(args.t),
+      pars(args.pars),
+      state_curr(args.state_curr),
+      state_next(args.state_next),
+      intermediate(args.intermediate),
+      opts(args.opts) {};
 
   void run_spectrum_post_hoc_calulations() {
     calculate_nonaids_deaths();
@@ -60,14 +61,13 @@ struct SpectrumPostHocCalculations<Config> {
   };
 
   // private methods that we don't want people to call
-  private:
+private:
   void calculate_nonaids_deaths() {
     auto& n_ha = state_next.ha;
     auto& n_sp = state_next.sp;
     auto& i_sp = intermediate.sp;
 
     for (int s = 0; s < NS; ++s) {
-
       // Spectrum stores nonaids deaths by age but for children is always 0.
       // Only write values for a >= p_idx_hiv_first_adult
       // so that it is always 0 for children to match Spectrum.
@@ -85,14 +85,18 @@ struct SpectrumPostHocCalculations<Config> {
         }
 
         if (i_sp.hiv_art_adult_sa + i_sp.hiv_untreated_adult_sa > 0) {
-          i_sp.artcov_adult_sa = i_sp.hiv_art_adult_sa / (i_sp.hiv_art_adult_sa + i_sp.hiv_untreated_adult_sa);
+          i_sp.artcov_adult_sa = i_sp.hiv_art_adult_sa
+              / (i_sp.hiv_art_adult_sa + i_sp.hiv_untreated_adult_sa);
         } else {
           i_sp.artcov_adult_sa = 0.0;
         }
 
         for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
-          n_sp.p_deaths_nonaids_artpop(a, s) = n_ha.p_deaths_background_hivpop(a, s) * i_sp.artcov_adult_sa;
-          n_sp.p_deaths_nonaids_hivpop(a, s) = n_ha.p_deaths_background_hivpop(a, s) * (1.0 - i_sp.artcov_adult_sa);
+          n_sp.p_deaths_nonaids_artpop(a, s) =
+              n_ha.p_deaths_background_hivpop(a, s) * i_sp.artcov_adult_sa;
+          n_sp.p_deaths_nonaids_hivpop(a, s) =
+              n_ha.p_deaths_background_hivpop(a, s)
+              * (1.0 - i_sp.artcov_adult_sa);
         }
       }
     }
@@ -103,42 +107,42 @@ struct SpectrumPostHocCalculations<Config> {
     auto& n_sp = state_next.sp;
 
     for (int s = 0; s < NS; ++s) {
-
       // Spectrum stores nonaids-excess deaths by age but for children
       // is always 0. Only write values for a >= p_idx_hiv_first_adult
       // so that it is always 0 for children to match Spectrum.
 
       int a = p_idx_hiv_first_adult;
       for (int ha = 0; ha < hAG; ++ha) {
-
         // Aggregate excess deaths and population in coarse age group
         auto excess_deaths_nonaids_no_art_ha = 0.0;
         auto excess_deaths_nonaids_on_art_ha = 0.0;
         auto hivpop_ha = 0.0;
 
         for (int hm = 0; hm < hDS; ++hm) {
-          excess_deaths_nonaids_no_art_ha += n_ha.h_deaths_excess_nonaids_no_art(hm, ha, s);
+          excess_deaths_nonaids_no_art_ha +=
+              n_ha.h_deaths_excess_nonaids_no_art(hm, ha, s);
           hivpop_ha += n_ha.h_hivpop(hm, ha, s);
 
           if (t > opts.ts_art_start) {
             for (int hu = 0; hu < hTS; ++hu) {
-              excess_deaths_nonaids_on_art_ha += n_ha.h_deaths_excess_nonaids_on_art(hu, hm, ha, s);
+              excess_deaths_nonaids_on_art_ha +=
+                  n_ha.h_deaths_excess_nonaids_on_art(hu, hm, ha, s);
               hivpop_ha += n_ha.h_artpop(hu, hm, ha, s);
             }
           }
         }
 
-
-	      // Distribute deaths from coarse age group ha to single age group a proportional
-	      // to distribution of HIV population in age group a
+        // Distribute deaths from coarse age group ha to single age group a
+        // proportional to distribution of HIV population in age group a
         for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
-
           if (hivpop_ha > 0) {
             const auto hivpop_proportion_a = n_ha.p_hivpop(a, s) / hivpop_ha;
-            n_sp.p_excess_deaths_nonaids_no_art(a, s) = excess_deaths_nonaids_no_art_ha * hivpop_proportion_a;
+            n_sp.p_excess_deaths_nonaids_no_art(a, s) =
+                excess_deaths_nonaids_no_art_ha * hivpop_proportion_a;
 
             if (t > opts.ts_art_start) {
-              n_sp.p_excess_deaths_nonaids_on_art(a, s) += excess_deaths_nonaids_on_art_ha *  hivpop_proportion_a;
+              n_sp.p_excess_deaths_nonaids_on_art(a, s) +=
+                  excess_deaths_nonaids_on_art_ha * hivpop_proportion_a;
             }
           } else {
             n_sp.p_excess_deaths_nonaids_no_art(a, s) = 0.0;
@@ -150,5 +154,5 @@ struct SpectrumPostHocCalculations<Config> {
   }
 };
 
-}
-}
+}  // namespace internal
+}  // namespace leapfrog

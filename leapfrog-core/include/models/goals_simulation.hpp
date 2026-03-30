@@ -1,13 +1,14 @@
 #pragma once
 
-#include "../options.hpp"
 #include "../generated/config_mixer.hpp"
+#include "../options.hpp"
 
 namespace leapfrog {
 namespace internal {
 
 template<typename Config>
-concept GoalsSimulationEnabled = RunDemographicProjection<Config> && RunHivSimulation<Config> && RunChildModel<Config> && RunGoals<Config>;
+concept GoalsSimulationEnabled = RunDemographicProjection<Config>
+    && RunHivSimulation<Config> && RunChildModel<Config> && RunGoals<Config>;
 
 template<typename Config>
 struct GoalsSimulation {
@@ -25,7 +26,7 @@ struct GoalsSimulation<Config> {
   using Args = Config::Args;
 
   // private members of this struct
-  private:
+private:
   // state space
   static constexpr int NS = SS::NS;
   static constexpr int hDS = SS::hDS;
@@ -45,22 +46,19 @@ struct GoalsSimulation<Config> {
   const Options<real_type>& opts;
 
   // only exposing the constructor and some methods
-  public:
-  GoalsSimulation(Args& args):
-    t(args.t),
-    pars(args.pars),
-    state_curr(args.state_curr),
-    state_next(args.state_next),
-    intermediate(args.intermediate),
-    opts(args.opts)
-  {};
+public:
+  GoalsSimulation(Args& args) :
+      t(args.t),
+      pars(args.pars),
+      state_curr(args.state_curr),
+      state_next(args.state_next),
+      intermediate(args.intermediate),
+      opts(args.opts) {};
 
-  void run_goals_simulation() {
-    example_step();
-  };
+  void run_goals_simulation() { example_step(); };
 
   // private methods that we don't want people to call
-  private:
+private:
   void example_step() {
     const auto& p_hv = pars.hv;
     const auto& c_dp = state_curr.dp;
@@ -79,8 +77,7 @@ struct GoalsSimulation<Config> {
       n_hv.new_output(e) = p_hv.transition_rate(e) + 1;
     }
   };
-
 };
 
-}
-}
+}  // namespace internal
+}  // namespace leapfrog
