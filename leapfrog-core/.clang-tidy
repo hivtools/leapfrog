@@ -1,0 +1,77 @@
+---
+# Enable ALL the things! Except not really
+# misc-non-private-member-variables-in-classes: the options don't do anything
+# modernize-use-nodiscard: too aggressive, attribute is situationally useful
+# modernize-use-trailing-return-type: purely stylistic
+# bugprone-easily-swappable-parameters: we should turn this on, but
+# qutie fiddly to fix. Start with it off for now and review later
+# misc-include-cleaner: causing lots of problems with hdf5 (review later)
+# readbility-identifier-length: We deliberatly use short names in some places
+# e.g. for loop variables, and have agreed on conventions for it.
+# readbility-function-cognitive-complexity: We have lots of nested loops,
+# and really it is the least bad way of looping through a 4d array. We've
+# chatted about alternatives but always come back to loops being the simplest.
+# boost-use-ranges: boost is a huge dependency we don't want to add
+# cppcoreguidelines-avoid-magic-numbers: We do want to do this, but inevitable
+# there will be some in a model.
+# readbility-magic-numbers: As above.
+Checks: "*,\
+  -google-readability-todo,\
+  -altera-*,\
+  -fuchsia-*,\
+  fuchsia-multiple-inheritance,\
+  -llvm-header-guard,\
+  -llvm-include-order,\
+  -llvmlibc-*,\
+  -modernize-use-nodiscard,\
+  -misc-non-private-member-variables-in-classes,\
+  -modernize-use-trailing-return-type,\
+  -bugprone-easily-swappable-parameters,\
+  -misc-include-cleaner,\
+  -readability-identifier-length,\
+  -readability-function-cognitive-complexity,\
+  -boost-use-ranges,\
+  -cppcoreguidelines-avoid-magic-numbers,\
+  -readbility-magic-numbers"
+FormatStyle: google
+WarningsAsErrors: ''
+# Exclude py and r interface, these rely on Python and R headers being available
+# which they won't be in this compilation context.
+# Also excluding hdf5_utils, that is giving false positives for variants
+# which are turned off. Raising internalAstError.
+# There are ways to work around that, but it feels like more of a faff to me
+# than it is worth and will make the code harder to read.
+ExcludeHeaderFilterRegex: ".*generated/((py|r)_interface)/.*"
+CheckOptions:
+  - key: 'bugprone-argument-comment.StrictMode'
+    value: 'true'
+# Prefer using enum classes with 2 values for parameters instead of bools
+  - key: 'bugprone-argument-comment.CommentBoolLiterals'
+    value: 'true'
+  - key: 'bugprone-misplaced-widening-cast.CheckImplicitCasts'
+    value: 'true'
+  - key: 'bugprone-sizeof-expression.WarnOnSizeOfIntegerExpression'
+    value: 'true'
+  - key: 'bugprone-suspicious-string-compare.WarnOnLogicalNotComparison'
+    value: 'true'
+  - key: 'readability-simplify-boolean-expr.ChainedConditionalReturn'
+    value: 'true'
+  - key: 'readability-simplify-boolean-expr.ChainedConditionalAssignment'
+    value: 'true'
+  - key: 'readability-uniqueptr-delete-release.PreferResetCall'
+    value: 'true'
+  - key: 'cppcoreguidelines-init-variables.MathHeader'
+    value: '<cmath>'
+  - key: 'cppcoreguidelines-narrowing-conversions.PedanticMode'
+    value: 'true'
+  - key: 'readability-else-after-return.WarnOnUnfixable'
+    value: 'true'
+  - key: 'readability-else-after-return.WarnOnConditionVariables'
+    value: 'true'
+  - key: 'readability-inconsistent-declaration-parameter-name.Strict'
+    value: 'true'
+  - key: 'readability-qualified-auto.AddConstToQualified'
+    value: 'true'
+  - key: 'readability-redundant-access-specifiers.CheckFirstDeclaration'
+    value: 'true'
+...

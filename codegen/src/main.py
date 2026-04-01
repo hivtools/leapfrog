@@ -2,6 +2,7 @@ import json
 import os
 import copy
 from pathlib import Path
+import shutil
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -113,6 +114,12 @@ def generate_delphi(template_name, *args, **kwargs):
   generate(template_path, dest_path, *args, **kwargs)
 
 
+def copy_cpp_file(source):
+  file_name = os.path.basename(source)
+  dest_path = os.path.join(GENERATED_CPP_DEST, file_name)
+  shutil.copyfile(source, dest_path)
+
+
 dat = load_json(SCHEMAS_DIR, "FullModel.json")
 dat = { k: load_children_model_schemas(v) for k, v in dat.items() }
 
@@ -133,8 +140,8 @@ for config in dat["configs"]:
     add_output_year_dim(cfg)
     process_var_config(name, cfg)
 
-
-file_loader = FileSystemLoader(relative_file_path("..", "templates"))
+template_dir = relative_file_path("..", "templates")
+file_loader = FileSystemLoader(template_dir)
 env = Environment(
   loader = file_loader,
   trim_blocks = True,
@@ -154,4 +161,5 @@ generate_hpp("cpp_interface/cpp_adapters", dat | vars(utils.config) | vars(utils
 generate_hpp("r_interface/r_adapters", dat | vars(utils.config) | vars(utils.general))
 generate_hpp("c_interface/c_adapters", dat | vars(utils.config) | vars(utils.general))
 generate_hpp("c_interface/c_types", dat | vars(utils.config) | vars(utils.delphi) | vars(utils.general))
+copy_cpp_file(os.path.join(template_dir, "cpp", ".clang-format"))
 generate_delphi("LeapfrogInterface", dat | vars(utils.delphi) | vars(utils.general))
