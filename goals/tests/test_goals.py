@@ -4,6 +4,7 @@ from deepdiff import DeepDiff
 from leapfrog_goals import (
     read_h5_file,
     run_goals,
+    simple_sum,
 )
 
 
@@ -12,6 +13,7 @@ def assert_equal(obj1, obj2):
 
 
 def test_goals_model():
+    assert 5==simple_sum(2, 3)
     parameters = read_h5_file(
         "../leapfrogr/tests/testthat/testdata/child_parms_full.h5"
     )

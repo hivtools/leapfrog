@@ -29,7 +29,12 @@ nb::dict run_base_model_single_year(
 ) {
   return sim_model(parameters, initial_state, simulation_start_year);
 }
-
+int simple_sum(
+  const int A,
+  const int B
+) {
+  return A+B;
+}
 
 nb::dict get_leapfrog_ss() {
   return leapfrog::get_ss_py<leapfrog::Goals>();
@@ -38,6 +43,9 @@ nb::dict get_leapfrog_ss() {
 NB_MODULE(_core, m) {
   m.doc() = "Leapfrog-Goals python interface";
 
+  m.def("simple_sum", &simple_sum, R"pbdoc(
+      Add two integers and return the result.
+  )pbdoc");
   m.def("run_base_model", &run_base_model, R"pbdoc(
       Run the goals model.
   )pbdoc");

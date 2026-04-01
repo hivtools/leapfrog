@@ -9,6 +9,7 @@ from leapfrog_goals._core import (
     run_base_model,
     run_base_model_from_state,
     run_base_model_single_year,
+    simple_sum,
 )
 
 LeapfrogParameters: TypeAlias = dict[str, Union[np.ndarray, int, float]]
