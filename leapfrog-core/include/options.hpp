@@ -10,7 +10,6 @@
 #include "generated/state_space.hpp"
 
 namespace leapfrog {
-
 namespace internal {
 
 inline void validate_output_years(
@@ -61,19 +60,19 @@ struct Options {
   int proj_steps;
 
   Options(
-      int hts_per_year,
-      int ts_art_start,
-      int proj_period_int,
-      int proj_start_year,
-      int proj_end_year
+      int _hts_per_year,
+      int _ts_art_start,
+      int _proj_period_int,
+      int _proj_start_year,
+      int _proj_end_year
   ) :
-      hts_per_year(hts_per_year),
-      dt(1.0 / hts_per_year),
-      ts_art_start(ts_art_start),
-      proj_period_int(proj_period_int),
-      proj_start_year(proj_start_year),
-      proj_end_year(proj_end_year),
-      proj_steps(proj_end_year - proj_start_year + 1) {}
+      hts_per_year(_hts_per_year),
+      dt(1.0 / _hts_per_year),
+      ts_art_start(_ts_art_start),
+      proj_period_int(_proj_period_int),
+      proj_start_year(_proj_start_year),
+      proj_end_year(_proj_end_year),
+      proj_steps(_proj_end_year - _proj_start_year + 1) {}
 };
 
 template<typename real_type>

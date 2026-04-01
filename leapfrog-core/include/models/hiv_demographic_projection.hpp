@@ -3,8 +3,7 @@
 #include "../generated/config_mixer.hpp"
 #include "../options.hpp"
 
-namespace leapfrog {
-namespace internal {
+namespace leapfrog::internal {
 
 template<typename Config>
 concept HivDemographicProjectionEnabled =
@@ -12,7 +11,7 @@ concept HivDemographicProjectionEnabled =
 
 template<typename Config>
 struct HivDemographicProjection {
-  HivDemographicProjection(...) {};
+  HivDemographicProjection(...) {}
 };
 
 template<HivDemographicProjectionEnabled Config>
@@ -53,7 +52,7 @@ public:
       state_curr(args.state_curr),
       state_next(args.state_next),
       intermediate(args.intermediate),
-      opts(args.opts) {};
+      opts(args.opts) {}
 
   void run_hivpop_demographic_projection() {
     run_hiv_ageing_and_mortality();
@@ -65,7 +64,7 @@ public:
     if constexpr (ModelVariant::run_child_model) {
       run_hc_hiv_and_art_stratified_deaths_and_migration();
     }
-  };
+  }
 
   void run_hivpop_end_year_migration() {
     auto& n_ha = state_next.ha;
@@ -86,7 +85,7 @@ public:
       for (int ha = 0; ha < hAG; ++ha) {
         real_type migration_num_ha = 0.0;
         real_type hivpop_ha_postmig = 0.0;
-        for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
+        for (int i = 0; i < hAG_span[static_cast<size_t>(ha)]; ++i, ++a) {
           hivpop_ha_postmig += n_ha.p_hivpop(a, s);
           migration_num_ha += n_ha.p_net_migration_hivpop(a, s);
         }
@@ -107,7 +106,7 @@ public:
         }
       }
     }
-  };
+  }
 
   void run_hc_hivpop_end_year_migration() {
     static_assert(ModelVariant::run_child_model,
@@ -117,7 +116,6 @@ public:
     static constexpr int hcAG_end = SS::hcAG_end;
     static constexpr int hc1DS = SS::hc1DS;
     static constexpr int hc2DS = SS::hc2DS;
-    static constexpr int hTS = SS::hTS;
     static constexpr int hcTT = SS::hcTT;
 
     auto& n_ha = state_next.ha;
@@ -163,7 +161,7 @@ public:
         }
       }
     }
-  };
+  }
 
   // private methods that we don't want people to call
 private:
@@ -185,7 +183,7 @@ private:
           * (1.0 - p_dp.survival_probability(pAG, s, t));
       n_ha.p_hivpop(pAG - 1, s) += c_ha.p_hivpop(pAG - 1, s);
     }
-  };
+  }
 
   void run_age_15_entrants() {
     static_assert(ModelVariant::run_child_model,
@@ -224,7 +222,7 @@ private:
         }
       }  // hm
     }  // s
-  };
+  }
 
   void run_hiv_and_art_stratified_ageing() {
     const auto& c_ha = state_curr.ha;
@@ -237,7 +235,7 @@ private:
       // Note: loop stops at hAG-1; no one ages out of the open-ended
       // age group
       for (int ha = 0; ha < (hAG - 1); ++ha) {
-        for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
+        for (int i = 0; i < hAG_span[static_cast<size_t>(ha)]; ++i, ++a) {
           i_ha.hiv_age_up_prob(ha, s) += c_ha.p_hivpop(a, s);
         }
 
@@ -306,7 +304,7 @@ private:
     }  // s
     // TODO: implement static entrants to adult HIV population here for case
     // when child model not simulated
-  };
+  }
 
   void run_hiv_and_art_stratified_deaths_and_migration() {
     auto& n_ha = state_next.ha;
@@ -316,7 +314,7 @@ private:
     for (int s = 0; s < NS; ++s) {
       int a = p_idx_hiv_first_adult;
       for (int ha = 0; ha < hAG; ++ha) {
-        for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
+        for (int i = 0; i < hAG_span[static_cast<size_t>(ha)]; ++i, ++a) {
           i_ha.p_coarse_ages_hivpop(ha, s) += n_ha.p_hivpop(a, s);
         }
       }
@@ -339,7 +337,7 @@ private:
       int a = p_idx_hiv_first_adult;
       for (int ha = 0; ha < hAG; ++ha) {
         real_type deaths_migrate = 0.0;
-        for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
+        for (int i = 0; i < hAG_span[static_cast<size_t>(ha)]; ++i, ++a) {
           deaths_migrate -= n_ha.p_deaths_background_hivpop(a, s);
           if (opts.proj_period_int == PROJPERIOD_MIDYEAR) {
             deaths_migrate += n_ha.p_net_migration_hivpop(a, s);
@@ -362,14 +360,13 @@ private:
         }
       }
     }
-  };
+  }
 
   void run_hc_hiv_and_art_stratified_deaths_and_migration() {
     static constexpr int hc2_agestart = SS::hc2_agestart;
     static constexpr int hcAG_end = SS::hcAG_end;
     static constexpr int hc1DS = SS::hc1DS;
     static constexpr int hc2DS = SS::hc2DS;
-    static constexpr int hTS = SS::hTS;
     static constexpr int hcTT = SS::hcTT;
 
     auto& n_ha = state_next.ha;
@@ -413,7 +410,6 @@ private:
         }
       }
     }
-  };
+  }
 };
-}  // namespace internal
-}  // namespace leapfrog
+}  // namespace leapfrog::internal

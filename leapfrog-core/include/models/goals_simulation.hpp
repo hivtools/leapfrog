@@ -3,8 +3,7 @@
 #include "../generated/config_mixer.hpp"
 #include "../options.hpp"
 
-namespace leapfrog {
-namespace internal {
+namespace leapfrog::internal {
 
 template<typename Config>
 concept GoalsSimulationEnabled = RunDemographicProjection<Config>
@@ -12,7 +11,7 @@ concept GoalsSimulationEnabled = RunDemographicProjection<Config>
 
 template<typename Config>
 struct GoalsSimulation {
-  GoalsSimulation(...) {};
+  GoalsSimulation(...) {}
 };
 
 template<GoalsSimulationEnabled Config>
@@ -53,9 +52,9 @@ public:
       state_curr(args.state_curr),
       state_next(args.state_next),
       intermediate(args.intermediate),
-      opts(args.opts) {};
+      opts(args.opts) {}
 
-  void run_goals_simulation() { example_step(); };
+  void run_goals_simulation() { example_step(); }
 
   // private methods that we don't want people to call
 private:
@@ -76,8 +75,7 @@ private:
     for (int e = 0; e < ex; ++e) {
       n_hv.new_output(e) = p_hv.transition_rate(e) + 1;
     }
-  };
+  }
 };
 
-}  // namespace internal
-}  // namespace leapfrog
+}  // namespace leapfrog::internal

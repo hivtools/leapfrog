@@ -5,8 +5,7 @@
 #include <variant>
 #include <vector>
 
-namespace leapfrog {
-namespace internal {
+namespace leapfrog::internal {
 
 using SSTypes = std::variant<
     int,
@@ -55,5 +54,4 @@ struct SSCollector {
   }
 };
 
-}  // namespace internal
-}  // namespace leapfrog
+}  // namespace leapfrog::internal

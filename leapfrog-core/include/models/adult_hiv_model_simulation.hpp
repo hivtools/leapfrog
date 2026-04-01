@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../generated/config_mixer.hpp"
+#include <array.h>
+
 #include "../options.hpp"
 
-namespace leapfrog {
-namespace internal {
+namespace leapfrog::internal {
 
 template<typename Config>
 concept AdultHivModelSimulationEnabled =
@@ -12,7 +12,7 @@ concept AdultHivModelSimulationEnabled =
 
 template<typename Config>
 struct AdultHivModelSimulation {
-  AdultHivModelSimulation(...) {};
+  AdultHivModelSimulation(...) {}
 };
 
 template<AdultHivModelSimulationEnabled Config>
@@ -59,7 +59,7 @@ public:
       state_curr(args.state_curr),
       state_next(args.state_next),
       intermediate(args.intermediate),
-      opts(args.opts) {};
+      opts(args.opts) {}
 
   void run_hiv_model_simulation() {
     const auto& p_ha = pars.ha;
@@ -83,28 +83,28 @@ public:
       nda::fill(i_ha.gradART, 0.0);
       nda::fill(i_ha.h_hiv_deaths_age_sex, 0.0);
       nda::fill(i_ha.h_deaths_excess_nonaids_agesex, 0.0);
-      run_disease_progression_and_mortality(hiv_step);
+      run_disease_progression_and_mortality();
 
       if (p_ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS) {
-        calc_new_infections_agesex(hiv_step);
+        calc_new_infections_agesex();
       } else if (p_ha.incidence_model_choice == SS::INCIDMOD_TRANSMRATE_HTS) {
         calc_new_infections_incidmod_transmrate(hiv_step);
       } else {
         throw std::invalid_argument("Incidence model choice not vaild\n");
       }
-      add_new_hiv_infections(hiv_step);
+      add_new_hiv_infections();
 
       if (t >= opts.ts_art_start) {
-        run_art_progression_and_mortality(hiv_step);
+        run_art_progression_and_mortality();
         run_h_art_initiation(hiv_step);
-        run_update_art_adult(hiv_step);
+        run_update_art_adult();
       }
 
-      run_update_hiv_adult(hiv_step);
-      run_remove_p_hiv_deaths(hiv_step);
+      run_update_hiv_adult();
+      run_remove_p_hiv_deaths();
       run_wlhiv_births();
     }
-  };
+  }
 
   // private methods that we don't want people to call
 private:
@@ -123,17 +123,17 @@ private:
       }
     }
 
-    real_type incrr_wgt_denominator = i_ha.hiv_neg_aggregate(MALE)
-        + p_ha.incidence_rate_ratio_sex(t) * i_ha.hiv_neg_aggregate(FEMALE);
-    real_type total_neg =
+    const real_type incrr_wgt_denominator = i_ha.hiv_neg_aggregate(MALE)
+        + (p_ha.incidence_rate_ratio_sex(t) * i_ha.hiv_neg_aggregate(FEMALE));
+    const real_type total_neg =
         i_ha.hiv_neg_aggregate(MALE) + i_ha.hiv_neg_aggregate(FEMALE);
     i_ha.incidence_rate_sex(MALE) =
         p_ha.input_adult_incidence_rate(t) * total_neg / incrr_wgt_denominator;
     i_ha.incidence_rate_sex(FEMALE) =
         i_ha.incidence_rate_sex(MALE) * p_ha.incidence_rate_ratio_sex(t);
-  };
+  }
 
-  void run_disease_progression_and_mortality(int hiv_step) {
+  void run_disease_progression_and_mortality() {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
@@ -177,7 +177,7 @@ private:
         }
       }
     }
-  };
+  }
 
   void calc_new_infections_incidmod_transmrate(int hiv_step) {
     const auto& p_ha = pars.ha;
@@ -186,8 +186,8 @@ private:
     auto& i_ha = intermediate.ha;
 
     // sum population sizes
-    real_type Xhivn_s[NS];
-    real_type Xhivn_incagerr[NS];
+    real_type Xhivn_s[static_cast<size_t>(NS)];
+    real_type Xhivn_incagerr[static_cast<size_t>(NS)];
     real_type Xhivp_noart = 0.0;
     real_type Xart = 0.0;
 
@@ -212,18 +212,18 @@ private:
         if (ha == SS::hIDX_15to49) {
           real_type hivp_ha = 0.0;
           int a = SS::pIDX_15to49;
-          for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
+          for (int i = 0; i < hAG_span[static_cast<size_t>(ha)]; ++i, ++a) {
             hivp_ha += n_ha.p_hivpop(a, s);
           }
           prop_include = (hivp_ha > 0) ? 1.0
-                  - n_ha.p_hivpop(SS::pIDX_15to49, s) / hivp_ha
-                      * (1.0 - opts.dt * hiv_step)
+                  - (n_ha.p_hivpop(SS::pIDX_15to49, s) / hivp_ha
+                     * (1.0 - opts.dt * hiv_step))
                                        : 1.0;
         } else if (ha == SS::hIDX_15to49 + SS::hAG_15to49) {
           real_type hivp_ha = 0.0;
           const int hAG_start_a = SS::pIDX_15to49 + SS::pAG_15to49;
           int a = hAG_start_a;
-          for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
+          for (int i = 0; i < hAG_span[static_cast<size_t>(ha)]; ++i, ++a) {
             hivp_ha += n_ha.p_hivpop(a, s);
           }
           prop_include = (hivp_ha > 0) ? n_ha.p_hivpop(hAG_start_a, s) / hivp_ha
@@ -260,7 +260,7 @@ private:
     real_type Xtot = Xhivn + Xhivp_noart + Xart;
     real_type prevcurr = (Xhivp_noart + Xart) / Xtot;
 
-    int current_hiv_time_step = t * opts.hts_per_year + hiv_step;
+    int current_hiv_time_step = (t * opts.hts_per_year) + hiv_step;
 
     real_type incrate15to49_hts =
         p_ha.transmission_rate_hts[current_hiv_time_step]
@@ -278,7 +278,7 @@ private:
     n_ha.incidence_15to49_hts(hiv_step) = incrate15to49_hts;
 
     // incidence by sex
-    real_type incrate15to49_s[NS];
+    real_type incrate15to49_s[static_cast<size_t>(NS)];
     incrate15to49_s[MALE] = incrate15to49_hts
         * (Xhivn_s[MALE] + Xhivn_s[FEMALE])
         / (Xhivn_s[MALE] + p_ha.incidence_rate_ratio_sex(t) * Xhivn_s[FEMALE]);
@@ -296,7 +296,7 @@ private:
     }
   }
 
-  void calc_new_infections_agesex(int hiv_step) {
+  void calc_new_infections_agesex() {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
     auto& n_dp = state_next.dp;
@@ -335,9 +335,9 @@ private:
             * i_ha.hiv_neg_aggregate(s) / i_ha.Xhivn_incagerr;
       }
     }
-  };
+  }
 
-  void add_new_hiv_infections(int hiv_step) {
+  void add_new_hiv_infections() {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
@@ -346,7 +346,7 @@ private:
       int a = p_idx_hiv_first_adult;
       for (int ha = 0; ha < hAG; ++ha) {
         i_ha.p_infections_ha = 0.0;
-        for (int i = 0; i < hAG_span[ha]; i++, a++) {
+        for (int i = 0; i < hAG_span[static_cast<size_t>(ha)]; i++, a++) {
           i_ha.p_infections_a = i_ha.p_infections_ts(a, s);
           i_ha.p_infections_ha += i_ha.p_infections_a;
           const auto new_infections = opts.dt * i_ha.p_infections_a;
@@ -361,9 +361,9 @@ private:
         }
       }
     }
-  };
+  }
 
-  void run_art_progression_and_mortality(int hiv_step) {
+  void run_art_progression_and_mortality() {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
@@ -418,7 +418,7 @@ private:
         }
       }
     }
-  };
+  }
 
   void run_h_art_initiation(int hiv_step) {
     const auto& p_ha = pars.ha;
@@ -452,7 +452,7 @@ private:
 
           for (int hu = 0; hu < hTS; ++hu) {
             i_ha.Xart_15plus += n_ha.h_artpop(hu, hm, ha, s)
-                + opts.dt * i_ha.gradART(hu, hm, ha, s);
+                + (opts.dt * i_ha.gradART(hu, hm, ha, s));
           }
         }
       }
@@ -464,14 +464,16 @@ private:
             && !p_ha.adults_on_art_is_percent(s, t - 1))
         {
           // case: both values are numbers
-          i_ha.artnum_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2)
-              + (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
+          i_ha.artnum_hts =
+              ((0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2))
+              + ((art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1));
         } else if (p_ha.adults_on_art_is_percent(s, t - 2)
                    && p_ha.adults_on_art_is_percent(s, t - 1))
         {
           // case: both values are percentages
-          i_ha.artcov_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2)
-              + (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
+          i_ha.artcov_hts =
+              ((0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2))
+              + ((art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1));
           i_ha.artnum_hts =
               i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
         } else if (!p_ha.adults_on_art_is_percent(s, t - 2)
@@ -482,8 +484,8 @@ private:
           i_ha.curr_coverage =
               i_ha.Xart_15plus / (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
           i_ha.artcov_hts = i_ha.curr_coverage
-              + (p_ha.adults_on_art(s, t - 1) - i_ha.curr_coverage) * opts.dt
-                  / (0.5 - opts.dt * hiv_step);
+              + ((p_ha.adults_on_art(s, t - 1) - i_ha.curr_coverage) * opts.dt
+                 / (0.5 - opts.dt * hiv_step));
           // back to number
           i_ha.artnum_hts =
               i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
@@ -505,14 +507,16 @@ private:
             && !p_ha.adults_on_art_is_percent(s, t))
         {
           // case: both values are numbers
-          i_ha.artnum_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1)
-              + art_interp_w * p_ha.adults_on_art(s, t);
+          i_ha.artnum_hts =
+              ((1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1))
+              + (art_interp_w * p_ha.adults_on_art(s, t));
         } else if (p_ha.adults_on_art_is_percent(s, t - 1)
                    && p_ha.adults_on_art_is_percent(s, t))
         {
           // case: both values are percentages
-          i_ha.artcov_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1)
-              + art_interp_w * p_ha.adults_on_art(s, t);
+          i_ha.artcov_hts =
+              ((1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1))
+              + (art_interp_w * p_ha.adults_on_art(s, t));
           // transition to number
           i_ha.artnum_hts =
               i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
@@ -524,8 +528,8 @@ private:
           i_ha.curr_coverage =
               i_ha.Xart_15plus / (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
           i_ha.artcov_hts = i_ha.curr_coverage
-              + (p_ha.adults_on_art(s, t) - i_ha.curr_coverage) * opts.dt
-                  / (1.0 - art_interp_w + opts.dt);
+              + ((p_ha.adults_on_art(s, t) - i_ha.curr_coverage) * opts.dt
+                 / (1.0 - art_interp_w + opts.dt));
           // back to number
           i_ha.artnum_hts =
               i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
@@ -571,7 +575,7 @@ private:
             );
             i_ha.artinit_hahm = std::min(
                 i_ha.artinit_hahm,
-                n_ha.h_hivpop(hm, ha, s) + opts.dt * i_ha.grad(hm, ha, s)
+                n_ha.h_hivpop(hm, ha, s) + (opts.dt * i_ha.grad(hm, ha, s))
             );
             i_ha.grad(hm, ha, s) -= i_ha.artinit_hahm / opts.dt;
             i_ha.gradART(ART0MOS, hm, ha, s) += i_ha.artinit_hahm / opts.dt;
@@ -580,9 +584,9 @@ private:
         }
       }
     }
-  };
+  }
 
-  void run_update_art_adult(int hiv_step) {
+  void run_update_art_adult() {
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
 
@@ -596,9 +600,9 @@ private:
         }
       }
     }
-  };
+  }
 
-  void run_update_hiv_adult(int hiv_step) {
+  void run_update_hiv_adult() {
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
 
@@ -609,9 +613,9 @@ private:
         }
       }
     }
-  };
+  }
 
-  void run_remove_p_hiv_deaths(int hiv_step) {
+  void run_remove_p_hiv_deaths() {
     auto& n_dp = state_next.dp;
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
@@ -621,7 +625,7 @@ private:
       int a = p_idx_hiv_first_adult;
       for (int ha = 0; ha < hAG; ++ha) {
         i_ha.hivpop_ha(ha) = 0.0;
-        for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
+        for (int i = 0; i < hAG_span[static_cast<size_t>(ha)]; ++i, ++a) {
           i_ha.hivpop_ha(ha) += n_ha.p_hivpop(a, s);
         }
       }
@@ -635,7 +639,7 @@ private:
           auto nonaids_excess_qx_ha =
               i_ha.h_deaths_excess_nonaids_agesex(ha, s) / i_ha.hivpop_ha(ha);
 
-          for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
+          for (int i = 0; i < hAG_span[static_cast<size_t>(ha)]; ++i, ++a) {
             i_ha.hivdeaths_a = n_ha.p_hivpop(a, s) * i_ha.hivqx_ha;
             auto deaths_nonaids_excess_a =
                 n_ha.p_hivpop(a, s) * nonaids_excess_qx_ha;
@@ -648,11 +652,11 @@ private:
           }
 
         } else {
-          a += hAG_span[ha];
+          a += hAG_span[static_cast<size_t>(ha)];
         }
       }
     }
-  };
+  }
 
   void run_wlhiv_births() {
     const auto& p_dp = pars.dp;
@@ -685,15 +689,18 @@ private:
 
       auto total_pop = 0.0;
       auto asfr_w = 0.0;
-      for (int a_idx = a_idx_in; a_idx < (a_idx_in + hAG_span[a]); ++a_idx) {
+      for (int a_idx = a_idx_in;
+           a_idx < (a_idx_in + hAG_span[static_cast<size_t>(a)]);
+           ++a_idx)
+      {
         total_pop += n_dp.p_totpop(a_idx, FEMALE);
         asfr_w +=
             p_dp.age_specific_fertility_rate(a_idx - p_idx_fertility_first, t)
             / i_ha.asfr_sum;
       }
       // set up a_idx_in for the next loop
-      a_idx_in = a_idx_in + hAG_span[a];
-      asfr_w /= hAG_span[a];
+      a_idx_in = a_idx_in + hAG_span[static_cast<size_t>(a)];
+      asfr_w /= hAG_span[static_cast<size_t>(a)];
 
       i_ha.prev = i_ha.nHIVcurr / total_pop;
 
@@ -729,8 +736,7 @@ private:
 
       n_ha.hiv_births += n_ha.hiv_births_by_mat_age(a);
     }  // end a
-  };
+  }
 };
 
-}  // namespace internal
-}  // namespace leapfrog
+}  // namespace leapfrog::internal

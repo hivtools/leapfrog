@@ -2,7 +2,8 @@
 
 #include <sstream>
 
-#include "array/array.h"
+#include <array.h>
+
 #include "generated/config_mixer.hpp"
 #include "generated/model_variants.hpp"
 #include "initial_year.hpp"
@@ -44,7 +45,7 @@ struct Leapfrog {
     return run_model_from_state(
         pars, opts, initial_state, simulation_start_year, output_years
     );
-  };
+  }
 
   static OutputState run_model_from_state(
       const Pars& pars,
@@ -71,7 +72,7 @@ struct Leapfrog {
     Intermediate intermediate;
     intermediate.reset();
 
-    OutputState output_state(output_years.size());
+    OutputState output_state(static_cast<int>(output_years.size()));
     save_state(opts.proj_start_year, state, output_state, output_years);
 
     // Each time step is mid-point of the year
@@ -89,7 +90,7 @@ struct Leapfrog {
       intermediate.reset();
     }
     return output_state;
-  };
+  }
 
   static State run_model_single_year(
       const Pars& pars,
@@ -115,7 +116,7 @@ struct Leapfrog {
     project_year(args);
 
     return args.state_next;
-  };
+  }
 
 private:
   static void save_state(
@@ -129,7 +130,7 @@ private:
         output_state.save_state(i, state_next);
       }
     }
-  };
+  }
 
   static void project_year(Args& args) {
     internal::GeneralDemographicProjection<Cfg> general_dp(args);
@@ -170,7 +171,7 @@ private:
         spectrum.run_spectrum_post_hoc_calulations();
       }
     }
-  };
+  }
 };
 
 }  // namespace leapfrog

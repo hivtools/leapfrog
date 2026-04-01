@@ -1,8 +1,6 @@
 #pragma once
 
 #include "generated/config_mixer.hpp"
-#include "generated/model_variants.hpp"
-#include "options.hpp"
 
 namespace leapfrog {
 
@@ -39,8 +37,8 @@ void run_initial_year_calculations(
 
     const auto a = SS::p_idx_fertility_first + af;
     auto female_fertility_population_a = is_dp.p_totpop(a, SS::FEMALE)
-        + is_dp.p_totpop(a + 1, SS::FEMALE)
-            / p_dp.survival_probability(a + 1, SS::FEMALE, t0);
+        + (is_dp.p_totpop(a + 1, SS::FEMALE)
+           / p_dp.survival_probability(a + 1, SS::FEMALE, t0));
     is_dp.births += female_fertility_population_a * 0.5
         * p_dp.age_specific_fertility_rate(af, t0);
   }

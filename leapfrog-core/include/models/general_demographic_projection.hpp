@@ -3,15 +3,14 @@
 #include "../generated/config_mixer.hpp"
 #include "../options.hpp"
 
-namespace leapfrog {
-namespace internal {
+namespace leapfrog::internal {
 
 template<typename Config>
 concept GeneralDemographicProjectionEnabled = RunDemographicProjection<Config>;
 
 template<typename Config>
 struct GeneralDemographicProjection {
-  GeneralDemographicProjection(...) {};
+  GeneralDemographicProjection(...) {}
 };
 
 template<GeneralDemographicProjectionEnabled Config>
@@ -50,7 +49,7 @@ public:
       state_curr(args.state_curr),
       state_next(args.state_next),
       intermediate(args.intermediate),
-      opts(args.opts) {};
+      opts(args.opts) {}
 
   void run_general_pop_demographic_projection() {
     run_ageing_and_mortality();
@@ -58,7 +57,7 @@ public:
       run_migration();
     }
     run_fertility_and_infant_migration();
-  };
+  }
 
   void run_end_year_migration() {
     const auto& p_dp = pars.dp;
@@ -70,13 +69,13 @@ public:
       for (int a = 0; a < pAG; ++a) {
         // Calculate migration rate as number of net migrants divided by total
         // pop.
-        i_dp.migration_rate(a, s) = p_dp.net_migration(a, s, t) == 0.0
+        i_dp.migration_rate(a, s) = n_dp.p_totpop(a, s) == 0.0
             ? 0.0
             : p_dp.net_migration(a, s, t) / n_dp.p_totpop(a, s);
         n_dp.p_totpop(a, s) *= 1.0 + i_dp.migration_rate(a, s);
       }
     }
-  };
+  }
 
   // private methods that we don't want people to call
 private:
@@ -101,7 +100,7 @@ private:
       n_dp.p_totpop(pAG - 1, s) +=
           c_dp.p_totpop(pAG - 1, s) - p_deaths_background_totpop_open_age;
     }
-  };
+  }
 
   void run_migration() {
     const auto& p_dp = pars.dp;
@@ -115,7 +114,7 @@ private:
         // survivorship to end of period. Divide by 2 as (on average) half of
         // deaths will happen before they migrate. Then divide by total pop to
         // get rate.
-        i_dp.migration_rate(a, s) = p_dp.net_migration(a, s, t) == 0.0
+        i_dp.migration_rate(a, s) = n_dp.p_totpop(a, s) == 0.0
             ? 0.0
             : p_dp.net_migration(a, s, t)
                 * (1.0 + p_dp.survival_probability(a, s, t)) * 0.5
@@ -135,13 +134,13 @@ private:
       real_type survival_probability_netmig =
           (n_dp.p_totpop(a, s) + 0.5 * n_dp.p_deaths_background_totpop(a, s))
           / (n_dp.p_totpop(a, s) + n_dp.p_deaths_background_totpop(a, s));
-      i_dp.migration_rate(a, s) = p_dp.net_migration(a, s, t) == 0.0
+      i_dp.migration_rate(a, s) = n_dp.p_totpop(a, s) == 0.0
           ? 0.0
           : survival_probability_netmig * p_dp.net_migration(a, s, t)
               / n_dp.p_totpop(a, s);
       n_dp.p_totpop(a, s) *= 1.0 + i_dp.migration_rate(a, s);
     }
-  };
+  }
 
   void run_fertility_and_infant_migration() {
     const auto& p_dp = pars.dp;
@@ -173,8 +172,7 @@ private:
         n_dp.p_totpop(0, s) *= 1.0 + migration_rate_a0;
       }
     }
-  };
+  }
 };
 
-}  // namespace internal
-}  // namespace leapfrog
+}  // namespace leapfrog::internal

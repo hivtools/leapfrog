@@ -18,14 +18,15 @@ find_package(HDF5 REQUIRED COMPONENTS C CXX)
 
 set(
     LEAPFROG_TEST_DATA_DIR
-    "${PROJECT_SOURCE_DIR}/../leapfrogr/tests/testthat/testdata"
+    "${PROJECT_SOURCE_DIR}/../../leapfrogr/tests/testthat/testdata"
     CACHE PATH "Path to leapfrog test data directory containing adult_parms_full.h5"
 )
 
 add_executable(simulate_model source/simulate_model.cpp)
 target_link_libraries(simulate_model PRIVATE leapfrog::leapfrog ${HDF5_C_LIBRARIES} ${HDF5_CXX_LIBRARIES})
-target_include_directories(simulate_model PRIVATE ${HDF5_INCLUDE_DIRS})
+target_include_directories(simulate_model SYSTEM PRIVATE ${HDF5_INCLUDE_DIRS})
 target_include_directories(simulate_model SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/../include/array")
+target_include_directories(simulate_model SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/../include/generated/cpp_interface")
 target_compile_features(simulate_model PRIVATE cxx_std_20)
 
 add_test(

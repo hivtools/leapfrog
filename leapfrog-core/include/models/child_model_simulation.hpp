@@ -1,10 +1,8 @@
 #pragma once
 
-#include "../generated/config_mixer.hpp"
 #include "../options.hpp"
 
-namespace leapfrog {
-namespace internal {
+namespace leapfrog::internal {
 
 template<typename Config>
 concept ChildModelSimulationEnabled = RunDemographicProjection<Config>
@@ -12,7 +10,7 @@ concept ChildModelSimulationEnabled = RunDemographicProjection<Config>
 
 template<typename Config>
 struct ChildModelSimulation {
-  ChildModelSimulation(...) {};
+  ChildModelSimulation(...) {}
 };
 
 template<ChildModelSimulationEnabled Config>
@@ -131,7 +129,7 @@ public:
       state_curr(args.state_curr),
       state_next(args.state_next),
       intermediate(args.intermediate),
-      opts(args.opts) {};
+      opts(args.opts) {}
 
   void run_child_model_simulation() {
     const auto& p_hc = pars.hc;
@@ -174,7 +172,7 @@ public:
 
     nosocomial_infections();
     fill_total_pop_outputs();
-  };
+  }
 
   // private methods that we don't want people to call
 private:
@@ -234,14 +232,14 @@ private:
         }
       }
     }
-  };
+  }
 
   void run_wlhiv_births_input_mat_prev() {
     const auto& p_hc = pars.hc;
     auto& n_ha = state_next.ha;
 
     n_ha.hiv_births = p_hc.mat_hiv_births(t);
-  };
+  }
 
   void calc_hiv_negative_pop() {
     auto& n_ha = state_next.ha;
@@ -253,7 +251,7 @@ private:
         i_hc.p_hiv_neg_pop(a, s) = n_dp.p_totpop(a, s) - n_ha.p_hivpop(a, s);
       }  // end a
     }  // end s
-  };
+  }
 
   void adjust_hiv_births() {
     const auto& p_hc = pars.hc;
@@ -264,7 +262,7 @@ private:
     } else {
       n_ha.hiv_births -= p_hc.abortion(0, t);
     }
-  };
+  }
 
   void convert_PMTCT_num_to_perc() {
     const auto& p_hc = pars.hc;
@@ -327,7 +325,7 @@ private:
         }
       }
     }  // end else
-  };
+  }
 
   void convert_PMTCT_pre_bf() {
     const auto& p_hc = pars.hc;
@@ -344,7 +342,7 @@ private:
         n_hc.mtct_by_source_tr(BPLUS_BEFORE_DROPOUT, 0);
     i_hc.PMTCT_during_dropout -=
         n_hc.mtct_by_source_tr(BPLUS_DURING_DROPOUT, 0);
-  };
+  }
 
   void calc_wlhiv_cd4_proportion() {
     const auto& p_hc = pars.hc;
@@ -395,7 +393,7 @@ private:
       }
       i_hc.prop_wlhiv_lt350 = i_hc.prop_wlhiv_lt200 + i_hc.prop_wlhiv_200to350;
     }
-  };
+  }
 
   void adjust_option_A_B_tr() {
     const auto& p_hc = pars.hc;
@@ -410,7 +408,7 @@ private:
     auto option_A_B_coverage = i_hc.PMTCT_coverage(0) + i_hc.PMTCT_coverage(1);
     if (option_A_B_coverage > i_hc.prop_wlhiv_gte350) {
       if (i_hc.prop_wlhiv_gte350 > 0) {
-        i_hc.excessratio = option_A_B_coverage / i_hc.prop_wlhiv_gte350 - 1;
+        i_hc.excessratio = (option_A_B_coverage / i_hc.prop_wlhiv_gte350) - 1;
       } else {
         i_hc.excessratio = 0;
       }
@@ -425,7 +423,7 @@ private:
       i_hc.optB_transmission_rate =
           p_hc.PMTCT_transmission_rate(0, 1, 0) * (1 + i_hc.excessratio);
     }
-  };
+  }
 
   void adjust_option_A_B_bf_tr() {
     const auto& p_hc = pars.hc;
@@ -444,7 +442,7 @@ private:
       if (option_A_B_coverage > i_hc.prop_wlhiv_gte350) {
         i_hc.excessratio_bf = option_A_B_coverage - i_hc.prop_wlhiv_gte350;
         auto excess_factor_bf =
-            i_hc.excessratio_bf / option_A_B_coverage * (1.45 / 0.46)
+            (i_hc.excessratio_bf / option_A_B_coverage * (1.45 / 0.46))
             + i_hc.prop_wlhiv_gte350;
         i_hc.optA_bf_transmission_rate =
             excess_factor_bf * p_hc.PMTCT_transmission_rate(4, OPTION_A, 1);
@@ -462,7 +460,7 @@ private:
       i_hc.optB_bf_transmission_rate =
           p_hc.PMTCT_transmission_rate(4, OPTION_B, 1);
     }
-  };
+  }
 
   void maternal_incidence_in_pregnancy_tr() {
     const auto& p_dp = pars.dp;
@@ -534,7 +532,7 @@ private:
         i_hc.perinatal_transmission_from_incidence = 0.0;
       }
     }
-  };
+  }
 
   void perinatal_tr() {
     const auto& p_hc = pars.hc;
@@ -577,9 +575,9 @@ private:
     // Transmission among women not on treatment
     if (i_hc.num_wlhiv > 0) {
       auto untreated_vertical_tr =
-          i_hc.prop_wlhiv_lt200 * p_hc.vertical_transmission_rate(4, 0)
-          + i_hc.prop_wlhiv_200to350 * p_hc.vertical_transmission_rate(2, 0)
-          + i_hc.prop_wlhiv_gte350 * p_hc.vertical_transmission_rate(0, 0);
+          (i_hc.prop_wlhiv_lt200 * p_hc.vertical_transmission_rate(4, 0))
+          + (i_hc.prop_wlhiv_200to350 * p_hc.vertical_transmission_rate(2, 0))
+          + (i_hc.prop_wlhiv_gte350 * p_hc.vertical_transmission_rate(0, 0));
       i_hc.perinatal_transmission_rate += i_hc.no_PMTCT * untreated_vertical_tr;
       // No ART
       if ((i_hc.no_PMTCT - i_hc.PMTCT_before_dropout - i_hc.PMTCT_during_dropout
@@ -607,7 +605,7 @@ private:
       n_hc.mtct_by_source_tr(MAT_SERO, 0) =
           i_hc.perinatal_transmission_from_incidence / i_hc.need_PMTCT;
     }
-  };
+  }
 
   void maternal_incidence_in_bf_tr() {
     const auto& p_hc = pars.hc;
@@ -631,7 +629,7 @@ private:
     n_hc.mtct_by_source_tr(MAT_SERO, VT_BF_00_05) =
         i_hc.bf_incident_hiv_transmission_rate
         * (total_births - n_ha.hiv_births) / n_ha.hiv_births;
-  };
+  }
 
   void bf_dropout(int bf) {
     const auto& p_hc = pars.hc;
@@ -640,7 +638,7 @@ private:
     for (int hp = 0; hp < hPS; hp++) {
       const auto hPS_dropout_idx = (bf < 6) ? 1 : 2;
       const auto PMTCT_retention =
-          1 - p_hc.PMTCT_dropout(hp, hPS_dropout_idx, t) * 2;
+          1 - (p_hc.PMTCT_dropout(hp, hPS_dropout_idx, t) * 2);
       if (hp == 4) {
         i_hc.PMTCT_before_dropout += i_hc.PMTCT_coverage(hp)
             * p_hc.PMTCT_dropout(hp, hPS_dropout_idx, t) * 2;
@@ -650,7 +648,7 @@ private:
       }
       i_hc.PMTCT_coverage(hp) *= PMTCT_retention;
     }
-  };
+  }
 
   void run_bf_transmission_rate(int bf_start, int bf_end, int index) {
     const auto& p_hc = pars.hc;
@@ -676,8 +674,8 @@ private:
           - i_hc.bf_transmission_rate(index);
 
       if (index > 0) {
-        for (int bf = 0; bf < index; ++bf) {
-          i_hc.percent_no_treatment -= i_hc.bf_transmission_rate(bf);
+        for (int prev_bf = 0; prev_bf < index; ++prev_bf) {
+          i_hc.percent_no_treatment -= i_hc.bf_transmission_rate(prev_bf);
         }
       }
 
@@ -702,9 +700,9 @@ private:
       if (p_hc.breastfeeding_duration_no_art(bf, t) < 1) {
         i_hc.percent_no_treatment = std::max(i_hc.percent_no_treatment, 0.0);
         auto untreated_vertical_bf_tr =
-            i_hc.prop_wlhiv_lt200 * p_hc.vertical_transmission_rate(4, 1)
-            + i_hc.prop_wlhiv_200to350 * p_hc.vertical_transmission_rate(2, 1)
-            + i_hc.prop_wlhiv_gte350 * p_hc.vertical_transmission_rate(0, 1);
+            (i_hc.prop_wlhiv_lt200 * p_hc.vertical_transmission_rate(4, 1))
+            + (i_hc.prop_wlhiv_200to350 * p_hc.vertical_transmission_rate(2, 1))
+            + (i_hc.prop_wlhiv_gte350 * p_hc.vertical_transmission_rate(0, 1));
         i_hc.bf_transmission_rate(index) += i_hc.bf_scalar
             * i_hc.percent_no_treatment * untreated_vertical_bf_tr * 2
             * (1 - p_hc.breastfeeding_duration_no_art(bf, t));
@@ -732,7 +730,7 @@ private:
         i_hc.PMTCT_before_dropout -= tr_before;
       }
     }
-  };
+  }
 
   void nosocomial_infections() {
     const auto& p_hc = pars.hc;
@@ -753,7 +751,7 @@ private:
         }
       }  // end a
     }  // end NS
-  };
+  }
 
   void add_infections() {
     const auto& p_dp = pars.dp;
@@ -910,7 +908,7 @@ private:
         }
       }
     }
-  };
+  }
 
   void art_eligibility_by_age() {
     const auto& p_hc = pars.hc;
@@ -932,7 +930,7 @@ private:
         }  // end a
       }  // end hcTT
     }  // end NS
-  };
+  }
 
   void art_eligibility_by_cd4() {
     const auto& p_hc = pars.hc;
@@ -956,7 +954,7 @@ private:
         }  // end a
       }  // end hcTT
     }  // end NS
-  };
+  }
 
   void need_for_cotrim() {
     const auto& p_hc = pars.hc;
@@ -1013,7 +1011,7 @@ private:
         }  // end a
       }  // end hcTT
     }  // end NS
-  };
+  }
 
   void get_cotrim_effect(int art_flag) {
     const auto& p_hc = pars.hc;
@@ -1021,12 +1019,13 @@ private:
     auto& i_hc = intermediate.hc;
 
     if (p_hc.ctx_val_is_percent(t)) {
-      i_hc.ctx_mean(art_flag) = 1 - p_hc.ctx_effect(art_flag) * p_hc.ctx_val(t);
+      i_hc.ctx_mean(art_flag) =
+          1 - (p_hc.ctx_effect(art_flag) * p_hc.ctx_val(t));
     } else if (n_hc.ctx_need > 0) {
       i_hc.ctx_mean(art_flag) =
-          1 - p_hc.ctx_effect(art_flag) * p_hc.ctx_val(t) / n_hc.ctx_need;
+          1 - (p_hc.ctx_effect(art_flag) * p_hc.ctx_val(t) / n_hc.ctx_need);
     }
-  };
+  }
 
   void cd4_mortality() {
     const auto& p_hc = pars.hc;
@@ -1102,7 +1101,7 @@ private:
         }
       }
     }
-  };
+  }
 
   void run_child_hiv_mort() {
     const auto& p_hc = pars.hc;
@@ -1138,7 +1137,7 @@ private:
         }
       }
     }
-  };
+  }
 
   void add_child_grad() {
     auto& n_hc = state_next.hc;
@@ -1165,7 +1164,7 @@ private:
         }  // end cat
       }  // end a
     }  // end s
-  };
+  }
 
   void eligible_for_treatment() {
     auto& n_hc = state_next.hc;
@@ -1183,7 +1182,7 @@ private:
         }  // end a
       }  // end hcTT
     }  // end NS
-  };
+  }
 
   void on_art_mortality(int t_art_idx, int art_flag) {
     const auto& p_hc = pars.hc;
@@ -1256,7 +1255,7 @@ private:
         }  // end a
       }  // end hc1DS
     }  // end NS
-  };
+  }
 
   void deaths_this_year() {
     const auto& p_hc = pars.hc;
@@ -1325,7 +1324,7 @@ private:
     }  // end dur
     i_hc.hc_art_deaths(0) =
         i_hc.hc_art_deaths(1) + i_hc.hc_art_deaths(2) + i_hc.hc_art_deaths(3);
-  };
+  }
 
   void progress_time_on_art(int curr_t_idx, int end_t_idx) {
     auto& n_hc = state_next.hc;
@@ -1350,7 +1349,7 @@ private:
         }  // end NS
       }  // end a
     }  // end hc1DS
-  };
+  }
 
   void calc_on_art() {
     auto& n_hc = state_next.hc;
@@ -1370,7 +1369,7 @@ private:
         }
       }
     }
-  };
+  }
 
   void calc_total_and_unmet_art_need() {
     auto& i_hc = intermediate.hc;
@@ -1391,7 +1390,7 @@ private:
     }  // end ag
     i_hc.total_need(0) =
         i_hc.on_art(0) + i_hc.unmet_need(0) + i_hc.hc_art_deaths(0);
-  };
+  }
 
   void age_specific_art_last_year() {
     const auto& p_hc = pars.hc;
@@ -1430,7 +1429,7 @@ private:
         }
       }  // end ag
     }
-  };
+  }
 
   void art_last_year() {
     const auto& p_hc = pars.hc;
@@ -1457,7 +1456,7 @@ private:
         i_hc.total_art_last_year(0) = p_hc.hc_art_val(0, t - 1);
       }
     }
-  };
+  }
 
   void art_this_year() {
     const auto& p_hc = pars.hc;
@@ -1469,7 +1468,7 @@ private:
         i_hc.total_art_this_year(ag) *= i_hc.total_need(ag);
       }
     }  // end ag
-  };
+  }
 
   void calc_art_initiates() {
     const auto& p_hc = pars.hc;
@@ -1488,15 +1487,15 @@ private:
           (i_hc.total_art_last_year(ag) + i_hc.total_art_this_year(ag)) / 2.0;
       n_hc.hc_art_init(ag) = std::max(
           i_hc.hc_art_deaths(ag) + average_art_by_year
-              - i_hc.on_art(ag) * i_hc.retained,
+              - (i_hc.on_art(ag) * i_hc.retained),
           0.0
       );
       n_hc.hc_art_init(ag) = std::min(
           n_hc.hc_art_init(ag),
-          i_hc.unmet_need(ag) + i_hc.on_art(ag) * p_hc.hc_art_ltfu(t)
+          i_hc.unmet_need(ag) + (i_hc.on_art(ag) * p_hc.hc_art_ltfu(t))
       );
     }  // end ag
-  };
+  }
 
   void art_ltfu() {
     const auto& p_hc = pars.hc;
@@ -1564,7 +1563,7 @@ private:
         }  // end hc1DS
       }  // end a
     }  // end NS
-  };
+  }
 
   void apply_ltfu_to_hivpop() {
     auto& n_hc = state_next.hc;
@@ -1585,7 +1584,7 @@ private:
         }  // end hc1DS
       }  // end a
     }  // end NS
-  };
+  }
 
   void apply_ltfu_to_artpop() {
     auto& n_hc = state_next.hc;
@@ -1607,7 +1606,7 @@ private:
         }  // end hc1DS
       }  // end a
     }  // end NS
-  };
+  }
 
   void art_initiation_by_age() {
     const auto& p_hc = pars.hc;
@@ -1715,7 +1714,7 @@ private:
         }  // end hcTT
       }  // end  NS
     }  // end if
-  };
+  }
 
   void fill_total_pop_outputs() {
     auto& n_ha = state_next.ha;
@@ -1755,8 +1754,7 @@ private:
         n_dp.p_totpop(a, s) -= n_ha.p_hiv_deaths(a, s);
       }
     }
-  };
+  }
 };
 
-}  // namespace internal
-}  // namespace leapfrog
+}  // namespace leapfrog::internal

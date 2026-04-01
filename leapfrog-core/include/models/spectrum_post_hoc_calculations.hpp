@@ -1,10 +1,8 @@
 #pragma once
 
-#include "../generated/config_mixer.hpp"
 #include "../options.hpp"
 
-namespace leapfrog {
-namespace internal {
+namespace leapfrog::internal {
 
 template<typename Config>
 concept SpectrumPostHocCalculationsEnabled =
@@ -13,7 +11,7 @@ concept SpectrumPostHocCalculationsEnabled =
 
 template<typename Config>
 struct SpectrumPostHocCalculations {
-  SpectrumPostHocCalculations(...) {};
+  SpectrumPostHocCalculations(...) {}
 };
 
 template<SpectrumPostHocCalculationsEnabled Config>
@@ -53,12 +51,12 @@ public:
       state_curr(args.state_curr),
       state_next(args.state_next),
       intermediate(args.intermediate),
-      opts(args.opts) {};
+      opts(args.opts) {}
 
   void run_spectrum_post_hoc_calulations() {
     calculate_nonaids_deaths();
     calculate_nonaids_excess_deaths();
-  };
+  }
 
   // private methods that we don't want people to call
 private:
@@ -100,7 +98,7 @@ private:
         }
       }
     }
-  };
+  }
 
   void calculate_nonaids_excess_deaths() {
     auto& n_ha = state_next.ha;
@@ -154,5 +152,4 @@ private:
   }
 };
 
-}  // namespace internal
-}  // namespace leapfrog
+}  // namespace leapfrog::internal
