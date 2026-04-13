@@ -1,17 +1,19 @@
 #pragma once
 
 #include <sstream>
-#include "array/array.h"
-#include "generated/model_variants.hpp"
+
+#include <array.h>
+
 #include "generated/config_mixer.hpp"
-#include "models/general_demographic_projection.hpp"
-#include "models/hiv_demographic_projection.hpp"
+#include "generated/model_variants.hpp"
+#include "initial_year.hpp"
 #include "models/adult_hiv_model_simulation.hpp"
 #include "models/child_model_simulation.hpp"
-#include "models/spectrum_post_hoc_calculations.hpp"
+#include "models/general_demographic_projection.hpp"
 #include "models/goals_simulation.hpp"
+#include "models/hiv_demographic_projection.hpp"
+#include "models/spectrum_post_hoc_calculations.hpp"
 #include "options.hpp"
-#include "initial_year.hpp"
 
 namespace leapfrog {
 
@@ -26,36 +28,41 @@ struct Leapfrog {
   using Args = Cfg::Args;
 
   static OutputState run_model(
-    const Pars& pars,
-    const Options<real_type>& opts,
-    const std::vector<int> output_years
+      const Pars& pars,
+      const Options<real_type>& opts,
+      const std::vector<int> output_years
   ) {
     int simulation_start_year = opts.proj_start_year;
 
     State initial_state = {};
     initial_state.reset();
     if constexpr (ModelVariant::run_demographic_projection) {
-      run_initial_year_calculations<L, real_type, ModelVariant>(pars, initial_state);
+      run_initial_year_calculations<L, real_type, ModelVariant>(
+          pars, initial_state
+      );
     }
 
-    return run_model_from_state(pars, opts, initial_state, simulation_start_year, output_years);
-  };
+    return run_model_from_state(
+        pars, opts, initial_state, simulation_start_year, output_years
+    );
+  }
 
   static OutputState run_model_from_state(
-    const Pars& pars,
-    const Options<real_type>& opts,
-    const State& initial_state,
-    const int simulation_start_year,
-    const std::vector<int> output_years
+      const Pars& pars,
+      const Options<real_type>& opts,
+      const State& initial_state,
+      const int simulation_start_year,
+      const std::vector<int> output_years
   ) {
-
-    const auto min_output_year = std::min_element(std::begin(output_years),
-                                                  std::end(output_years));
-    if (*min_output_year != opts.proj_start_year && *min_output_year <= simulation_start_year) {
+    const auto min_output_year =
+        std::min_element(std::begin(output_years), std::end(output_years));
+    if (*min_output_year != opts.proj_start_year
+        && *min_output_year <= simulation_start_year)
+    {
       std::ostringstream oss;
       oss << "Cannot output year '" << *min_output_year << "'. "
-          << "Output years must be later than simulation start year"
-          << " '" << simulation_start_year << "'.";
+          << "Output years must be later than simulation start year" << " '"
+          << simulation_start_year << "'.";
       throw std::invalid_argument(oss.str());
     }
     auto state = initial_state;
@@ -65,27 +72,31 @@ struct Leapfrog {
     Intermediate intermediate;
     intermediate.reset();
 
-    OutputState output_state(output_years.size());
+    OutputState output_state(static_cast<int>(output_years.size()));
     save_state(opts.proj_start_year, state, output_state, output_years);
 
     // Each time step is mid-point of the year
-    for (int step = simulation_start_year - opts.proj_start_year + 1; step < opts.proj_steps; ++step) {
-      Args args = { step, pars, state, state_next, intermediate, opts };
+    for (int step = simulation_start_year - opts.proj_start_year + 1;
+         step < opts.proj_steps;
+         ++step)
+    {
+      Args args = {step, pars, state, state_next, intermediate, opts};
       project_year(args);
-      save_state(opts.proj_start_year + step, state_next,
-                 output_state, output_years);
+      save_state(
+          opts.proj_start_year + step, state_next, output_state, output_years
+      );
       std::swap(state, state_next);
       state_next.reset();
       intermediate.reset();
     }
     return output_state;
-  };
+  }
 
   static State run_model_single_year(
-    const Pars& pars,
-    const Options<real_type>& opts,
-    const State& initial_state,
-    const int simulation_start_year
+      const Pars& pars,
+      const Options<real_type>& opts,
+      const State& initial_state,
+      const int simulation_start_year
   ) {
     auto state = initial_state;
     auto state_next = state;
@@ -94,25 +105,32 @@ struct Leapfrog {
     Intermediate intermediate;
     intermediate.reset();
 
-    Args args = { simulation_start_year - opts.proj_start_year + 1, pars, state, state_next, intermediate, opts };
+    Args args = {
+        simulation_start_year - opts.proj_start_year + 1,
+        pars,
+        state,
+        state_next,
+        intermediate,
+        opts
+    };
     project_year(args);
 
     return args.state_next;
-  };
+  }
 
-  private:
+private:
   static void save_state(
-    const int step,
-    State& state_next,
-    OutputState& output_state,
-    const std::vector<int>& output_years
+      const int step,
+      State& state_next,
+      OutputState& output_state,
+      const std::vector<int>& output_years
   ) {
     for (size_t i = 0; i < output_years.size(); ++i) {
       if (step == output_years[i]) {
         output_state.save_state(i, state_next);
       }
     }
-  };
+  }
 
   static void project_year(Args& args) {
     internal::GeneralDemographicProjection<Cfg> general_dp(args);
@@ -153,7 +171,7 @@ struct Leapfrog {
         spectrum.run_spectrum_post_hoc_calulations();
       }
     }
-  };
+  }
 };
 
-}
+}  // namespace leapfrog

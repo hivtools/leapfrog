@@ -7,7 +7,6 @@ leapfrogr/int/doc
 .vscode
 README.html
 .clangd
-.clang-format
 model-outputs
 leapfrogr/tests/testthat/testdata/*.h5
 leapfrogr/tests/testthat/testdata/*.rds

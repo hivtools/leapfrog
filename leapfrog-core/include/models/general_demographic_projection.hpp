@@ -1,17 +1,16 @@
 #pragma once
 
-#include "../options.hpp"
 #include "../generated/config_mixer.hpp"
+#include "../options.hpp"
 
-namespace leapfrog {
-namespace internal {
+namespace leapfrog::internal {
 
 template<typename Config>
 concept GeneralDemographicProjectionEnabled = RunDemographicProjection<Config>;
 
 template<typename Config>
 struct GeneralDemographicProjection {
-  GeneralDemographicProjection(...) {};
+  GeneralDemographicProjection(...) {}
 };
 
 template<GeneralDemographicProjectionEnabled Config>
@@ -25,7 +24,7 @@ struct GeneralDemographicProjection<Config> {
   using Args = Config::Args;
 
   // private members of this struct
-  private:
+private:
   // state space
   static constexpr int NS = SS::NS;
   static constexpr int pAG = SS::pAG;
@@ -43,15 +42,14 @@ struct GeneralDemographicProjection<Config> {
   const Options<real_type>& opts;
 
   // only exposing the constructor and some methods
-  public:
-  GeneralDemographicProjection(Args& args):
-    t(args.t),
-    pars(args.pars),
-    state_curr(args.state_curr),
-    state_next(args.state_next),
-    intermediate(args.intermediate),
-    opts(args.opts)
-  {};
+public:
+  GeneralDemographicProjection(Args& args) :
+      t(args.t),
+      pars(args.pars),
+      state_curr(args.state_curr),
+      state_next(args.state_next),
+      intermediate(args.intermediate),
+      opts(args.opts) {}
 
   void run_general_pop_demographic_projection() {
     run_ageing_and_mortality();
@@ -59,7 +57,7 @@ struct GeneralDemographicProjection<Config> {
       run_migration();
     }
     run_fertility_and_infant_migration();
-  };
+  }
 
   void run_end_year_migration() {
     const auto& p_dp = pars.dp;
@@ -69,17 +67,18 @@ struct GeneralDemographicProjection<Config> {
     for (int s = 0; s < NS; ++s) {
       // Migration for ages 0, ..., 80+
       for (int a = 0; a < pAG; ++a) {
-        // Calculate migration rate as number of net migrants divided by total pop.
-        i_dp.migration_rate(a, s) = p_dp.net_migration(a, s, t) == 0.0 ? 0.0 :
-	  p_dp.net_migration(a, s, t) / n_dp.p_totpop(a, s);
+        // Calculate migration rate as number of net migrants divided by total
+        // pop.
+        i_dp.migration_rate(a, s) = n_dp.p_totpop(a, s) == 0.0
+            ? 0.0
+            : p_dp.net_migration(a, s, t) / n_dp.p_totpop(a, s);
         n_dp.p_totpop(a, s) *= 1.0 + i_dp.migration_rate(a, s);
       }
     }
-  };
-
+  }
 
   // private methods that we don't want people to call
-  private:
+private:
   void run_ageing_and_mortality() {
     const auto& p_dp = pars.dp;
     const auto& c_dp = state_curr.dp;
@@ -88,16 +87,20 @@ struct GeneralDemographicProjection<Config> {
     for (int s = 0; s < NS; ++s) {
       // Start at index 1 as we will add infant (age 0) births and deaths later
       for (int a = 1; a < pAG; ++a) {
-        n_dp.p_deaths_background_totpop(a, s) = c_dp.p_totpop(a - 1, s) * (1.0 - p_dp.survival_probability(a, s, t));
-        n_dp.p_totpop(a, s) = c_dp.p_totpop(a - 1, s) - n_dp.p_deaths_background_totpop(a, s);
+        n_dp.p_deaths_background_totpop(a, s) = c_dp.p_totpop(a - 1, s)
+            * (1.0 - p_dp.survival_probability(a, s, t));
+        n_dp.p_totpop(a, s) =
+            c_dp.p_totpop(a - 1, s) - n_dp.p_deaths_background_totpop(a, s);
       }
       // open age group
-      real_type p_deaths_background_totpop_open_age = c_dp.p_totpop(pAG - 1, s) *
-                                                      (1.0 - p_dp.survival_probability(pAG, s, t));
-      n_dp.p_deaths_background_totpop(pAG - 1, s) += p_deaths_background_totpop_open_age;
-      n_dp.p_totpop(pAG - 1, s) += c_dp.p_totpop(pAG - 1, s) - p_deaths_background_totpop_open_age;
+      real_type p_deaths_background_totpop_open_age = c_dp.p_totpop(pAG - 1, s)
+          * (1.0 - p_dp.survival_probability(pAG, s, t));
+      n_dp.p_deaths_background_totpop(pAG - 1, s) +=
+          p_deaths_background_totpop_open_age;
+      n_dp.p_totpop(pAG - 1, s) +=
+          c_dp.p_totpop(pAG - 1, s) - p_deaths_background_totpop_open_age;
     }
-  };
+  }
 
   void run_migration() {
     const auto& p_dp = pars.dp;
@@ -107,30 +110,37 @@ struct GeneralDemographicProjection<Config> {
     for (int s = 0; s < NS; ++s) {
       // Migration for ages 1, 2, ... 79
       for (int a = 1; a < pAG - 1; ++a) {
-        // Get migration rate, as number of net migrants adjusted for survivorship
-        // to end of period. Divide by 2 as (on average) half of deaths will
-        // happen before they migrate. Then divide by total pop to get rate.
-        i_dp.migration_rate(a, s) = p_dp.net_migration(a, s, t) == 0.0 ? 0.0 :
-	                              p_dp.net_migration(a, s, t) *
-                                      (1.0 + p_dp.survival_probability(a, s, t)) * 0.5 /
-	                              n_dp.p_totpop(a, s);
+        // Get migration rate, as number of net migrants adjusted for
+        // survivorship to end of period. Divide by 2 as (on average) half of
+        // deaths will happen before they migrate. Then divide by total pop to
+        // get rate.
+        i_dp.migration_rate(a, s) = n_dp.p_totpop(a, s) == 0.0
+            ? 0.0
+            : p_dp.net_migration(a, s, t)
+                * (1.0 + p_dp.survival_probability(a, s, t)) * 0.5
+                / n_dp.p_totpop(a, s);
         n_dp.p_totpop(a, s) *= 1.0 + i_dp.migration_rate(a, s);
       }
 
       // For open age group (age 80+), net migrant survivor adjustment based on
       // weighted survival_probability for age 79 and age 80+.
-      // * Numerator: p_totpop(a, s, t-1) * (1.0 + survival_probability(a+1, s, t))
+      // * Numerator: p_totpop(a, s, t-1) * (1.0 + survival_probability(a+1, s,
+      // t))
       // + p_totpop(a-1, s, t-1) * (1.0 + survival_probability(a, s, t))
       // * Denominator: p_totpop(a, s, t-1) + p_totpop(a-1, s, t-1)
-      // Re-expressed current population and deaths to open age group (already calculated):
+      // Re-expressed current population and deaths to open age group (already
+      // calculated):
       int a = pAG - 1;
-      real_type survival_probability_netmig = (n_dp.p_totpop(a, s) + 0.5 * n_dp.p_deaths_background_totpop(a, s)) /
-                                                (n_dp.p_totpop(a, s) + n_dp.p_deaths_background_totpop(a, s));
-      i_dp.migration_rate(a, s) = p_dp.net_migration(a, s, t) == 0.0 ? 0.0 :
-	survival_probability_netmig * p_dp.net_migration(a, s, t) / n_dp.p_totpop(a, s);
+      real_type survival_probability_netmig =
+          (n_dp.p_totpop(a, s) + 0.5 * n_dp.p_deaths_background_totpop(a, s))
+          / (n_dp.p_totpop(a, s) + n_dp.p_deaths_background_totpop(a, s));
+      i_dp.migration_rate(a, s) = n_dp.p_totpop(a, s) == 0.0
+          ? 0.0
+          : survival_probability_netmig * p_dp.net_migration(a, s, t)
+              / n_dp.p_totpop(a, s);
       n_dp.p_totpop(a, s) *= 1.0 + i_dp.migration_rate(a, s);
     }
-  };
+  }
 
   void run_fertility_and_infant_migration() {
     const auto& p_dp = pars.dp;
@@ -139,28 +149,30 @@ struct GeneralDemographicProjection<Config> {
 
     n_dp.births = 0.0;
     for (int af = 0; af < p_fertility_age_groups; ++af) {
-      auto total_female_pop_per_age_group = c_dp.p_totpop(p_idx_fertility_first + af, FEMALE) +
-                                            n_dp.p_totpop(p_idx_fertility_first + af, FEMALE);
-      n_dp.births += total_female_pop_per_age_group * 0.5 * p_dp.age_specific_fertility_rate(af, t);
+      auto total_female_pop_per_age_group =
+          c_dp.p_totpop(p_idx_fertility_first + af, FEMALE)
+          + n_dp.p_totpop(p_idx_fertility_first + af, FEMALE);
+      n_dp.births += total_female_pop_per_age_group * 0.5
+          * p_dp.age_specific_fertility_rate(af, t);
     }
 
     // add births & infant migration
     for (int s = 0; s < NS; ++s) {
       real_type births_sex = n_dp.births * p_dp.births_sex_prop(s, t);
-      n_dp.p_deaths_background_totpop(0, s) = births_sex * (1.0 - p_dp.survival_probability(0, s, t));
+      n_dp.p_deaths_background_totpop(0, s) =
+          births_sex * (1.0 - p_dp.survival_probability(0, s, t));
       n_dp.p_totpop(0, s) = births_sex * p_dp.survival_probability(0, s, t);
 
       if (opts.proj_period_int == PROJPERIOD_MIDYEAR) {
-        // Assume 2/3 survival_probability rate since mortality in first six months higher
-        // than second 6 months (Spectrum manual, section 6.2.7.4)
-        real_type migration_rate_a0 = p_dp.net_migration(0, s, t) *
-                                      (1.0 + 2.0 * p_dp.survival_probability(0, s, t)) /
-                                      3.0 / n_dp.p_totpop(0, s);
+        // Assume 2/3 survival_probability rate since mortality in first six
+        // months higher than second 6 months (Spectrum manual, section 6.2.7.4)
+        real_type migration_rate_a0 = p_dp.net_migration(0, s, t)
+            * (1.0 + 2.0 * p_dp.survival_probability(0, s, t)) / 3.0
+            / n_dp.p_totpop(0, s);
         n_dp.p_totpop(0, s) *= 1.0 + migration_rate_a0;
       }
     }
-  };
+  }
 };
 
-}
-}
+}  // namespace leapfrog::internal

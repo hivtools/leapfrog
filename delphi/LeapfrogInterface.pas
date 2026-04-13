@@ -483,12 +483,15 @@ type
   private
     exInput: PDouble;
     exInputLength: Integer;
+    transitionRate: PDouble;
+    transitionRateLength: Integer;
 end;
 
 type
   LeapfrogGoalsParams = class
   public
     exInput: TGBFixedArray<Double>;
+    transitionRate: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -500,12 +503,15 @@ type
   private
     exOutput: PDouble;
     exOutputLength: Integer;
+    newOutput: PDouble;
+    newOutputLength: Integer;
 end;
 
 type
   LeapfrogGoalsState = class
   public
     exOutput: TGBFixedArray<Double>;
+    newOutput: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsStateView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -960,12 +966,14 @@ end;
 destructor LeapfrogGoalsParams.Destroy;
 begin;
   exInput.Free;
+  transitionRate.Free;
   inherited;
 end;
 
 destructor LeapfrogGoalsState.Destroy;
 begin;
   exOutput.Free;
+  newOutput.Free;
   inherited;
 end;
 
@@ -973,12 +981,16 @@ function LeapfrogGoalsParams.getView(): LeapfrogGoalsParamsView;
 begin;
   Result.exInput := PDouble(exInput.data);
   Result.exInputLength := exInput.GetLength();
+  Result.transitionRate := PDouble(transitionRate.data);
+  Result.transitionRateLength := transitionRate.GetLength();
 end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
 begin;
   Result.exOutput := PDouble(exOutput.data);
   Result.exOutputLength := exOutput.GetLength();
+  Result.newOutput := PDouble(newOutput.data);
+  Result.newOutputLength := newOutput.GetLength();
 end;
 
 procedure LeapfrogDemProjParams.writeToDisk(dir: string);
@@ -1134,6 +1146,7 @@ begin;
   if not DirectoryExists(dir) then
     ForceDirectories(dir);
   exInput.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'exInput');
+  transitionRate.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'transitionRate');
 end;
 
 procedure LeapfrogGoalsState.writeToDisk(dir: string);
@@ -1141,6 +1154,7 @@ begin;
   if not DirectoryExists(dir) then
     ForceDirectories(dir);
   exOutput.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'exOutput');
+  newOutput.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newOutput');
 end;
 
 procedure LeapfrogParams.SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);
