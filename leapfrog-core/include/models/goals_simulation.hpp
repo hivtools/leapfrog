@@ -27,13 +27,36 @@ struct GoalsSimulation<Config> {
   // private members of this struct
   private:
   // state space
-  static constexpr int NS = SS::NS;
-  static constexpr int hDS = SS::hDS;
-  static constexpr int hTS = SS::hTS;
-  static constexpr int hAG = SS::hAG;
-  static constexpr auto hAG_span = SS::hAG_span;
-  static constexpr int pAG = SS::pAG;
-  static constexpr int p_idx_hiv_first_adult = SS::p_idx_hiv_first_adult;
+  static constexpr int pRG = SS::pRG;  //Number of risk groups
+  static constexpr int pF3 = SS::pF3;  //Number of behavior groups
+  static constexpr int pAvgDur = SS::pAvgDur;  //Number of average duration groups
+
+  enum Index {
+    //Risk group indices
+      AllRisk         = 0,
+      None            = 1,
+      LRH             = 2,
+      MRH             = 3,
+      HRH             = 4,
+      IDU             = 5,
+      MSM             = 6,
+      MSMLR           = 7,
+      MSMMR           = 8,
+      MSMHR           = 9,
+      MSMIDU          = 10,
+      RG_Total        = 11,   //NOTE:  _Total IS USED IN CALCULATIONS FOR MALE/FEMALE OFFSET
+      None_F3         = 12,
+      LRH_F3          = 13,
+      MRH_F3          = 14,
+      HRH_F3          = 15,
+      IDU_F3          = 16,
+      MSM_F3          = 17,
+    //Duration group indices
+      PercPop           = 1,
+      AvgDur            = 2
+
+  };
+
 
   // function args
   int t;
@@ -65,14 +88,21 @@ struct GoalsSimulation<Config> {
     const auto& c_dp = state_curr.dp;
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
-
-    for (int s = 0; s < NS; ++s) {
-      for (int a = 0; a < pAG; ++a) {
-        i_hv.ex_intermediate(a, s) = 1.0;
-
-        n_hv.ex_output(a, s) = c_dp.p_totpop(a, s) + p_hv.ex_input(a, s);
-      }
+    
+    //sum the condom percents by year
+    n_hv.ex_output = p_hv.epi_initial_pulse;
+    n_hv.b_condom_prop_sum = 0;
+    for (int r = 0; r < pRG; ++r) {
+        n_hv.b_condom_prop_sum += p_hv.b_condom_prop(r, t);// * c_dp.p_totpop(r, s);
     }
+    p_hv.b_condom_prop(AllRisk, t) = n_hv.b_condom_prop_sum;
+
+    //   for (int a = 0; a < pAG; ++a) {
+    //     i_hv.ex_intermediate(a, s) = 1.0;
+
+    //     n_hv.ex_output(a, s) = c_dp.p_totpop(a, s) + p_hv.b_condom_prop(a, s);
+    //   }
+    // }
   };
 
 };
