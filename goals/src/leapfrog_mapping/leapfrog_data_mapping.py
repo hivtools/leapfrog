@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from leapfrog_mapping.AMTags import (
+from SpectrumCommon.Const.AM.AMTags import (
     AM_AdultAnnRateProgressLowerCD4Tag,
     AM_AdultDistNewInfectionsCD4Tag,
     AM_AdultMortByCD4NoARTTag,
@@ -51,7 +51,7 @@ from leapfrog_mapping.AMTags import (
     AM_RatioWomenOnARTTag,
     AM_TransEffAssumpTag,
 )
-from leapfrog_mapping.DPConst import (
+from SpectrumCommon.Const.DP.DPConst import (
     DP_A0,
     DP_A14,
     DP_CD4_100_199,
@@ -139,7 +139,7 @@ from leapfrog_mapping.DPConst import (
     DP_WHO2006DualARV,
     DP_FIRST_INDEX,
 )
-from leapfrog_mapping.DPTags import (
+from SpectrumCommon.Const.DP.DPTags import (
     DP_ASFRTag,
     DP_BigPopTag,
     DP_MigrAgeDistTag,
@@ -148,7 +148,7 @@ from leapfrog_mapping.DPTags import (
     DP_SurvRateTag,
     DP_TFRTag,
 )
-from leapfrog_mapping.GBConst import (
+from SpectrumCommon.Const.GB.GBConst import (
     GB_A0_4,
     GB_A5_9,
     GB_A10_14,
@@ -175,10 +175,7 @@ from SpectrumCommon.Const.HV.HVTags import (
     HVInitialPulseTag,
 )
 from SpectrumCommon.Const.HV.HVConst import HV_MSMIDU, HV_MSM_F3, HV_AvgDur
-
-PJN_FirstYearTag = "<PJN_FirstYear_V1>"
-PJN_FinalYearTag = "<PJN_FinalYear_V1>"
-
+from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 
 Modvars = dict[str, int | float | bool | np.ndarray | dict]
 

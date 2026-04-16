@@ -6,6 +6,8 @@ import numpy as np
 from leapfrog_goals import get_goals_ss, run_goals
 from src.leapfrog_mapping.leapfrog_data_mapping import modvars_to_leapfrog
 from Tools.ImportPJNZ.Importer import GB_ImportProjectionFromFile
+from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
+
 
 """
 Note this script is only expected to be used temporarily until the
@@ -58,8 +60,8 @@ for tag, value in modvars.items():
                 value = np.array(value, order="C")
             else:
                 value = np.array(value, order="C", dtype=np.dtype(np.float64))
-        except:
-            print(f"Failed to convert list to numpy array {tag}")
+        except Exception() as e:
+            raise Exception(f"Failed to convert list to numpy array {tag}") from e
 
     modvars[tag] = np.array(value)
 
@@ -69,5 +71,8 @@ lf_data = modvars_to_leapfrog(modvars, ss)
 # lf_data["b_condom_prop_sum"] = np.full((81), 0)
 
 
-output = run_goals(lf_data)
+output = run_goals(
+    lf_data,
+    output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
+)
 print(output)
