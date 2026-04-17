@@ -27,13 +27,38 @@ struct GoalsSimulation<Config> {
   // private members of this struct
   private:
   // state space
-  static constexpr int NS = SS::NS;
-  static constexpr int hDS = SS::hDS;
-  static constexpr int hTS = SS::hTS;
-  static constexpr int hAG = SS::hAG;
-  static constexpr auto hAG_span = SS::hAG_span;
-  static constexpr int pAG = SS::pAG;
-  static constexpr int p_idx_hiv_first_adult = SS::p_idx_hiv_first_adult;
+  static constexpr int pRG_TOTAL = SS::pRG_TOTAL;  //Number of risk groups
+  static constexpr int pRG_MSM_F3 = SS::pRG_MSM_F3;  //Number of behavior groups
+  static constexpr int pDUR_AVG = SS::pDUR_AVG;  //Number of average duration groups
+
+  enum Index {
+
+      //Risk Groups
+      RG_ALL = 0,
+      RG_None = 1,
+      RG_LRH = 2,
+      RG_MRH = 3,
+      RG_HRH = 4,
+      RG_IDU = 5,
+      RG_MSM = 6,
+      RG_MSMLR = 7,
+      RG_MSMMR = 8,
+      RG_MSMHR = 9,
+      RG_MSMIDU = 10,
+      RG_TOTAL = 11,
+      RG_NONE_F3 = 12,
+      RG_LRH_F3 = 13,
+      RG_MRH_F3 = 14,
+      RG_HRH_F3 = 15,
+      RG_IDU_F3 = 16,
+      RG_MSM_F3 = 17,
+
+      //Duration
+      DUR_PERC_POP = 1,
+      DUR_AVG = 2,
+     
+  };
+
 
   // function args
   int t;
@@ -65,14 +90,22 @@ struct GoalsSimulation<Config> {
     const auto& c_dp = state_curr.dp;
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
+    
+    //sum the condom percents by year
+    n_hv.ex_output = p_hv.epi_initial_pulse;
 
-    for (int s = 0; s < NS; ++s) {
-      for (int a = 0; a < pAG; ++a) {
-        i_hv.ex_intermediate(a, s) = 1.0;
-
-        n_hv.ex_output(a, s) = c_dp.p_totpop(a, s) + p_hv.ex_input(a, s);
-      }
+    n_hv.b_condom_prop_sum = 0;
+    for (int r = 0; r < pRG_TOTAL; ++r) {
+        n_hv.b_condom_prop_sum += p_hv.b_condom_prop(r, t);// * c_dp.p_totpop(r, s);
     }
+    p_hv.b_condom_prop(RG_ALL, t) = n_hv.b_condom_prop_sum;
+
+    //   for (int a = 0; a < pAG; ++a) {
+    //     i_hv.ex_intermediate(a, s) = 1.0;
+
+    //     n_hv.ex_output(a, s) = c_dp.p_totpop(a, s) + p_hv.b_condom_prop(a, s);
+    //   }
+    // }
   };
 
 };

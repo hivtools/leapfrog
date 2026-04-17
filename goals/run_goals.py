@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 
-import os
-import pickle
 
 import numpy as np
 
 from leapfrog_goals import get_goals_ss, run_goals
 from src.leapfrog_mapping.leapfrog_data_mapping import modvars_to_leapfrog
 from Tools.ImportPJNZ.Importer import GB_ImportProjectionFromFile
+from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
+
+
 """
 Note this script is only expected to be used temporarily until the
 proper data reading code is ready to go.
@@ -44,27 +45,37 @@ with open("zimbabwe_modvars.pickle", "wb") as handle:
 # with open(zim_pickle_path, "rb") as handle:
 #     modvars = pickle.load(handle)
 
+modvars, param, epp, shiny90 = GB_ImportProjectionFromFile(
+    r"C:\work\LeapFrog\V2\Files_PJNZ\SouthAfrica.pjnz"
+)
 
-
-modvars, param, epp, shiny90 = GB_ImportProjectionFromFile(r"C:\work\LeapFrog\V2\Files_PJNZ\Eswatini-2025-sqb.pjnz")
 
 for tag, value in modvars.items():
     if isinstance(value, list):
         try:
-            if len(value) > 0 and ((isinstance(value[0], dict)) or (isinstance(value[0], str)) or (isinstance(value[0], bool))):
-                value = np.array(value, order='C')
+            if len(value) > 0 and (
+                (isinstance(value[0], dict))
+                or (isinstance(value[0], str))
+                or (isinstance(value[0], bool))
+            ):
+                value = np.array(value, order="C")
             else:
-                value = np.array(value, order='C', dtype=np.dtype(np.float64))
-        except:
-            print(f'Failed to convert list to numpy array {tag}')
+                value = np.array(value, order="C", dtype=np.dtype(np.float64))
+        except Exception() as e:
+            raise Exception(f"Failed to convert list to numpy array {tag}") from e
 
     modvars[tag] = np.array(value)
 
 ss = get_goals_ss()
 lf_data = modvars_to_leapfrog(modvars, ss)
 
-lf_data["ex_input"] = np.full((81, 2), 1)
+# lf_data["b_condom_prop_sum"] = np.full((81), 0)
 
 output = run_goals(lf_data)
 print(output)
-print(lf_data.columns)
+
+#output = run_goals(
+#    lf_data,
+#    output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
+#)
+#print(output)
