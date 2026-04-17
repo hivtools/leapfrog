@@ -67,3 +67,4 @@ lf_data["ex_input"] = np.full((81, 2), 1)
 
 output = run_goals(lf_data)
 print(output)
+print(lf_data.columns)
