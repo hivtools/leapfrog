@@ -71,11 +71,11 @@ lf_data = modvars_to_leapfrog(modvars, ss)
 
 # lf_data["b_condom_prop_sum"] = np.full((81), 0)
 
-output = run_goals(lf_data)
-#print(output)
+# output = run_goals(lf_data)
+# print(output)
 
-#output = run_goals(
-#    lf_data,
-#    output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
-#)
-#print(output)
+output = run_goals(
+   lf_data,
+   output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
+)
+print(output)
