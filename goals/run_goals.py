@@ -46,7 +46,7 @@ with open("zimbabwe_modvars.pickle", "wb") as handle:
 #     modvars = pickle.load(handle)
 
 modvars, param, epp, shiny90 = GB_ImportProjectionFromFile(
-    r"C:\work\LeapFrog\V2\Files_PJNZ\SouthAfrica.pjnz"
+    r"C:\Proj\GoalsProjections\SouthAfrica.pjnz"
 )
 
 

@@ -32,6 +32,7 @@ struct AdultHivModelSimulation<Config> {
   static constexpr int hDS = SS::hDS;
   static constexpr int hTS = SS::hTS;
   static constexpr int hAG = SS::hAG;
+  static constexpr int pRG_TOTAL = SS::pRG_TOTAL;
   static constexpr auto hAG_span = SS::hAG_span;
   static constexpr int PROJPERIOD_MIDYEAR = SS::PROJPERIOD_MIDYEAR;
   static constexpr int MALE = SS::MALE;
@@ -50,6 +51,22 @@ struct AdultHivModelSimulation<Config> {
   Intermediate& intermediate;
   const Options<real_type>& opts;
 
+  //please remove the following function with real model calculations 
+  void run_goals_innerloop(int hiv_step) {
+    auto& i_hv = intermediate.hv;
+    auto& p_hv = pars.hv;
+
+    for (int sex = 0; sex < SS::NS; ++sex) {
+      for (int rg = 0; rg < SS::pRG_TOTAL; ++rg) {
+        for (int hiv = 0; hiv < SS::pHIV; ++hiv) {
+          for (int vacc = 0; vacc < SS::pVacc; ++vacc) {
+            i_hv.a_adults(sex, rg, hiv, vacc, t) = p_hv.epi_initial_pulse*i_hv.c_mu(0, sex);
+          }
+        }
+      }
+    }
+  }
+
   // only exposing the constructor and some methods
   public:
   AdultHivModelSimulation(Args& args):
@@ -64,6 +81,7 @@ struct AdultHivModelSimulation<Config> {
   void run_hiv_model_simulation() {
     const auto& p_ha = pars.ha;
     auto& i_ha = intermediate.ha;
+    auto& i_hv = intermediate.hv;
 
     i_ha.everARTelig_idx = p_ha.idx_hm_elig(t) < hDS ? p_ha.idx_hm_elig(t) : hDS;
     i_ha.anyelig_idx = p_ha.idx_hm_elig(t);
@@ -79,6 +97,12 @@ struct AdultHivModelSimulation<Config> {
     }
 
     for (int hiv_step = 0; hiv_step < opts.hts_per_year; ++hiv_step) {
+       if constexpr (ModelVariant::run_goals) {
+        nda::fill(i_hv.a_adults, 0.0); //please remove with real model calculations 
+        nda::fill(i_hv.c_mu, 1.0); //please remove with real model calculations 
+        
+        run_goals_innerloop(hiv_step);
+      }
       nda::fill(i_ha.grad, 0.0);
       nda::fill(i_ha.gradART, 0.0);
       nda::fill(i_ha.h_hiv_deaths_age_sex, 0.0);
