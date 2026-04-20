@@ -50,7 +50,8 @@ struct AdultHivModelSimulation<Config> {
   State& state_next;
   Intermediate& intermediate;
   const Options<real_type>& opts;
-  
+
+  //please remove the following function with real model calculations 
   void run_goals_innerloop(int hiv_step) {
     auto& i_hv = intermediate.hv;
     auto& p_hv = pars.hv;
@@ -59,7 +60,7 @@ struct AdultHivModelSimulation<Config> {
       for (int rg = 0; rg < SS::pRG_TOTAL; ++rg) {
         for (int hiv = 0; hiv < SS::pHIV; ++hiv) {
           for (int vacc = 0; vacc < SS::pVacc; ++vacc) {
-            i_hv.adults(sex, rg, hiv, vacc, t) = p_hv.epi_initial_pulse;
+            i_hv.a_adults(sex, rg, hiv, vacc, t) = p_hv.epi_initial_pulse*i_hv.c_mu(0, sex);
           }
         }
       }
@@ -97,7 +98,9 @@ struct AdultHivModelSimulation<Config> {
 
     for (int hiv_step = 0; hiv_step < opts.hts_per_year; ++hiv_step) {
        if constexpr (ModelVariant::run_goals) {
-        nda::fill(i_hv.adults, 0.0); //please remove
+        nda::fill(i_hv.a_adults, 0.0); //please remove with real model calculations 
+        nda::fill(i_hv.c_mu, 1.0); //please remove with real model calculations 
+        
         run_goals_innerloop(hiv_step);
       }
       nda::fill(i_ha.grad, 0.0);

@@ -9,11 +9,21 @@
       "pRG_TOTAL": 11,
       "pRG_MSM_F3": 17,
       "pDUR_AVG": 3,
+      "pRG_DUR": 2,
+      "pCD4_ALL_HIV": 19,
+      "pCD4_LT50": 8,
+      "pVAC_NO_PROT": 4,
+      "hIDX_24to35": 2,
       "pHIV": 19,
       "pVacc": 4
     }
   },
   "pars": {
+    
+    "b_balance_sex_acts": {
+      "num_type": "int"
+    },
+    
     "epi_initial_pulse": {
       "num_type": "real_type"
     },
@@ -36,16 +46,46 @@
     "b_num_partners": {
       "num_type": "real_type",
       "dims": ["SS::pRG_MSM_F3", "opts.proj_steps"]
+    },
+
+    "b_incr_recruit": {
+      "num_type": "real_type",
+      "dims": ["SS::NS", "SS::pRG_TOTAL"]
+    },
+
+    "b_behaviors": {
+      "num_type": "real_type",
+      "dims": ["SS::pRG_MSM_F3", "SS::pRG_DUR"]
+    },
+
+    "b_married_prop": {
+      "num_type": "real_type",
+      "dims": ["SS::pRG_MSM_F3"]
+    },
+
+    "b_age_first_sex": {
+      "num_type": "real_type",
+      "dims": ["SS::NS", "opts.proj_steps"]
+    },
+
+    "b_idu_share_prop": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
     }
+
   },
 
   "intermediate": {
     "ex_intermediate": {
       "num_type": "real_type"
     },
-    "adults": {
+    "a_adults": {
       "num_type": "real_type",
       "dims": ["SS::pBothSexes", "SS::pRG_TOTAL", "SS::pHIV", "SS::pVacc", "opts.proj_steps"]
+    },
+    "c_mu": {
+      "num_type": "real_type",
+      "dims": ["SS::pCD4_LT50","SS::NS"]
     }
   },
 
