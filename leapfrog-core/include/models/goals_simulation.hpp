@@ -28,10 +28,17 @@ struct GoalsSimulation<Config> {
   private:
   // state space
   static constexpr int pRG_TOTAL = SS::pRG_TOTAL;  //Number of risk groups
-  static constexpr int pRG_MSM_F3 = SS::pRG_MSM_F3;  //Number of behavior groups
-  static constexpr int pDUR_AVG = SS::pDUR_AVG;  //Number of average duration groups
+  static constexpr int pRG_MSM_F3 = SS::pRG_MSM_F3;//Number of behavior groups
+  static constexpr int pDUR_AVG = SS::pDUR_AVG;    //Number of average duration groups
+  static constexpr int pRG_DUR = SS::pDUR_AVG;    
+
 
   enum Index {
+
+      //Sexes
+      S_BOTH_SEXES = 0,
+      S_MALE = 1,
+      S_FEMALE = 2,
 
       //Risk Groups
       RG_ALL = 0,
@@ -56,6 +63,31 @@ struct GoalsSimulation<Config> {
       //Duration
       DUR_PERC_POP = 1,
       DUR_AVG = 2,
+
+      //CD4 10 year age bins
+      CA_15_24 = 1,
+      CA_25_34 = 2,
+      CA_35_44 = 3,
+      CA_45_54 = 4,
+
+      CD4_NEG = 0,
+      CD4_PRIM = 1,
+      CD4_GT500 = 2,
+      CD4_350_500 = 3,
+      CD4_250_349 = 4,
+      CD4_200_249 = 5,
+      CD4_100_199 = 6,
+      CD4_50_99 = 7,
+      CD4_LT50 = 8,
+      CD4_GT500_ART = 12,
+      CD4_350_500_ART = 13,
+      CD4_250_349_ART = 14,
+      CD4_200_249_ART = 15,
+      CD4_100_199_ART = 16,
+      CD4_50_99_ART = 17,
+      CD4_LT50_ART = 18,
+      CD4_ALL_HIV = 19,
+
      
   };
 
@@ -107,6 +139,9 @@ struct GoalsSimulation<Config> {
     //   }
     // }
   };
+
+  
+
 
 };
 
