@@ -5,9 +5,12 @@
   "enable_if": "run_goals",
   "state_space": {
     "default": {
+      "pBothSexes": 2,
       "pRG_TOTAL": 11,
       "pRG_MSM_F3": 17,
-      "pDUR_AVG": 3
+      "pDUR_AVG": 3,
+      "pHIV": 19,
+      "pVacc": 4
     }
   },
   "pars": {
@@ -39,6 +42,10 @@
   "intermediate": {
     "ex_intermediate": {
       "num_type": "real_type"
+    },
+    "adults": {
+      "num_type": "real_type",
+      "dims": ["SS::pBothSexes", "SS::pRG_TOTAL", "SS::pHIV", "SS::pVacc", "opts.proj_steps"]
     }
   },
 
