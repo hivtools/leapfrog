@@ -1126,7 +1126,7 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "b_married_prop": b_married_prop, 
         "b_age_first_sex":b_age_first_sex,
         "b_idu_share_prop":b_idu_share_prop,
-        "rn_poc_cov":rn_poc_cov,
+        "rn_poc_cov":rn_poc_cov
     }
 
 

@@ -2,6 +2,7 @@
 
 #include "../options.hpp"
 #include "../generated/config_mixer.hpp"
+#include "goals_simulation.hpp"
 
 namespace leapfrog {
 namespace internal {
@@ -52,20 +53,20 @@ struct AdultHivModelSimulation<Config> {
   const Options<real_type>& opts;
 
   //please remove the following function with real model calculations 
-  void run_goals_innerloop(int hiv_step) {
-    auto& i_hv = intermediate.hv;
-    auto& p_hv = pars.hv;
+  // void run_goals_innerloop(int hiv_step) {
+  //   auto& i_hv = intermediate.hv;
+  //   auto& p_hv = pars.hv;
 
-    for (int sex = 0; sex < SS::NS; ++sex) {
-      for (int rg = 0; rg < SS::pRG_TOTAL; ++rg) {
-        for (int hiv = 0; hiv < SS::pHIV; ++hiv) {
-          for (int vacc = 0; vacc < SS::pVacc; ++vacc) {
-            i_hv.a_adults(sex, rg, hiv, vacc, t) = p_hv.epi_initial_pulse*i_hv.c_mu(0, sex);
-          }
-        }
-      }
-    }
-  }
+  //   for (int sex = 0; sex < SS::NS; ++sex) {
+  //     for (int rg = 0; rg < SS::pRG_TOTAL; ++rg) {
+  //       for (int hiv = 0; hiv < SS::pHIV; ++hiv) {
+  //         for (int vacc = 0; vacc < SS::pVacc; ++vacc) {
+  //           i_hv.a_adults(sex, rg, hiv, vacc, t) = p_hv.epi_initial_pulse*i_hv.c_mu(0, sex);
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   // only exposing the constructor and some methods
   public:
@@ -83,6 +84,11 @@ struct AdultHivModelSimulation<Config> {
     auto& i_ha = intermediate.ha;
     auto& i_hv = intermediate.hv;
 
+    if constexpr (GoalsSimulationEnabled<Config>) {
+      Args goals_args{t, pars, state_curr, state_next, intermediate, opts};
+      GoalsSimulation<Config> goals_sim(goals_args);
+      goals_sim.run_goals_pre_inner_loop();
+    }
     i_ha.everARTelig_idx = p_ha.idx_hm_elig(t) < hDS ? p_ha.idx_hm_elig(t) : hDS;
     i_ha.anyelig_idx = p_ha.idx_hm_elig(t);
 
@@ -98,11 +104,16 @@ struct AdultHivModelSimulation<Config> {
 
     for (int hiv_step = 0; hiv_step < opts.hts_per_year; ++hiv_step) {
        if constexpr (ModelVariant::run_goals) {
-        nda::fill(i_hv.a_adults, 0.0); //please remove with real model calculations 
-        nda::fill(i_hv.c_mu, 1.0); //please remove with real model calculations 
+          Args goals_args{t, pars, state_curr, state_next, intermediate, opts};
+          GoalsSimulation<Config> goals_sim(goals_args);
+
+          goals_sim.run_goals_inner_loop(hiv_step);
+       }
+      //   nda::fill(i_hv.a_adults, 0.0); //please remove with real model calculations 
+      //   nda::fill(i_hv.c_mu, 1.0); //please remove with real model calculations 
         
-        run_goals_innerloop(hiv_step);
-      }
+      //  i_hv._goals_innerloop(hiv_step);
+      // }
       nda::fill(i_ha.grad, 0.0);
       nda::fill(i_ha.gradART, 0.0);
       nda::fill(i_ha.h_hiv_deaths_age_sex, 0.0);
@@ -689,6 +700,8 @@ struct AdultHivModelSimulation<Config> {
 
 
 };
-
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
 }
 }

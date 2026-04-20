@@ -530,6 +530,10 @@ type
   private
     exOutput: PDouble;
     exOutputLength: Integer;
+    aAdults: PDouble;
+    aAdultsLength: Integer;
+    cMu: PDouble;
+    cMuLength: Integer;
     bCondomPropSum: PDouble;
     bCondomPropSumLength: Integer;
 end;
@@ -538,6 +542,8 @@ type
   LeapfrogGoalsState = class
   public
     exOutput: TGBFixedArray<Double>;
+    aAdults: TGBFixedArray<Double>;
+    cMu: TGBFixedArray<Double>;
     bCondomPropSum: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsStateView;
     procedure writeToDisk(dir: string);
@@ -1007,6 +1013,8 @@ end;
 destructor LeapfrogGoalsState.Destroy;
 begin;
   exOutput.Free;
+  aAdults.Free;
+  cMu.Free;
   bCondomPropSum.Free;
   inherited;
 end;
@@ -1041,6 +1049,10 @@ function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
 begin;
   Result.exOutput := PDouble(exOutput.data);
   Result.exOutputLength := exOutput.GetLength();
+  Result.aAdults := PDouble(aAdults.data);
+  Result.aAdultsLength := aAdults.GetLength();
+  Result.cMu := PDouble(cMu.data);
+  Result.cMuLength := cMu.GetLength();
   Result.bCondomPropSum := PDouble(bCondomPropSum.data);
   Result.bCondomPropSumLength := bCondomPropSum.GetLength();
 end;
@@ -1212,6 +1224,8 @@ procedure LeapfrogGoalsState.writeToDisk(dir: string);
 begin;
   if not DirectoryExists(dir) then
     ForceDirectories(dir);
+  aAdults.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'aAdults');
+  cMu.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'cMu');
 end;
 
 procedure LeapfrogParams.SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);
