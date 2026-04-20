@@ -12,7 +12,7 @@
       "pCD4_ALL_HIV": 19,
       "pCD4_LT50": 8,
       "pVAC_NO_PROT": 4,
-      "hIDX_24to35": 2,
+      "hIDX_24to35": 2
 
     }
   },
@@ -82,15 +82,14 @@
   "state": {
     "a_adults": {
       "num_type": "real_type",
-      "dims": ["SS::NS", "SS::pRG_MSM_F3", "SS::pCD4_ALL_HIV", "SS::pVAC_NO_PROT","opts.proj_steps"]
+      "dims": ["SS::NS", "SS::pRG_MSM_F3", "SS::pCD4_ALL_HIV", "SS::pVAC_NO_PROT"]
     },
 
     "c_mu": {
       "num_type": "real_type",
       "dims": ["SS::pCD4_LT50","SS::NS"]
     },
-
-    
+ 
     "ex_output": {
       "num_type": "real_type"
     },
