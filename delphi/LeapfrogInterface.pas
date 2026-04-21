@@ -528,10 +528,6 @@ end;
 type
   LeapfrogGoalsStateView = record
   private
-    aAdults: PDouble;
-    aAdultsLength: Integer;
-    cMu: PDouble;
-    cMuLength: Integer;
     exOutput: PDouble;
     exOutputLength: Integer;
     aAdults: PDouble;
@@ -545,8 +541,6 @@ end;
 type
   LeapfrogGoalsState = class
   public
-    aAdults: TGBFixedArray<Double>;
-    cMu: TGBFixedArray<Double>;
     exOutput: TGBFixedArray<Double>;
     aAdults: TGBFixedArray<Double>;
     cMu: TGBFixedArray<Double>;
@@ -1018,8 +1012,6 @@ end;
 
 destructor LeapfrogGoalsState.Destroy;
 begin;
-  aAdults.Free;
-  cMu.Free;
   exOutput.Free;
   aAdults.Free;
   cMu.Free;
@@ -1055,10 +1047,6 @@ end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
 begin;
-  Result.aAdults := PDouble(aAdults.data);
-  Result.aAdultsLength := aAdults.GetLength();
-  Result.cMu := PDouble(cMu.data);
-  Result.cMuLength := cMu.GetLength();
   Result.exOutput := PDouble(exOutput.data);
   Result.exOutputLength := exOutput.GetLength();
   Result.aAdults := PDouble(aAdults.data);

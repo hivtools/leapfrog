@@ -165,11 +165,12 @@ struct GoalsSimulation<Config> {
 
   void THVProj_Calc_CD4Trans() {
     const auto& p_ha = pars.ha;
+    auto& i_hv = intermediate.hv;
     // Mortality by CD4 averaged over age groups
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
         for (int h = CD4_GT500; h <= CD4_LT50; ++h) {
-            //c_mu[h][s] = p_ha.cd4_mortality(h, HV_DP_CD4_25_34, s); //HV_GetDPMortByCD4NoART(p, s, HV_DP_CD4_25_34, h);
-            //c_mu[h][s] += p_ha.cd4_nonaids_excess_mort(h, HV_DP_CD4_25_34, s) //HV_GetAdultNonAIDSExcessMort(p, s, HV_DP_CD4_25_34, h, DP_NoTreat);
+            i_hv.c_mu[h][s] = p_ha.cd4_mortality(h, CA_25_34, s); //HV_GetDPMortByCD4NoART(p, s, HV_DP_CD4_25_34, h);
+            i_hv.c_mu[h][s] += p_ha.cd4_nonaids_excess_mort(h, CA_25_34, s); //HV_GetAdultNonAIDSExcessMort(p, s, HV_DP_CD4_25_34, h, DP_NoTreat);
 
             //if (t > 1) {
             //    _mu[h][s] = std::max(_mu[h][s], _NonAIDSDeathRate[s][t - 1]);
