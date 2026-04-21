@@ -128,8 +128,8 @@ struct GoalsSimulation<Config> {
     nda::fill(n_hv.a_adults, 1.0);
     nda::fill(n_hv.c_mu, 1.0);
 
-    #auto& i_hv = intermediate.hv;
-    #auto& p_hv = pars.hv;
+    //auto& i_hv = intermediate.hv;
+    //auto& p_hv = pars.hv;
 
 /*     for (int sex = 0; sex < SS::NS; ++sex) {
       for (int rg = 0; rg < SS::pRG_TOTAL; ++rg) {
