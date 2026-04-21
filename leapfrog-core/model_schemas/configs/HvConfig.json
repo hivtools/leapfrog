@@ -78,7 +78,14 @@
   "intermediate": {
     "ex_intermediate": {
       "num_type": "real_type"
+    }
+  },
+
+  "state": {
+    "ex_output": {
+      "num_type": "real_type"
     },
+    
     "a_adults": {
       "num_type": "real_type",
       "dims": ["SS::pBothSexes", "SS::pRG_TOTAL", "SS::pHIV", "SS::pVacc"]
@@ -86,12 +93,6 @@
     "c_mu": {
       "num_type": "real_type",
       "dims": ["SS::pCD4_LT50","SS::NS"]
-    }
-  },
-
-  "state": {
-    "ex_output": {
-      "num_type": "real_type"
     },
     "b_condom_prop_sum": {
       "num_type": "real_type"
