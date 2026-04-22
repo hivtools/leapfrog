@@ -481,14 +481,44 @@ end;
 type
   LeapfrogGoalsParamsView = record
   private
-    exInput: PDouble;
-    exInputLength: Integer;
+    bBalanceSexActs: Integer;
+    bBalanceSexActsLength: Integer;
+    epiInitialPulse: Double;
+    epiInitialPulseLength: Integer;
+    bCondomProp: PDouble;
+    bCondomPropLength: Integer;
+    bBehav: PDouble;
+    bBehavLength: Integer;
+    bSexActs: PDouble;
+    bSexActsLength: Integer;
+    bNumPartners: PDouble;
+    bNumPartnersLength: Integer;
+    bIncrRecruit: PDouble;
+    bIncrRecruitLength: Integer;
+    bBehaviors: PDouble;
+    bBehaviorsLength: Integer;
+    bMarriedProp: PDouble;
+    bMarriedPropLength: Integer;
+    bAgeFirstSex: PDouble;
+    bAgeFirstSexLength: Integer;
+    bIduShareProp: PDouble;
+    bIduSharePropLength: Integer;
 end;
 
 type
   LeapfrogGoalsParams = class
   public
-    exInput: TGBFixedArray<Double>;
+    bBalanceSexActs: Integer;
+    epiInitialPulse: Double;
+    bCondomProp: TGBFixedArray<Double>;
+    bBehav: TGBFixedArray<Double>;
+    bSexActs: TGBFixedArray<Double>;
+    bNumPartners: TGBFixedArray<Double>;
+    bIncrRecruit: TGBFixedArray<Double>;
+    bBehaviors: TGBFixedArray<Double>;
+    bMarriedProp: TGBFixedArray<Double>;
+    bAgeFirstSex: TGBFixedArray<Double>;
+    bIduShareProp: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -500,12 +530,15 @@ type
   private
     exOutput: PDouble;
     exOutputLength: Integer;
+    bCondomPropSum: PDouble;
+    bCondomPropSumLength: Integer;
 end;
 
 type
   LeapfrogGoalsState = class
   public
     exOutput: TGBFixedArray<Double>;
+    bCondomPropSum: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsStateView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -959,26 +992,57 @@ end;
 
 destructor LeapfrogGoalsParams.Destroy;
 begin;
-  exInput.Free;
+  bCondomProp.Free;
+  bBehav.Free;
+  bSexActs.Free;
+  bNumPartners.Free;
+  bIncrRecruit.Free;
+  bBehaviors.Free;
+  bMarriedProp.Free;
+  bAgeFirstSex.Free;
+  bIduShareProp.Free;
   inherited;
 end;
 
 destructor LeapfrogGoalsState.Destroy;
 begin;
   exOutput.Free;
+  bCondomPropSum.Free;
   inherited;
 end;
 
 function LeapfrogGoalsParams.getView(): LeapfrogGoalsParamsView;
 begin;
-  Result.exInput := PDouble(exInput.data);
-  Result.exInputLength := exInput.GetLength();
+  Result.bBalanceSexActs := bBalanceSexActs;
+  Result.bBalanceSexActsLength := 1;
+  Result.epiInitialPulse := epiInitialPulse;
+  Result.epiInitialPulseLength := 1;
+  Result.bCondomProp := PDouble(bCondomProp.data);
+  Result.bCondomPropLength := bCondomProp.GetLength();
+  Result.bBehav := PDouble(bBehav.data);
+  Result.bBehavLength := bBehav.GetLength();
+  Result.bSexActs := PDouble(bSexActs.data);
+  Result.bSexActsLength := bSexActs.GetLength();
+  Result.bNumPartners := PDouble(bNumPartners.data);
+  Result.bNumPartnersLength := bNumPartners.GetLength();
+  Result.bIncrRecruit := PDouble(bIncrRecruit.data);
+  Result.bIncrRecruitLength := bIncrRecruit.GetLength();
+  Result.bBehaviors := PDouble(bBehaviors.data);
+  Result.bBehaviorsLength := bBehaviors.GetLength();
+  Result.bMarriedProp := PDouble(bMarriedProp.data);
+  Result.bMarriedPropLength := bMarriedProp.GetLength();
+  Result.bAgeFirstSex := PDouble(bAgeFirstSex.data);
+  Result.bAgeFirstSexLength := bAgeFirstSex.GetLength();
+  Result.bIduShareProp := PDouble(bIduShareProp.data);
+  Result.bIduSharePropLength := bIduShareProp.GetLength();
 end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
 begin;
   Result.exOutput := PDouble(exOutput.data);
   Result.exOutputLength := exOutput.GetLength();
+  Result.bCondomPropSum := PDouble(bCondomPropSum.data);
+  Result.bCondomPropSumLength := bCondomPropSum.GetLength();
 end;
 
 procedure LeapfrogDemProjParams.writeToDisk(dir: string);
@@ -1133,14 +1197,21 @@ procedure LeapfrogGoalsParams.writeToDisk(dir: string);
 begin;
   if not DirectoryExists(dir) then
     ForceDirectories(dir);
-  exInput.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'exInput');
+  bCondomProp.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'bCondomProp');
+  bBehav.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'bBehav');
+  bSexActs.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'bSexActs');
+  bNumPartners.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'bNumPartners');
+  bIncrRecruit.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'bIncrRecruit');
+  bBehaviors.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'bBehaviors');
+  bMarriedProp.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'bMarriedProp');
+  bAgeFirstSex.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'bAgeFirstSex');
+  bIduShareProp.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'bIduShareProp');
 end;
 
 procedure LeapfrogGoalsState.writeToDisk(dir: string);
 begin;
   if not DirectoryExists(dir) then
     ForceDirectories(dir);
-  exOutput.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'exOutput');
 end;
 
 procedure LeapfrogParams.SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);

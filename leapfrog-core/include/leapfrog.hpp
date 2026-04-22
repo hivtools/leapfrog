@@ -127,7 +127,25 @@ struct Leapfrog {
 
       if constexpr (ModelVariant::run_hiv_simulation) {
         hiv_dp.run_hivpop_demographic_projection();
-        hiv_sim.run_hiv_model_simulation();
+
+        if constexpr (ModelVariant::run_goals) {
+          goals_sim.run_goals_pre_hiv_loop();
+        }
+        
+        hiv_sim.run_hiv_adult_pre_hiv_loop();
+
+        for (int hiv_step = 0; hiv_step < args.opts.hts_per_year; ++hiv_step) {
+          if constexpr (ModelVariant::run_goals) {
+            goals_sim.run_goals_hiv_loop(hiv_step);
+          }
+
+          hiv_sim.run_hiv_adult_hiv_loop(hiv_step);
+        }
+
+        if constexpr (ModelVariant::run_goals) {
+          goals_sim.run_goals_post_hiv_loop();
+        }
+
       }
 
       if constexpr (ModelVariant::run_child_model) {

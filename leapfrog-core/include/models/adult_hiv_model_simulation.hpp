@@ -2,6 +2,7 @@
 
 #include "../options.hpp"
 #include "../generated/config_mixer.hpp"
+#include "goals_simulation.hpp"
 
 namespace leapfrog {
 namespace internal {
@@ -32,6 +33,7 @@ struct AdultHivModelSimulation<Config> {
   static constexpr int hDS = SS::hDS;
   static constexpr int hTS = SS::hTS;
   static constexpr int hAG = SS::hAG;
+  static constexpr int pRG_TOTAL = SS::pRG_TOTAL;
   static constexpr auto hAG_span = SS::hAG_span;
   static constexpr int PROJPERIOD_MIDYEAR = SS::PROJPERIOD_MIDYEAR;
   static constexpr int MALE = SS::MALE;
@@ -50,6 +52,22 @@ struct AdultHivModelSimulation<Config> {
   Intermediate& intermediate;
   const Options<real_type>& opts;
 
+  //please remove the following function with real model calculations
+  // void run_goals_innerloop(int hiv_step) {
+  //   auto& i_hv = intermediate.hv;
+  //   auto& p_hv = pars.hv;
+
+  //   for (int sex = 0; sex < SS::NS; ++sex) {
+  //     for (int rg = 0; rg < SS::pRG_TOTAL; ++rg) {
+  //       for (int hiv = 0; hiv < SS::pHIV; ++hiv) {
+  //         for (int vacc = 0; vacc < SS::pVacc; ++vacc) {
+  //           i_hv.a_adults(sex, rg, hiv, vacc, t) = p_hv.epi_initial_pulse*i_hv.c_mu(0, sex);
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
   // only exposing the constructor and some methods
   public:
   AdultHivModelSimulation(Args& args):
@@ -61,9 +79,10 @@ struct AdultHivModelSimulation<Config> {
     opts(args.opts)
   {};
 
-  void run_hiv_model_simulation() {
+  void run_hiv_adult_pre_hiv_loop() {
     const auto& p_ha = pars.ha;
     auto& i_ha = intermediate.ha;
+    auto& i_hv = intermediate.hv;
 
     i_ha.everARTelig_idx = p_ha.idx_hm_elig(t) < hDS ? p_ha.idx_hm_elig(t) : hDS;
     i_ha.anyelig_idx = p_ha.idx_hm_elig(t);
@@ -72,38 +91,42 @@ struct AdultHivModelSimulation<Config> {
 
       // Note: In Spectrum, incidence rate by sex is calculated once per year, using
       // the previous year HIV negative population.
-      // Incidence rate by age is calculated per time-step using the **current year** 
+      // Incidence rate by age is calculated per time-step using the **current year**
       // HIV negative population, rathern than the previous year HIV population.
       // Rob Glaubius, 5 August 2022: https://github.com/mrc-ide/leaptfrog/issues/18
-      calculate_annual_incidence_rate_by_sex();
+      this->calculate_annual_incidence_rate_by_sex();
+    }
+  };
+
+  void run_hiv_adult_hiv_loop(int hiv_step) {
+    const auto& p_ha = pars.ha;
+    auto& i_ha = intermediate.ha;
+    auto& i_hv = intermediate.hv;
+
+    nda::fill(i_ha.grad, 0.0);
+    nda::fill(i_ha.gradART, 0.0);
+    nda::fill(i_ha.h_hiv_deaths_age_sex, 0.0);
+    nda::fill(i_ha.h_deaths_excess_nonaids_agesex, 0.0);
+    this->run_disease_progression_and_mortality(hiv_step);
+
+    if (p_ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS) {
+      this->calc_new_infections_agesex(hiv_step);
+    } else if (p_ha.incidence_model_choice == SS::INCIDMOD_TRANSMRATE_HTS){
+      this->calc_new_infections_incidmod_transmrate(hiv_step);
+    } else {
+      throw std::invalid_argument("Incidence model choice not vaild\n");
+    }
+    this->add_new_hiv_infections(hiv_step);
+
+    if (t >= opts.ts_art_start) {
+      this->run_art_progression_and_mortality(hiv_step);
+      this->run_h_art_initiation(hiv_step);
+      this->run_update_art_adult(hiv_step);
     }
 
-    for (int hiv_step = 0; hiv_step < opts.hts_per_year; ++hiv_step) {
-      nda::fill(i_ha.grad, 0.0);
-      nda::fill(i_ha.gradART, 0.0);
-      nda::fill(i_ha.h_hiv_deaths_age_sex, 0.0);
-      nda::fill(i_ha.h_deaths_excess_nonaids_agesex, 0.0);
-      run_disease_progression_and_mortality(hiv_step);
-
-      if (p_ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS) {
-        calc_new_infections_agesex(hiv_step);
-      } else if (p_ha.incidence_model_choice == SS::INCIDMOD_TRANSMRATE_HTS){
-        calc_new_infections_incidmod_transmrate(hiv_step);
-      } else {
-        throw std::invalid_argument("Incidence model choice not vaild\n");
-      }
-      add_new_hiv_infections(hiv_step);
-
-      if (t >= opts.ts_art_start) {
-        run_art_progression_and_mortality(hiv_step);
-        run_h_art_initiation(hiv_step);
-        run_update_art_adult(hiv_step);
-      }
-
-      run_update_hiv_adult(hiv_step);
-      run_remove_p_hiv_deaths(hiv_step);
-      run_wlhiv_births();
-    }
+    this->run_update_hiv_adult(hiv_step);
+    this->run_remove_p_hiv_deaths(hiv_step);
+    this->run_wlhiv_births();
   };
 
   // private methods that we don't want people to call
@@ -169,12 +192,12 @@ struct AdultHivModelSimulation<Config> {
   };
 
   void calc_new_infections_incidmod_transmrate(int hiv_step) {
-    
+
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
     auto& n_dp = state_next.dp;
     auto& i_ha = intermediate.ha;
-    
+
     // sum population sizes
     real_type Xhivn_s[NS];
     real_type Xhivn_incagerr[NS];
@@ -187,7 +210,7 @@ struct AdultHivModelSimulation<Config> {
       Xhivn_incagerr[s] = 0.0;
       for(int a = SS::pIDX_15to49; a < SS::pIDX_15to49 + SS::pAG_15to49; ++a) {
         auto Xhivn_sa = n_dp.p_totpop(a, s) - n_ha.p_hivpop(a, s);
-        Xhivn_s[s] += Xhivn_sa; 
+        Xhivn_s[s] += Xhivn_sa;
         Xhivn_incagerr[s] += p_ha.incidence_rate_ratio_age(a - p_ha.pIDX_INCIDPOP, s, t) * Xhivn_sa;
       }
 
@@ -224,7 +247,7 @@ struct AdultHivModelSimulation<Config> {
             }
           }
         }
-        
+
       } // end loop over ha
     } // end loop over s
 
@@ -269,7 +292,7 @@ struct AdultHivModelSimulation<Config> {
       i_ha.p_infections_ts(a, s) = hivn_a * incrate15to49_s[s] * p_ha.incidence_rate_ratio_age(a - SS::p_idx_hiv_first_adult, s, t) * Xhivn_s[s] / Xhivn_incagerr[s];
     }
   }
-  
+
   void calc_new_infections_agesex(int hiv_step) {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
@@ -280,7 +303,7 @@ struct AdultHivModelSimulation<Config> {
     const auto adult_incid_last_age_group = adult_incid_first_age_group + p_ha.pAG_INCIDPOP;
 
     // Calculate HIV infections by age. This uses the updated
-    // 'current year' population [state_next] (vs. previous year 
+    // 'current year' population [state_next] (vs. previous year
     // population used for overall incidence rate and incidence by sex)
 
     for (int s = 0; s < NS; ++s) {
@@ -665,6 +688,8 @@ struct AdultHivModelSimulation<Config> {
 
 
 };
-
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
 }
 }
