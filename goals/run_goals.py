@@ -46,7 +46,7 @@ with open("zimbabwe_modvars.pickle", "wb") as handle:
 #     modvars = pickle.load(handle)
 
 modvars, param, epp, shiny90 = GB_ImportProjectionFromFile(
-    r"C:\Proj\GoalsProjections\SouthAfrica.pjnz"
+    r"C:\work\LeapFrog\V2\Files_PJNZ\SouthAfrica.pjnz"
 )
 
 
@@ -78,4 +78,4 @@ output = run_goals(
    lf_data,
    output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
 )
-print(output['a_adults'])
+#print(output['a_adults'])

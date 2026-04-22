@@ -15,7 +15,9 @@
       "pVAC_NO_PROT": 4,
       "hIDX_24to35": 2,
       "pHIV": 19,
-      "pVacc": 4
+      "pVacc": 4,
+      "pAges5Yrs": 17,
+      "pARTgt12m":8
     }
   },
   "pars": {
@@ -78,14 +80,7 @@
   "intermediate": {
     "ex_intermediate": {
       "num_type": "real_type"
-    }
-  },
-
-  "state": {
-    "ex_output": {
-      "num_type": "real_type"
     },
-    
     "a_adults": {
       "num_type": "real_type",
       "dims": ["SS::pBothSexes", "SS::pRG_TOTAL", "SS::pHIV", "SS::pVacc"]
@@ -93,6 +88,56 @@
     "c_mu": {
       "num_type": "real_type",
       "dims": ["SS::pCD4_LT50","SS::NS"]
+    },
+
+    "hiv_cd4_mort_no_art": {
+      "num_type": "real_type",
+      "dims": ["SS::pAges5Yrs", "SS::NS", "SS::pCD4_LT50"]
+    },
+
+    "hiv_cd4_mort_art": {
+      "num_type": "real_type",
+      "dims": ["SS::pAges5Yrs", "SS::NS", "SS::pCD4_LT50"]
+    },
+
+    "hiv_cd4_trans": {
+      "num_type": "real_type",
+      "dims": ["SS::pAges5Yrs", "SS::NS", "SS::pCD4_LT50"]
+    },
+
+    "hiv_aging_15": {
+      "num_type": "real_type",
+      "dims": ["SS::pCD4_LT50", "SS::pARTgt12m"]
+    },
+
+      "hiv_aging_50": {
+      "num_type": "real_type",
+      "dims": ["SS::pCD4_LT50", "SS::pARTgt12m"]
+    },
+
+
+    "pop_sex_age_hiv": {
+      "num_type": "real_type",
+      "dims": ["SS::NS", "SS::pAges5Yrs", "SS::pCD4_LT50"]
+    },
+
+    "pop_1549": {
+      "num_type": "real_type",
+      "dims": ["SS::NS"]
+    },
+
+    "pop_1549_art": {
+      "num_type": "real_type",
+      "dims": ["SS::NS"]
+    }
+
+
+  },
+
+
+  "state": {
+    "ex_output": {
+      "num_type": "real_type"
     },
     "b_condom_prop_sum": {
       "num_type": "real_type"

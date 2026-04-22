@@ -117,20 +117,23 @@ struct GoalsSimulation<Config> {
 
   void run_goals_pre_hiv_loop() {
     auto& n_hv = state_next.hv;
+    auto& i_hv = intermediate.hv;
     
-    nda::fill(n_hv.a_adults, 0.0); //please remove with real model calculations 
-    nda::fill(n_hv.c_mu, 0.0); //please remove with real model calculations 
+    nda::fill(i_hv.a_adults, 0.0); //please remove with real model calculations 
+    nda::fill(i_hv.c_mu, 0.0); //please remove with real model calculations 
   }
 
   void run_goals_hiv_loop(int hiv_step) {
     auto& n_hv = state_next.hv;
 
-    nda::fill(n_hv.a_adults, 1.0);
-    nda::fill(n_hv.c_mu, 1.0);
+    auto& i_hv = intermediate.hv;
+    auto& p_hv = pars.hv;
 
-    //auto& i_hv = intermediate.hv;
-    //auto& p_hv = pars.hv;
 
+    nda::fill(i_hv.a_adults, 1.0);
+    nda::fill(i_hv.c_mu, 1.0);
+
+    
 /*     for (int sex = 0; sex < SS::NS; ++sex) {
       for (int rg = 0; rg < SS::pRG_TOTAL; ++rg) {
         for (int hiv = 0; hiv < SS::pHIV; ++hiv) {
@@ -146,10 +149,10 @@ struct GoalsSimulation<Config> {
   }
 
   void run_goals_post_hiv_loop() {
-    auto& n_hv = state_next.hv;
+    auto& i_hv = intermediate.hv;
     
-    nda::fill(n_hv.a_adults, 2.0); //please remove with real model calculations 
-    nda::fill(n_hv.c_mu, 2.0); //please remove with real model calculations 
+    nda::fill(i_hv.a_adults, 2.0); //please remove with real model calculations 
+    nda::fill(i_hv.c_mu, 2.0); //please remove with real model calculations 
   }
 
   // private methods that we don't want people to call
