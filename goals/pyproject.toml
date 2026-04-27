@@ -1,6 +1,6 @@
 [project]
 name = "leapfrog-goals"
-version = "0.0.2"
+version = "0.0.3"
 description = "Python interface for Leapfrog Goals model"
 readme = "README.md"
 authors = [
