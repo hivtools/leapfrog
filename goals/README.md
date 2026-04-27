@@ -1,6 +1,6 @@
 # goals
 
-## Installation (TODO)
+## Installation
 
 ```bash
 pip install leapfrog-goals
