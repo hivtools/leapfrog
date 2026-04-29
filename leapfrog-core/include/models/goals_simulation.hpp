@@ -2,6 +2,7 @@
 
 #include "../options.hpp"
 #include "../generated/config_mixer.hpp"
+#include "../model_debugger.hpp"
 
 namespace leapfrog {
 namespace internal {
@@ -118,7 +119,6 @@ struct GoalsSimulation<Config> {
   void run_goals_pre_hiv_loop() {
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
-    
     nda::fill(i_hv.a_adults, 0.0); //please remove with real model calculations 
     nda::fill(i_hv.c_mu, 0.0); //please remove with real model calculations 
   }
@@ -128,11 +128,19 @@ struct GoalsSimulation<Config> {
 
     auto& i_hv = intermediate.hv;
     auto& p_hv = pars.hv;
-
+    
+    int year = opts.proj_start_year + t;
+    
+    auto dbg_model = capture_model(state_next, intermediate, pars);
 
     nda::fill(i_hv.a_adults, 1.0);
     nda::fill(i_hv.c_mu, 1.0);
-
+    // auto dbg = nda_capture(state_next.dp.p_totpop);
+    state_next.dp.p_totpop(0, 0) = 123.0; //please remove with real model calculations
+    state_next.dp.p_totpop(0, 1) = 456.0; //please remove with real model calculations
+    state_next.dp.p_totpop(1, 0) = 789.0; //please remove with real model calculations  
+    state_next.dp.p_totpop(0, 0) = 321.0; //please remove with real model calculations
+    state_next.dp.p_totpop(0, 1) = 654.0; //please remove with real model calculations
     
 /*     for (int sex = 0; sex < SS::NS; ++sex) {
       for (int rg = 0; rg < SS::pRG_TOTAL; ++rg) {
@@ -205,5 +213,8 @@ struct GoalsSimulation<Config> {
 
 };
 
-}
-}
+} // namespace internal
+} // namespace leapfrog
+
+
+
