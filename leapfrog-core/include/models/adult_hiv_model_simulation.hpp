@@ -33,7 +33,6 @@ struct AdultHivModelSimulation<Config> {
   static constexpr int hDS = SS::hDS;
   static constexpr int hTS = SS::hTS;
   static constexpr int hAG = SS::hAG;
-  static constexpr int pRG_TOTAL = SS::pRG_TOTAL;
   static constexpr auto hAG_span = SS::hAG_span;
   static constexpr int PROJPERIOD_MIDYEAR = SS::PROJPERIOD_MIDYEAR;
   static constexpr int MALE = SS::MALE;
@@ -43,6 +42,7 @@ struct AdultHivModelSimulation<Config> {
   static constexpr int hIDX_15PLUS = SS::hIDX_15PLUS;
   static constexpr int hAG_fertility = SS::hAG_fertility;
   static constexpr int p_idx_fertility_first = SS::p_idx_fertility_first;
+  static constexpr int rRG_TOTAL = SS::rRG_TOTAL;
 
   // function args
   int t;

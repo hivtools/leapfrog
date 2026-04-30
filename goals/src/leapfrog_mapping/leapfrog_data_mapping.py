@@ -170,6 +170,7 @@ from SpectrumCommon.Const.GB.GBConst import (
 )
 
 from SpectrumCommon.Const.HV.HVTags import (
+    HVEpidemicStYrTag, 
     HVAgeFirstSexTag,
     HVBalanceSexActsTag,
     HVBehaviorTag,
@@ -186,13 +187,18 @@ from SpectrumCommon.Const.RN.RNTags import (
     RNADHTreatCovTag,
     RNADHTreatReducMortTag,
     RNPointOfCareTag,
-    RNPOCEffectTag
+    RNPOCEffectTag,
+    RNVacCoverageTag,
+    RNVaccineCovTypeTag,
+    RNVaccineEffectivenessTag,
+    RNVaccineTargetingTag,
+
 )
 
-from SpectrumCommon.Const.HV.HVConst import HV_MSMIDU, HV_MSM_F3, HV_AvgDur
+from SpectrumCommon.Const.HV.HVConst import HV_MSMIDU, HV_MSM_F3, HV_AvgDur, HV_Female
 from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 from SpectrumCommon.Const.DP.DPConst import GB_Female
-from SpectrumCommon.Const.RN.RNConst import RN_POC_VL
+from SpectrumCommon.Const.RN.RNConst import RN_POC_VL, RN_Duration
 
 
 Modvars = dict[str, int | float | bool | np.ndarray | dict]
@@ -1058,39 +1064,36 @@ def _hiv_child_modvars_leapfrog(modvars: Modvars, final_year_idx: int, ss: dict)
 def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
 
     
+    epi_start_year = int(modvars[HVEpidemicStYrTag])
+
     b_balance_sex_acts = int(modvars[HVBalanceSexActsTag])
     
     epi_initial_pulse = float(modvars[HVInitialPulseTag])
 
-    # array[HV_None..HV_MSMIDU] of HV_TDoubleDynYearArray;
+    #array[HV_None..HV_MSMIDU] of HV_TDoubleDynYearArray;
     b_condom_prop = modvars[HVCondomPercentTag][
         : (HV_MSMIDU + 1), : (final_year_idx + 1)
     ].copy(order="F")
 
-    # array [HV_AllRisk..HV_MSM_F3,HV_PercPop..HV_AvgDur] of Double;
-    b_behav = modvars[HVBehaviorTag][: (HV_MSM_F3 + 1), : (HV_AvgDur + 1)].copy(
+    #array [HV_AllRisk..HV_MSM_F3,HV_PercPop..HV_AvgDur] of Double;
+    b_behav_dur = modvars[HVBehaviorTag][: (HV_MSM_F3 + 1), : (HV_AvgDur + 1)].copy(
         order="F"
     )
 
-    # array[HV_AllRisk..{HV_IDU_F1}HV_MSM_F3] of HV_TDoubleDynYearArray;
+    #array[HV_AllRisk..{HV_IDU_F1}HV_MSM_F3] of HV_TDoubleDynYearArray;
     b_sex_acts = modvars[HVSexActsTag][
         : (HV_MSM_F3 + 1), : (final_year_idx + 1)
     ].copy(order="F"
     )
 
-    # array[HV_AllRisk..{HV_IDU_F1}HV_MSM_F3] of HV_TDoubleDynYearArray;
+    #array[HV_AllRisk..{HV_IDU_F1}HV_MSM_F3] of HV_TDoubleDynYearArray;
     b_num_partners = modvars[HVNumPartTag][
         : (HV_MSM_F3 + 1), : (final_year_idx + 1)
     ].copy(order="F")
 
-    # array [HV_AllRisk..HV_MSM_F3,HV_PercPop..HV_AvgDur] of Double;
+    #array[HV_BothSexes..HV_Female,HV_AllRisk..HV_MSMIDU] of Double;
     b_incr_recruit = modvars[HVIncRecruitmentTag][
         : (GB_Female+1), : (HV_MSMIDU + 1)
-    ].copy(order="F")
-
-    #array [HV_AllRisk..HV_MSM_F3,HV_PercPop..HV_AvgDur] of Double;
-    b_behaviors = modvars[HVBehaviorTag][
-        : (HV_MSM_F3 + 1), : (HV_AvgDur + 1)
     ].copy(order="F")
 
     #array [HV_AllRisk..HV_MSM_F3] of double;
@@ -1112,21 +1115,39 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
     rn_poc_cov = modvars[RNPointOfCareTag ][
         : (RN_POC_VL + 1), : (final_year_idx + 1)
     ].copy(order="F")
+    
+   #array [RN_Efficacy..RN_Duration] of Double;
+    rn_vac_params = modvars[RNVaccineEffectivenessTag ][
+        : (RN_Duration+1)
+    ].copy(order="F")
+
+   #array [RN_AllRisk..RN_MSM_F] of RN_TDoubleDynYearArray;
+    rn_vac_coverage = modvars[RNVacCoverageTag ][
+        : (HV_MSM_F3+1), : (final_year_idx + 1)
+    ].copy(order="F")
+
+    rn_vac_cov_type = int(modvars[RNVaccineCovTypeTag])
+
+    rn_vac_targetting = int(modvars[RNVaccineTargetingTag])
+
 
 
     return {
+        "epi_start_year": epi_start_year,
         "b_balance_sex_acts": b_balance_sex_acts,
         "epi_initial_pulse": epi_initial_pulse,
         "b_condom_prop": b_condom_prop,
-        "b_behav": b_behav,
+        "b_behav_dur": b_behav_dur,
         "b_sex_acts": b_sex_acts,
         "b_num_partners": b_num_partners,
         "b_incr_recruit": b_incr_recruit,
-        "b_behaviors": b_behaviors,#risk group proprtions and behav change rate derives from this
         "b_married_prop": b_married_prop, 
         "b_age_first_sex":b_age_first_sex,
         "b_idu_share_prop":b_idu_share_prop,
-        "rn_poc_cov":rn_poc_cov
+        "rn_poc_cov":rn_poc_cov,
+        "rn_vac_params":rn_vac_params,
+        "rn_vac_cov_type":rn_vac_cov_type,
+        "rn_vac_targetting":rn_vac_targetting,
     }
 
 

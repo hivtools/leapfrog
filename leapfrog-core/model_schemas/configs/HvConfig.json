@@ -5,23 +5,40 @@
   "enable_if": "run_goals",
   "state_space": {
     "default": {
-      "pBothSexes": 2,
-      "pRG_TOTAL": 11,
-      "pRG_MSM_F3": 17,
-      "pDUR_AVG": 3,
-      "pRG_DUR": 2,
-      "pCD4_ALL_HIV": 19,
-      "pCD4_LT50": 8,
-      "pVAC_NO_PROT": 4,
-      "hIDX_24to35": 2,
-      "pHIV": 19,
-      "pVacc": 4,
+      "nNS": 2,
+      "nCD4": 16,
+      "nCD4p": 8,
+      "nCD4a": 7,
+      "nRG": 17,
+      "nVAC": 4,
+      "nHIV": 5,
+
+      "pIDX_24to35": 2,
+      "pIDX_15to49": 15,
       "pAges5Yrs": 17,
-      "pARTgt12m":8
+      "rRG_TOTAL": 11,
+      "rRG_MSM_F3": 18,
+      "rRG_DUR": 2,
+      "vVAC_NO_PROT": 5,
+      "vVAC_NUM_PARS": 5,
+      "vVAC_NUM_EFFECTS": 5,
+      "vVAC_NUM_ACTTYPE": 2,
+      "vVAC_NUM_COVTYPE": 2,
+      "hDS": 7,
+      "hTS": 3,
+      "hCD4_ALL_HIV": 17,
+      "hCD4_LT50": 7,
+      "hHIV_Cats": 5
     }
   },
+
+
   "pars": {
     
+     "epi_start_year": {
+      "num_type": "int"
+    },
+
     "b_balance_sex_acts": {
       "num_type": "int"
     },
@@ -32,48 +49,63 @@
       
     "b_condom_prop": {
       "num_type": "real_type",
-      "dims": ["SS::pRG_TOTAL", "opts.proj_steps"]
+      "dims": ["SS::nRG+1", "opts.proj_steps"]
     },
 
-    "b_behav": {
+    "b_behav_dur": {
       "num_type": "real_type",
-      "dims": ["SS::pRG_MSM_F3", "SS::pDUR_AVG"]
+      "dims": ["SS::nRG+1", "SS::rRG_DUR"]
     },
 
    "b_sex_acts": {
       "num_type": "real_type",
-      "dims": ["SS::pRG_MSM_F3", "opts.proj_steps"]
+      "dims": ["SS::nRG+1", "opts.proj_steps"]
     },
 
     "b_num_partners": {
       "num_type": "real_type",
-      "dims": ["SS::pRG_MSM_F3", "opts.proj_steps"]
+      "dims": ["SS::nRG+1", "opts.proj_steps"]
     },
 
     "b_incr_recruit": {
       "num_type": "real_type",
-      "dims": ["SS::NS", "SS::pRG_TOTAL"]
+      "dims": ["SS::nNS+1", "SS::rRG_TOTAL"]
     },
 
-    "b_behaviors": {
-      "num_type": "real_type",
-      "dims": ["SS::pRG_MSM_F3", "SS::pRG_DUR"]
-    },
 
     "b_married_prop": {
       "num_type": "real_type",
-      "dims": ["SS::pRG_MSM_F3"]
+      "dims": ["SS::nRG+1"]
     },
 
     "b_age_first_sex": {
       "num_type": "real_type",
-      "dims": ["SS::NS", "opts.proj_steps"]
+      "dims": ["SS::nNS+1", "opts.proj_steps"]
     },
 
     "b_idu_share_prop": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
+    },
+
+    "rn_vac_params": {
+      "num_type": "real_type",
+      "dims": ["SS::vVAC_NUM_PARS"]
+    },
+
+     "rn_vac_coverage": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG+1","opts.proj_steps"]
+    },
+
+    "rn_vac_cov_type": {
+      "num_type": "int"
+    },
+
+     "rn_vac_targetting": {
+      "num_type": "int"
     }
+
 
   },
 
@@ -81,55 +113,187 @@
     "ex_intermediate": {
       "num_type": "real_type"
     },
-    "a_adults": {
+
+    
+    "adults": {
       "num_type": "real_type",
-      "dims": ["SS::pBothSexes", "SS::pRG_TOTAL", "SS::pHIV", "SS::pVacc"]
-    },
-    "c_mu": {
-      "num_type": "real_type",
-      "dims": ["SS::pCD4_LT50","SS::NS"]
+      "dims": ["SS::nVAC+1","SS::nRG+1","SS::nCD4+1","SS::nNS+1"]
     },
 
+
+    "riskgroup_proportions": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG","SS::nNS"]
+    },
+
+    "behave_change_rate": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG","SS::nNS"]
+    },
+
+    "totpop_1549": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
+    },
+
+    "migration_num": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
+    },
+
+    "migration_denom": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
+    },
+
+     "migration_rate": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
+    },
+
+
+    "totpop_deaths_background": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
+    },
+
+    "background_death_rate": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
+    },
+
+     "deaths_art": {
+      "num_type": "real_type",
+      "dims": ["SS::nHIV", "SS::nCD4a","SS::nNS"]
+    },
+
+    
+    "entrants_age_15": {
+      "num_type": "real_type",
+      "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
+    },
+
+   "rate_aging_50": {
+      "num_type": "real_type",
+      "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
+    },
+
+    "hiv_exit_rates": {
+      "num_type": "real_type",
+      "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
+    },
+
+     "art_exit_rates": {
+      "num_type": "real_type",
+      "dims": ["SS::nHIV", "SS::nCD4a","SS::nNS"]
+    },
+
+    "hiv_stage_exits": {
+      "num_type": "real_type",
+      "dims": ["SS::nVAC","SS::nRG","SS::nCD4p","SS::nNS"]
+    },
+
+     "hiv_stage_progressors": {
+      "num_type": "real_type",
+      "dims": ["SS::nVAC","SS::nCD4p","SS::nNS"]
+    },
+
+    "art_stage_exits": {
+      "num_type": "real_type",
+      "dims": ["SS::nVAC","SS::nRG","SS::nCD4a","SS::nNS"]
+    },
+
+     "stage_entrants": {
+      "num_type": "real_type",
+      "dims": ["SS::nVAC","SS::nRG","SS::nCD4","SS::nNS"]
+    },
+
+    "migrants": {
+      "num_type": "real_type",
+      "dims": ["SS::nVAC","SS::nRG","SS::nCD4","SS::nNS"]
+    },
+
+    "new_vaccinations": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG","SS::nCD4","SS::nNS"]
+    },
+    
+    "hiv_mu": {
+      "num_type": "real_type",
+      "dims": ["SS::nCD4p","SS::nNS" ]
+    },
+
+     "hiv_lambda": {
+      "num_type": "real_type",
+      "dims": ["SS::nCD4p","SS::nNS" ]
+    },
+
+     "art_alpha": {
+      "num_type": "real_type",
+      "dims": ["SS::nCD4p","SS::nNS"]
+    },
+    
     "hiv_cd4_mort_no_art": {
       "num_type": "real_type",
-      "dims": ["SS::pAges5Yrs", "SS::NS", "SS::pCD4_LT50"]
+      "dims": ["SS::nCD4p","SS::nNS"]
     },
 
     "hiv_cd4_mort_art": {
       "num_type": "real_type",
-      "dims": ["SS::pAges5Yrs", "SS::NS", "SS::pCD4_LT50"]
+      "dims": ["SS::nCD4a","SS::nNS"]
     },
 
-    "hiv_cd4_trans": {
+    "hiv_cd4_progression": {
       "num_type": "real_type",
-      "dims": ["SS::pAges5Yrs", "SS::NS", "SS::pCD4_LT50"]
+      "dims": ["SS::nCD4p","SS::nNS"]
     },
 
-    "hiv_aging_15": {
+    "aging_15": {
       "num_type": "real_type",
-      "dims": ["SS::pCD4_LT50", "SS::pARTgt12m"]
+      "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
     },
 
-      "hiv_aging_50": {
+      "aging_50": {
       "num_type": "real_type",
-      "dims": ["SS::pCD4_LT50", "SS::pARTgt12m"]
+      "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
     },
 
 
     "pop_sex_age_hiv": {
       "num_type": "real_type",
-      "dims": ["SS::NS", "SS::pAges5Yrs", "SS::pCD4_LT50"]
+      "dims": ["SS::nHIV","SS::nNS"]
     },
 
     "pop_1549": {
       "num_type": "real_type",
-      "dims": ["SS::NS"]
+      "dims": ["SS::nNS"]
     },
 
-    "pop_1549_art": {
+    "pop_1549_hiv": {
       "num_type": "real_type",
-      "dims": ["SS::NS"]
+      "dims": ["SS::nCD4p","SS::nNS"]
+    },
+
+     "pop_1549_art": {
+      "num_type": "real_type",
+      "dims": ["SS::nCD4p","SS::nNS"]
+    },
+
+     "aging_denom_1549": {
+      "num_type": "real_type",
+      "dims": ["SS::nHIV","SS::nCD4p","SS::nNS" ]
+    },
+
+     "vac_params": {
+      "num_type": "real_type",
+      "dims": ["SS::vVAC_NUM_PARS"]
+    },
+
+    "vac_effect": {
+      "num_type": "real_type",
+      "dims": ["SS::vVAC_NUM_ACTTYPE","SS::vVAC_NUM_PARS"]
     }
+
   },
   "state": {
     "ex_output": {
