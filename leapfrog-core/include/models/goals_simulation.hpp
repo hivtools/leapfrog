@@ -2,6 +2,7 @@
 
 #include "../options.hpp"
 #include "../generated/config_mixer.hpp"
+#include "../model_debugger.hpp"
 
 namespace leapfrog {
 namespace internal {
@@ -180,6 +181,7 @@ struct GoalsSimulation<Config> {
     const auto& c_dp = state_curr.dp;
     
     auto& n_hv = state_next.hv;
+    auto dbg_model = capture_model(state_next, intermediate, pars);
 
     n_hv.total_population += t; //c_dp.p_totpop(20,S_MALE);
     
@@ -200,7 +202,6 @@ struct GoalsSimulation<Config> {
     if(t==1){
       calc_initial_pop();
     }  
-    
     //at hiv first year, apply initial pulse
     if(t>(p_hv.epi_start_year-proj_start_year+1)){
       calc_initial_pulse();
@@ -251,12 +252,18 @@ struct GoalsSimulation<Config> {
     //from goals
     auto& p_hv = pars.hv;
     auto& i_hv = intermediate.hv;
-
-   //nda::fill(i_hv.initial_pulse, 0.0);
+    
+    int year = opts.proj_start_year + t;
+    
 
    real_type pulse =0;
    real_type distr =0;
-
+    // auto dbg = nda_capture(state_next.dp.p_totpop);
+    state_next.dp.p_totpop(0, 0) = 123.0; //please remove with real model calculations
+    state_next.dp.p_totpop(0, 1) = 456.0; //please remove with real model calculations
+    state_next.dp.p_totpop(1, 0) = 789.0; //please remove with real model calculations  
+    state_next.dp.p_totpop(0, 0) = 321.0; //please remove with real model calculations
+    state_next.dp.p_totpop(0, 1) = 654.0; //please remove with real model calculations
     for (int s = S_MALE; s <= S_FEMALE; ++s) { 
 
       for (int rg = RG_NONE; rg <= RG_TOTAL; ++rg) {
@@ -1127,5 +1134,8 @@ void sum_adult_pop_dims_goals(int t)
 
 };
 
-}
-}
+} // namespace internal
+} // namespace leapfrog
+
+
+

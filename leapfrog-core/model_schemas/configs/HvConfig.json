@@ -294,11 +294,7 @@
       "dims": ["SS::vVAC_NUM_ACTTYPE","SS::vVAC_NUM_PARS"]
     }
 
-
-
   },
-
-
   "state": {
     "ex_output": {
       "num_type": "real_type"
