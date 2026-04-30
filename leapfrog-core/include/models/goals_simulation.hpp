@@ -178,7 +178,6 @@ struct GoalsSimulation<Config> {
 
   void run_goals_simulation() {
     const auto& c_dp = state_curr.dp;
-    auto& n_dp = state_next.dp;
     
     auto& n_hv = state_next.hv;
 
@@ -378,14 +377,12 @@ void calc_new_vaccinations(int t)
 //inner loop functions
   void set_goals_vars_from_dp(int t) {
     //dp
-    auto& n_dp = state_next.dp;
     const auto& c_dp = state_curr.dp;
     auto& i_dp = intermediate.dp;
   
 
     //aim
     const auto& c_ha = state_curr.ha;
-    auto& n_ha = state_next.ha;
     const auto& p_ha = pars.ha;
     
     //goals
@@ -418,20 +415,20 @@ void calc_new_vaccinations(int t)
       
      for(int a = SS::pIDX_15to49; a < SS::pIDX_15to49 + SS::pAG_15to49; ++a) {
      
-      i_hv.totpop_deaths_background(s) += n_dp.p_deaths_background_totpop(a, s);
+      i_hv.totpop_deaths_background(s) += c_dp.p_deaths_background_totpop(a, s);
       i_hv.totpop_1549(s) += c_dp.p_totpop(a - 1, s);
 
-      i_hv.migration_num(s) += n_dp.p_totpop(a, s) * i_dp.migration_rate(a, s);
-      i_hv.migration_denom(s) += n_dp.p_totpop(a, s);
+      i_hv.migration_num(s) += c_dp.p_totpop(a, s) * i_dp.migration_rate(a, s);
+      i_hv.migration_denom(s) += c_dp.p_totpop(a, s);
       
-      i_hv.pop_1549(s) += n_dp.p_totpop(a, s);
-      i_hv.aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) += n_dp.p_totpop(a, s);
+      i_hv.pop_1549(s) += c_dp.p_totpop(a, s);
+      i_hv.aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) += c_dp.p_totpop(a, s);
       if(a==SS::pIDX_15to49){
-          i_hv.entrants_age_15(POP_H_HIVNeg, CD4_NEG, s) += n_dp.p_totpop(a, s);
+          i_hv.entrants_age_15(POP_H_HIVNeg, CD4_NEG, s) += c_dp.p_totpop(a, s);
         }
         
         if(a==SS::pIDX_15to49 + SS::pAG_15to49){
-          i_hv.aging_50(POP_H_HIVNeg, CD4_NEG, s) += n_dp.p_totpop(a, s);
+          i_hv.aging_50(POP_H_HIVNeg, CD4_NEG, s) += c_dp.p_totpop(a, s);
         }
 
       for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
@@ -456,7 +453,7 @@ void calc_new_vaccinations(int t)
 
           i_hv.hiv_cd4_mort_no_art(hd,s) += c_ha.h_hiv_deaths_no_art(hd, a, s);
           if(hd>1){
-            i_hv.hiv_cd4_progression(hd-1, s) += p_ha.cd4_progression(hd - 1, a, s) * n_ha.h_hivpop(hd - 1, a, s);
+            i_hv.hiv_cd4_progression(hd-1, s) += p_ha.cd4_progression(hd - 1, a, s) * c_ha.h_hivpop(hd - 1, a, s);
           }
 
           for (int ht = 0; ht <= nHIV; ++ht) {
