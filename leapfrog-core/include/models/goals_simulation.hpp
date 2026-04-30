@@ -178,7 +178,15 @@ struct GoalsSimulation<Config> {
   {};
 
   void run_goals_simulation() {
-    example_step();
+    const auto& c_dp = state_curr.dp;
+    auto& n_dp = state_next.dp;
+    
+    auto& n_hv = state_next.hv;
+    auto dbg_model = capture_model(state_next, intermediate, pars);
+
+    n_hv.total_population += t; //c_dp.p_totpop(20,S_MALE);
+    
+    //example_step();
   };
 
   void run_goals_pre_hiv_loop() {
@@ -223,6 +231,9 @@ struct GoalsSimulation<Config> {
 
     //progress, hiv-neg, hiv-pos and hiv-art (RG_LRH..RG_MSM)
     progress_hivn_hivp_art(t);
+
+    //ART allocation
+    allocate_art(t);
     
   }
 
@@ -245,7 +256,6 @@ struct GoalsSimulation<Config> {
     
     int year = opts.proj_start_year + t;
     
-    auto dbg_model = capture_model(state_next, intermediate, pars);
 
    real_type pulse =0;
    real_type distr =0;
@@ -949,6 +959,13 @@ void progress_hivn_hivp_art(int t)
       }//rg
 
     }//s
+}
+
+void allocate_art(int t)
+{
+
+ 
+
 }
 
 //post inner loop functions

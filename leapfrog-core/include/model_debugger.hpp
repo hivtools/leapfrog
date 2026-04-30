@@ -35,7 +35,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
   requires requires (const HvState& hv, const IntermediateHv& i_hv, const ParsHv& p_hv) {
     hv.ex_output;
     hv.b_condom_prop_sum;
-    i_hv.a_adults;
+    i_hv.adults;
     p_hv.b_condom_prop;
     p_hv.epi_initial_pulse;
   }
@@ -200,29 +200,36 @@ struct HvDebugInfo {
 
   // Intermediate
   double ex_intermediate;
-  NdaInfo a_adults;
-  NdaInfo c_mu;
+  NdaInfo adults;
+  NdaInfo hiv_mu;
+  NdaInfo hiv_lambda;
+  NdaInfo art_alpha;
   NdaInfo hiv_cd4_mort_no_art;
   NdaInfo hiv_cd4_mort_art;
-  NdaInfo hiv_cd4_trans;
-  NdaInfo hiv_aging_15;
-  NdaInfo hiv_aging_50;
+  NdaInfo hiv_cd4_progression;
+  NdaInfo aging_15;
+  NdaInfo aging_50;
   NdaInfo pop_sex_age_hiv;
   NdaInfo pop_1549;
+  NdaInfo pop_1549_hiv;
   NdaInfo pop_1549_art;
 
   // Pars
+  int epi_start_year;
   int b_balance_sex_acts;
   double epi_initial_pulse;
   NdaInfo b_condom_prop;
-  NdaInfo b_behav;
+  NdaInfo b_behav_dur;
   NdaInfo b_sex_acts;
   NdaInfo b_num_partners;
   NdaInfo b_incr_recruit;
-  NdaInfo b_behaviors;
   NdaInfo b_married_prop;
   NdaInfo b_age_first_sex;
   NdaInfo b_idu_share_prop;
+  NdaInfo rn_vac_params;
+  NdaInfo rn_vac_coverage;
+  int rn_vac_cov_type;
+  int rn_vac_targetting;
 };
 
 struct HaDebugInfo {
@@ -388,7 +395,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
   requires requires (const HvState& hv, const IntermediateHv& i_hv, const ParsHv& p_hv) {
     hv.ex_output;
     hv.b_condom_prop_sum;
-    i_hv.a_adults;
+    i_hv.adults;
     p_hv.b_condom_prop;
     p_hv.epi_initial_pulse;
   }
@@ -400,28 +407,35 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.b_condom_prop_sum = static_cast<double>(hv.b_condom_prop_sum);
 
   out.ex_intermediate = static_cast<double>(i_hv.ex_intermediate);
-  out.a_adults = nda_capture(i_hv.a_adults);
-  out.c_mu = nda_capture(i_hv.c_mu);
+  out.adults = nda_capture(i_hv.adults);
+  out.hiv_mu = nda_capture(i_hv.hiv_mu);
+  out.hiv_lambda = nda_capture(i_hv.hiv_lambda);
+  out.art_alpha = nda_capture(i_hv.art_alpha);
   out.hiv_cd4_mort_no_art = nda_capture(i_hv.hiv_cd4_mort_no_art);
   out.hiv_cd4_mort_art = nda_capture(i_hv.hiv_cd4_mort_art);
-  out.hiv_cd4_trans = nda_capture(i_hv.hiv_cd4_trans);
-  out.hiv_aging_15 = nda_capture(i_hv.hiv_aging_15);
-  out.hiv_aging_50 = nda_capture(i_hv.hiv_aging_50);
+  out.hiv_cd4_progression = nda_capture(i_hv.hiv_cd4_progression);
+  out.aging_15 = nda_capture(i_hv.aging_15);
+  out.aging_50 = nda_capture(i_hv.aging_50);
   out.pop_sex_age_hiv = nda_capture(i_hv.pop_sex_age_hiv);
   out.pop_1549 = nda_capture(i_hv.pop_1549);
+  out.pop_1549_hiv = nda_capture(i_hv.pop_1549_hiv);
   out.pop_1549_art = nda_capture(i_hv.pop_1549_art);
 
+  out.epi_start_year = static_cast<int>(p_hv.epi_start_year);
   out.b_balance_sex_acts = static_cast<int>(p_hv.b_balance_sex_acts);
   out.epi_initial_pulse = static_cast<double>(p_hv.epi_initial_pulse);
   out.b_condom_prop = nda_capture(p_hv.b_condom_prop);
-  out.b_behav = nda_capture(p_hv.b_behav);
+  out.b_behav_dur = nda_capture(p_hv.b_behav_dur);
   out.b_sex_acts = nda_capture(p_hv.b_sex_acts);
   out.b_num_partners = nda_capture(p_hv.b_num_partners);
   out.b_incr_recruit = nda_capture(p_hv.b_incr_recruit);
-  out.b_behaviors = nda_capture(p_hv.b_behaviors);
   out.b_married_prop = nda_capture(p_hv.b_married_prop);
   out.b_age_first_sex = nda_capture(p_hv.b_age_first_sex);
   out.b_idu_share_prop = nda_capture(p_hv.b_idu_share_prop);
+  out.rn_vac_params = nda_capture(p_hv.rn_vac_params);
+  out.rn_vac_coverage = nda_capture(p_hv.rn_vac_coverage);
+  out.rn_vac_cov_type = static_cast<int>(p_hv.rn_vac_cov_type);
+  out.rn_vac_targetting = static_cast<int>(p_hv.rn_vac_targetting);
 
   return out;
 }
@@ -581,7 +595,11 @@ inline ModelDebugInfo capture_model(const State& state,
     const Intermediate& intermediate, const Pars& pars) {
   ModelDebugInfo out{};
   out.dp = capture_dp(state.dp, intermediate.dp, pars.dp);
-  out.hv = capture_hv(state.hv, intermediate.hv, pars.hv);
+  if constexpr (requires {
+    capture_hv(state.hv, intermediate.hv, pars.hv);
+  }) {
+    out.hv = capture_hv(state.hv, intermediate.hv, pars.hv);
+  }
   out.ha = capture_ha(state.ha, intermediate.hv, pars.ha);
   out.hc = capture_hc(state.hc, intermediate.hc, pars.hc);
   return out;

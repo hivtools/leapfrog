@@ -542,6 +542,8 @@ type
   private
     exOutput: PDouble;
     exOutputLength: Integer;
+    totalPopulation: PDouble;
+    totalPopulationLength: Integer;
     bCondomPropSum: PDouble;
     bCondomPropSumLength: Integer;
 end;
@@ -550,6 +552,7 @@ type
   LeapfrogGoalsState = class
   public
     exOutput: TGBFixedArray<Double>;
+    totalPopulation: TGBFixedArray<Double>;
     bCondomPropSum: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsStateView;
     procedure writeToDisk(dir: string);
@@ -1020,6 +1023,7 @@ end;
 destructor LeapfrogGoalsState.Destroy;
 begin;
   exOutput.Free;
+  totalPopulation.Free;
   bCondomPropSum.Free;
   inherited;
 end;
@@ -1062,6 +1066,8 @@ function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
 begin;
   Result.exOutput := PDouble(exOutput.data);
   Result.exOutputLength := exOutput.GetLength();
+  Result.totalPopulation := PDouble(totalPopulation.data);
+  Result.totalPopulationLength := totalPopulation.GetLength();
   Result.bCondomPropSum := PDouble(bCondomPropSum.data);
   Result.bCondomPropSumLength := bCondomPropSum.GetLength();
 end;

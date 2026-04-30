@@ -195,7 +195,7 @@ from SpectrumCommon.Const.RN.RNTags import (
 
 )
 
-from SpectrumCommon.Const.HV.HVConst import HV_MSMIDU, HV_MSM_F3, HV_AvgDur, HV_Female
+from SpectrumCommon.Const.HV.HVConst import HV_MSMHR, HV_MSMIDU, HV_MSM_F3, HV_AvgDur, HV_Female
 from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 from SpectrumCommon.Const.DP.DPConst import GB_Female
 from SpectrumCommon.Const.RN.RNConst import RN_POC_VL, RN_Duration
@@ -1070,9 +1070,9 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
     
     epi_initial_pulse = float(modvars[HVInitialPulseTag])
 
-    #array[HV_None..HV_MSMIDU] of HV_TDoubleDynYearArray;
+    #array[HV_None..HV_MSM_F3] of HV_TDoubleDynYearArray;
     b_condom_prop = modvars[HVCondomPercentTag][
-        : (HV_MSMIDU + 1), : (final_year_idx + 1)
+        : (HV_MSM_F3 + 1), : (final_year_idx + 1)
     ].copy(order="F")
 
     #array [HV_AllRisk..HV_MSM_F3,HV_PercPop..HV_AvgDur] of Double;
@@ -1148,6 +1148,7 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "rn_vac_params":rn_vac_params,
         "rn_vac_cov_type":rn_vac_cov_type,
         "rn_vac_targetting":rn_vac_targetting,
+        "rn_vac_coverage":rn_vac_coverage
     }
 
 
