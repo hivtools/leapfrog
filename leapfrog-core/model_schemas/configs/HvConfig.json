@@ -303,6 +303,11 @@
     "ex_output": {
       "num_type": "real_type"
     },
+
+    "total_population": {
+      "num_type": "real_type"
+    },
+
     "b_condom_prop_sum": {
       "num_type": "real_type"
     }

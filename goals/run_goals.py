@@ -78,4 +78,4 @@ output = run_goals(
    lf_data,
    output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
 )
-#print(output['a_adults'])
+print(output['total_population'])
