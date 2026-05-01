@@ -16,7 +16,9 @@
       "hIDX_15to49": 0,
       "hAG_15to49": 35,
       "HIV_STEPS_PER_YEAR": 10,
-      "nKP_ART" : 7
+      "nKP_ART" : 7,
+      "nART_NUM_PERC" : 4
+
     },
 
     
@@ -206,8 +208,14 @@
     "kp_eligible_treat": {
       "num_type": "real_type",
       "dims": ["SS::hAG", "SS::NS"]
-      }
+      },
+
+    "art_cov_num_percent": {
+      "num_type": "int",
+      "dims": ["SS::nART_NUM_PERC+1"]
+    }
   },
+
   "intermediate": {
     "hiv_negative_pop": {
       "num_type": "real_type",
@@ -342,6 +350,8 @@
     "prev": {
       "num_type": "real_type"
     }
+
+
   },
   "state": {
     "p_hivpop": {

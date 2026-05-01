@@ -2,6 +2,7 @@ import math
 import numpy as np
 
 from SpectrumCommon.Const.AM.AMTags import (
+    AM_ARTCoverageSelectionTag,
     AM_AdultAnnRateProgressLowerCD4Tag,
     AM_AdultDistNewInfectionsCD4Tag,
     AM_AdultMortByCD4NoARTTag,
@@ -172,6 +173,7 @@ from SpectrumCommon.Const.GB.GBConst import (
 )
 
 from SpectrumCommon.Const.HV.HVTags import (
+    HVARTInputCoverageByRGTag,
     HVEpidemicStYrTag, 
     HVAgeFirstSexTag,
     HVBalanceSexActsTag,
@@ -545,7 +547,10 @@ def _hiv_adult_modvars_leapfrog(modvars: Modvars, final_year_idx: int, ss: dict)
     initiation_mortality_weight = modvars[AM_NewARTPatAllocTag][DP_AdvOpt_ART_ExpMort]
 
     kp_eligible_treat = modvars[AM_PopsEligTreatTag]
-   
+
+    art_cov_num_percent = int(modvars[AM_ARTCoverageSelectionTag])
+
+  
     pag_incidpop = (
         ss["p_fertility_age_groups"]
         if modvars[AM_EPPPopulationAgesTag] == DP_EPP_15t49
@@ -604,6 +609,7 @@ def _hiv_adult_modvars_leapfrog(modvars: Modvars, final_year_idx: int, ss: dict)
         "frr_art6mos": fert_mult_on_art,
         "frr_scalar": local_adj_factor,
         "kp_eligible_treat":kp_eligible_treat,
+        "art_cov_num_percent":art_cov_num_percent,
     }
 
 
@@ -1137,6 +1143,9 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
 
     rn_vac_targetting = int(modvars[RNVaccineTargetingTag])
 
+    art_coverage_rg = modvars[HVARTInputCoverageByRGTag][
+        : (GB_Female+1), : (HV_MSMIDU + 1), : (final_year_idx + 1)
+    ].copy(order="F")
 
 
     return {
@@ -1156,7 +1165,8 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "rn_vac_params":rn_vac_params,
         "rn_vac_cov_type":rn_vac_cov_type,
         "rn_vac_targetting":rn_vac_targetting,
-        "rn_vac_coverage":rn_vac_coverage
+        "rn_vac_coverage":rn_vac_coverage,
+        "art_coverage_rg":art_coverage_rg
     }
 
 

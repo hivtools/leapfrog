@@ -142,6 +142,8 @@ type
     localAdjFactorLength: Integer;
     kpEligibleTreat: PDouble;
     kpEligibleTreatLength: Integer;
+    artCovNumPercent: PInteger;
+    artCovNumPercentLength: Integer;
 end;
 
 type
@@ -177,6 +179,7 @@ type
     fertMultOnArt: TGBFixedArray<Double>;
     localAdjFactor: Double;
     kpEligibleTreat: TGBFixedArray<Double>;
+    artCovNumPercent: TGBFixedArray<Integer>;
     function getView(): LeapfrogHivAdultParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -516,6 +519,8 @@ type
     rnVacCovTypeLength: Integer;
     rnVacTargetting: Integer;
     rnVacTargettingLength: Integer;
+    artCoverageRg: PDouble;
+    artCoverageRgLength: Integer;
 end;
 
 type
@@ -537,6 +542,7 @@ type
     rnVacCoverage: TGBFixedArray<Double>;
     rnVacCovType: Integer;
     rnVacTargetting: Integer;
+    artCoverageRg: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -672,6 +678,7 @@ begin;
   fertMultOffArt.Free;
   fertMultOnArt.Free;
   kpEligibleTreat.Free;
+  artCovNumPercent.Free;
   inherited;
 end;
 
@@ -760,6 +767,8 @@ begin;
   Result.localAdjFactorLength := 1;
   Result.kpEligibleTreat := PDouble(kpEligibleTreat.data);
   Result.kpEligibleTreatLength := kpEligibleTreat.GetLength();
+  Result.artCovNumPercent := PInteger(artCovNumPercent.data);
+  Result.artCovNumPercentLength := artCovNumPercent.GetLength();
 end;
 
 function LeapfrogHivAdultState.getView(): LeapfrogHivAdultStateView;
@@ -1023,6 +1032,7 @@ begin;
   bIduShareProp.Free;
   rnVacParams.Free;
   rnVacCoverage.Free;
+  artCoverageRg.Free;
   inherited;
 end;
 
@@ -1067,6 +1077,8 @@ begin;
   Result.rnVacCovTypeLength := 1;
   Result.rnVacTargetting := rnVacTargetting;
   Result.rnVacTargettingLength := 1;
+  Result.artCoverageRg := PDouble(artCoverageRg.data);
+  Result.artCoverageRgLength := artCoverageRg.GetLength();
 end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
@@ -1121,6 +1133,7 @@ begin;
   fertMultOffArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOffArt');
   fertMultOnArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOnArt');
   kpEligibleTreat.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'kpEligibleTreat');
+  artCovNumPercent.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCovNumPercent');
 end;
 
 procedure LeapfrogHivAdultState.writeToDisk(dir: string);
@@ -1240,6 +1253,7 @@ begin;
   bIduShareProp.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'bIduShareProp');
   rnVacParams.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnVacParams');
   rnVacCoverage.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnVacCoverage');
+  artCoverageRg.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCoverageRg');
 end;
 
 procedure LeapfrogGoalsState.writeToDisk(dir: string);

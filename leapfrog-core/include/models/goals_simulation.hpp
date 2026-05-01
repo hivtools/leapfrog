@@ -153,6 +153,11 @@ struct GoalsSimulation<Config> {
       VAC_COV_SINGLE        = 0,
       VAC_COV_ALLRISK       = 1,
 
+      ART_NUM_PERCENT       =0,
+      ART_CD4_PERCENT       =1,
+      ART_CD4_NUMBER        =2,
+      ART_NEW_PATS          =3,
+      ART_RG_PERCENT        =4,
      
   };
 
@@ -1015,6 +1020,7 @@ void progress_hivn_hivp_art(int t)
 void allocate_art(int t)
 {
   //from aim
+  auto& i_ha = intermediate.ha;
   const auto& p_ha = pars.ha;
 
   //from goals
@@ -1023,17 +1029,17 @@ void allocate_art(int t)
   auto& i_hv = intermediate.hv;
   auto& p_hv = pars.hv;
 
-  real_type NotReceivingARTBySHRV[nNS][nCD4p][nRG][nNS];  
-  real_type EligibleARTBySHRV[nNS][nNS][nCD4p][nRG][nNS];
+  real_type not_receiving_art_vrhs[nVAC][nRG][nCD4p][nNS]; 
+  real_type eligible_art_vrhs[nVAC][nRG][nCD4p][nNS]; 
 
-  real_type receiving_art_bysex[nNS][RG_TOTAL1][nVAC];      
-  real_type not_receiving_art_bysex[nNS][RG_TOTAL1][nVAC];  
-  real_type start_art[nNS][RG_TOTAL1][nVAC]; 
-  real_type sum_elig_art[nNS][RG_TOTAL1][nVAC];         
+  real_type receiving_art_vrs[nVAC][nRG][nNS] ;   
+  real_type not_receiving_art_vrs[nVAC][nRG][nNS] ;
+  real_type start_art[nVAC][nRG][nNS]  ; 
+  real_type sum_elig_art[nVAC][nRG][nNS]   ;       
  
-  real_type  sex_age_hiv[nNS][POP_H_OnART];         
-  real_type  art_cov[nNS][RG_TOTAL1];             
-  bool  kp_cd4_elig[nNS][RG_TOTAL1];  
+  real_type  sex_age_hiv[POP_H_OnART][nNS];         
+  real_type  art_cov[RG_TOTAL1][nNS];             
+  bool  kp_cd4_elig[RG_TOTAL1][nNS];  
   
   real_type new_patients[nCD4p];            
   real_type mort_rate[nCD4p];           
@@ -1056,7 +1062,7 @@ void allocate_art(int t)
 
 for (int s = S_MALE; s <= S_FEMALE; ++s) {
     for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
-        kp_cd4_elig[s][rg] = true;
+        kp_cd4_elig[rg][s] = true;
     }
 }
 
@@ -1117,11 +1123,11 @@ new_art_cap = 0.99;
 for (int s = S_MALE; s <= S_FEMALE; ++s) {
     for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
         if (s == S_FEMALE) {
-            if ((r == TG_HRH) && DP.GetPopsEligTreat(DP_EligTreatSexWorkers).Eligible &&
+            if ((rg == TG_HRH) && DP.GetPopsEligTreat(DP_EligTreatSexWorkers).Eligible &&
                 DP.GetPopsEligTreat(DP_EligTreatSexWorkers).Year <= (DP.GetFirstYear + t - 1)) {
                 kp_cd4_elig[S_FEMALE][RG_HRH] = false;
             }
-            if ((r == RG_IDU) && DP.GetPopsEligTreat(DP_EligTreatIDU).Eligible &&
+            if ((rg == RG_IDU) && DP.GetPopsEligTreat(DP_EligTreatIDU).Eligible &&
                 DP.GetPopsEligTreat(DP_EligTreatIDU).Year <= (DP.GetFirstYear + t - 1)) {
                 kp_cd4_elig[S_FEMALE][RG_IDU] = false;
             }
@@ -1132,10 +1138,10 @@ for (int s = S_MALE; s <= S_FEMALE; ++s) {
                 DP.GetPopsEligTreat(DP_EligTreatMSM).Year <= (DP.GetFirstYear + t - 1)) {
                 kp_cd4_elig[S_MALE][RG_MSM] = false;
                 //not doing these groups, currently 
-                //kp_cd4_elig[HV_Male][HV_MSMLR] = false;
-                //kp_cd4_elig[HV_Male][HV_MSMMR] = false;
-                //kp_cd4_elig[HV_Male][HV_MSMHR] = false;
-                //kp_cd4_elig[HV_Male][HV_MSMIDU] = false;
+                //kp_cd4_elig[HV_Male][RG_MSMLR] = false;
+                //kp_cd4_elig[HV_Male][RG_MSMMR] = false;
+                //kp_cd4_elig[HV_Male][RG_MSMHR] = false;
+                //kp_cd4_elig[HV_Male][RG_MSMIDU] = false;
             }
             if ((rg == RG_IDU) && DP.GetPopsEligTreat(DP_EligTreatIDU).Eligible &&
                 DP.GetPopsEligTreat(DP_EligTreatIDU).Year <= (DP.GetFirstYear + t - 1)) {
@@ -1146,8 +1152,91 @@ for (int s = S_MALE; s <= S_FEMALE; ++s) {
 } */
 
 
+for (int s = S_MALE; s <= S_FEMALE; ++s) {
+// Set ART coverage for all risk groups to AIM 15‑49 coverage
+if (sex_age_hiv[S_MALE][POP_H_OnART] > 0.0)
+    for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg)
+    {
+     
+        art_cov[S_MALE][rg] = sex_age_hiv[S_MALE][POP_H_OnART] /
+                               (sex_age_hiv[S_MALE][POP_H_NoART] +
+                                sex_age_hiv[S_MALE][POP_H_OnART]);
+
+        art_cov[S_FEMALE][rg] = sex_age_hiv[S_FEMALE][POP_H_OnART] /
+                                 (sex_age_hiv[S_FEMALE][POP_H_NoART] +
+                                  sex_age_hiv[S_FEMALE][POP_H_OnART]);
+    }
+
+
+      // ART_NUM_PERCENT       =0;
+      // ART_CD4_PERCENT       =1;
+      // ART_CD4_NUMBER        =2;
+      // ART_NEW_PATS          =3;
+      // ART_RG_PERCENT        =4;
+     
+  
+//KP coverage from AIM input editor
+//if (p_ha.art_cov_num_percent == ART_RG_PERCENT)
+if (p_ha.art_cov_num_percent == 0)
+{
+    // Coverage for males, risk groups HV_IDU … HV_MSM
+    for (int rg = RG_IDU; rg <= RG_MSM; ++rg)
+    {
+        art_cov[rg][S_MALE] = p_hv.art_coverage_rg(S_FEMALE, rg, t) / 100.0;
+    }
+
+    // Coverage for females, risk groups HV_HRH … HV_IDU
+    for (int rg = RG_HRH; rg <= RG_IDU; ++rg)
+    {
+        art_cov[rg][S_FEMALE]= p_hv.art_coverage_rg(S_FEMALE, rg, t) / 100.0;
+    }
+}
 
 }
+
+
+// Calc new ART by sex and allocate it
+for (int s = S_MALE; s <= S_FEMALE; ++s)              
+{
+
+    for (int hd = CD4_GT500; hd <= CD4_LT50 ; ++hd)   
+    {
+        for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg)     
+        {
+            for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) 
+            {
+                // not receiving ART (by sex & risk‑HIV‑risk‑viral)
+                not_receiving_art_vrs[v][rg][s] += n_hv.adults(v,rg,hd,s);
+                not_receiving_art_vrhs[v][rg][hd][s] += n_hv.adults(v,rg,hd,s);
+
+                // receiving ART (by sex & risk‑viral)
+                receiving_art_vrs[v][rg][s] += n_hv.adults(v,rg,hd+7,s);
+
+                if (kp_cd4_elig[rg][s] == true)
+                {
+                    if (hd>=i_ha.everARTelig_idx)
+                    {
+                        // eligible ART (by sex, CD4, risk‑viral)
+                        eligible_art_vrhs[v][rg][hd][s] = n_hv.adults(v,rg,hd,s);
+                        sum_elig_art[v][rg][s] += n_hv.adults(v,rg,hd,s);
+                    }
+                }
+                else
+                {
+                    // eligible ART (by sex, CD4, risk‑viral) – default path
+                    eligible_art_vrhs[v][rg][hd][s] = n_hv.adults(v,rg,hd,s);
+                    sum_elig_art[v][rg][s] += n_hv.adults(v,rg,hd,s);
+                }
+            } // v
+        } // r
+    } // h
+
+
+
+} // s
+
+
+};
 
 //post inner loop functions
 void sum_adult_pop_dims(int t)
