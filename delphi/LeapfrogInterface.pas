@@ -140,6 +140,8 @@ type
     fertMultOnArtLength: Integer;
     localAdjFactor: Double;
     localAdjFactorLength: Integer;
+    kpEligibleTreat: PDouble;
+    kpEligibleTreatLength: Integer;
 end;
 
 type
@@ -174,6 +176,7 @@ type
     fertMultOffArt: TGBFixedArray<Double>;
     fertMultOnArt: TGBFixedArray<Double>;
     localAdjFactor: Double;
+    kpEligibleTreat: TGBFixedArray<Double>;
     function getView(): LeapfrogHivAdultParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -483,6 +486,8 @@ type
   private
     epiStartYear: Integer;
     epiStartYearLength: Integer;
+    epiMonthsInPrimary: Double;
+    epiMonthsInPrimaryLength: Integer;
     bBalanceSexActs: Integer;
     bBalanceSexActsLength: Integer;
     epiInitialPulse: Double;
@@ -517,6 +522,7 @@ type
   LeapfrogGoalsParams = class
   public
     epiStartYear: Integer;
+    epiMonthsInPrimary: Double;
     bBalanceSexActs: Integer;
     epiInitialPulse: Double;
     bCondomProp: TGBFixedArray<Double>;
@@ -540,20 +546,17 @@ end;
 type
   LeapfrogGoalsStateView = record
   private
-    exOutput: PDouble;
-    exOutputLength: Integer;
+    adults: PDouble;
+    adultsLength: Integer;
     totalPopulation: PDouble;
     totalPopulationLength: Integer;
-    bCondomPropSum: PDouble;
-    bCondomPropSumLength: Integer;
 end;
 
 type
   LeapfrogGoalsState = class
   public
-    exOutput: TGBFixedArray<Double>;
+    adults: TGBFixedArray<Double>;
     totalPopulation: TGBFixedArray<Double>;
-    bCondomPropSum: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsStateView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -668,6 +671,7 @@ begin;
   fertMultByAge.Free;
   fertMultOffArt.Free;
   fertMultOnArt.Free;
+  kpEligibleTreat.Free;
   inherited;
 end;
 
@@ -754,6 +758,8 @@ begin;
   Result.fertMultOnArtLength := fertMultOnArt.GetLength();
   Result.localAdjFactor := localAdjFactor;
   Result.localAdjFactorLength := 1;
+  Result.kpEligibleTreat := PDouble(kpEligibleTreat.data);
+  Result.kpEligibleTreatLength := kpEligibleTreat.GetLength();
 end;
 
 function LeapfrogHivAdultState.getView(): LeapfrogHivAdultStateView;
@@ -1022,9 +1028,8 @@ end;
 
 destructor LeapfrogGoalsState.Destroy;
 begin;
-  exOutput.Free;
+  adults.Free;
   totalPopulation.Free;
-  bCondomPropSum.Free;
   inherited;
 end;
 
@@ -1032,6 +1037,8 @@ function LeapfrogGoalsParams.getView(): LeapfrogGoalsParamsView;
 begin;
   Result.epiStartYear := epiStartYear;
   Result.epiStartYearLength := 1;
+  Result.epiMonthsInPrimary := epiMonthsInPrimary;
+  Result.epiMonthsInPrimaryLength := 1;
   Result.bBalanceSexActs := bBalanceSexActs;
   Result.bBalanceSexActsLength := 1;
   Result.epiInitialPulse := epiInitialPulse;
@@ -1064,12 +1071,10 @@ end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
 begin;
-  Result.exOutput := PDouble(exOutput.data);
-  Result.exOutputLength := exOutput.GetLength();
+  Result.adults := PDouble(adults.data);
+  Result.adultsLength := adults.GetLength();
   Result.totalPopulation := PDouble(totalPopulation.data);
   Result.totalPopulationLength := totalPopulation.GetLength();
-  Result.bCondomPropSum := PDouble(bCondomPropSum.data);
-  Result.bCondomPropSumLength := bCondomPropSum.GetLength();
 end;
 
 procedure LeapfrogDemProjParams.writeToDisk(dir: string);
@@ -1115,6 +1120,7 @@ begin;
   fertMultByAge.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultByAge');
   fertMultOffArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOffArt');
   fertMultOnArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOnArt');
+  kpEligibleTreat.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'kpEligibleTreat');
 end;
 
 procedure LeapfrogHivAdultState.writeToDisk(dir: string);
@@ -1240,6 +1246,7 @@ procedure LeapfrogGoalsState.writeToDisk(dir: string);
 begin;
   if not DirectoryExists(dir) then
     ForceDirectories(dir);
+  adults.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'adults');
 end;
 
 procedure LeapfrogParams.SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);

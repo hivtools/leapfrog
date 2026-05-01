@@ -195,12 +195,29 @@ struct DpDebugInfo {
 
 struct HvDebugInfo {
   // State
-  double ex_output;
-  double b_condom_prop_sum;
+  NdaInfo adults;
+  NdaInfo total_population;
 
   // Intermediate
-  double ex_intermediate;
-  NdaInfo adults;
+  NdaInfo riskgroup_proportions;
+  NdaInfo behave_change_rate;
+  NdaInfo totpop_1549;
+  NdaInfo migration_num;
+  NdaInfo  migration_denom;
+  NdaInfo migration_rate;
+  NdaInfo totpop_deaths_background;
+  NdaInfo background_death_rate;
+  NdaInfo deaths_art;
+  NdaInfo entrants_age_15;
+  NdaInfo rate_aging_50;
+  NdaInfo hiv_exit_rates;
+  NdaInfo art_exit_rates;
+  NdaInfo hiv_stage_exits;
+  NdaInfo hiv_stage_progressors;
+  NdaInfo art_stage_exits;
+  NdaInfo stage_entrants;
+  NdaInfo migrants;
+  NdaInfo new_vaccinations;
   NdaInfo hiv_mu;
   NdaInfo hiv_lambda;
   NdaInfo art_alpha;
@@ -213,6 +230,9 @@ struct HvDebugInfo {
   NdaInfo pop_1549;
   NdaInfo pop_1549_hiv;
   NdaInfo pop_1549_art;
+  NdaInfo aging_denom_1549;
+  NdaInfo vac_params;
+  NdaInfo vac_effect;
 
   // Pars
   int epi_start_year;
@@ -403,11 +423,34 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
     const ParsHv& p_hv) {
   HvDebugInfo out{};
 
-  out.ex_output = static_cast<double>(hv.ex_output);
-  out.b_condom_prop_sum = static_cast<double>(hv.b_condom_prop_sum);
+  //out.ex_output = static_cast<double>(hv.ex_output);
+  //out.b_condom_prop_sum = static_cast<double>(hv.b_condom_prop_sum);
 
-  out.ex_intermediate = static_cast<double>(i_hv.ex_intermediate);
-  out.adults = nda_capture(i_hv.adults);
+  out.adults = nda_capture(hv.adults);
+  out.total_population = nda_capture(i_hv.total_population);
+
+  //out.ex_output = static_cast<double>(hv.ex_output);
+  //out.b_condom_prop_sum = static_cast<double>(hv.b_condom_prop_sum);
+
+  out.riskgroup_proportions = nda_capture(i_hv.riskgroup_proportions);
+  out.behave_change_rate = nda_capture(i_hv.behave_change_rate);
+  out.totpop_1549 = nda_capture(i_hv.totpop_1549);
+  out.migration_num = nda_capture(i_hv.migration_num);
+  out.migration_denom = nda_capture(i_hv.migration_denom);
+  out.migration_rate = nda_capture(i_hv.migration_rate);
+  out.totpop_deaths_background = nda_capture(i_hv.totpop_deaths_background);
+  out.background_death_rate = nda_capture(i_hv.background_death_rate);
+  out.deaths_art = nda_capture(i_hv.deaths_art);
+  out.entrants_age_15 = nda_capture(i_hv.entrants_age_15);
+  out.rate_aging_50 = nda_capture(i_hv.rate_aging_50);
+  out.hiv_exit_rates = nda_capture(i_hv.hiv_exit_rates);
+  out.art_exit_rates = nda_capture(i_hv.art_exit_rates);
+  out.hiv_stage_exits = nda_capture(i_hv.hiv_stage_exits);
+  out.hiv_stage_progressors = nda_capture(i_hv.hiv_stage_progressors);
+  out.art_stage_exits = nda_capture(i_hv.art_stage_exits);
+  out.stage_entrants = nda_capture(i_hv.stage_entrants);
+  out.migrants = nda_capture(i_hv.migrants);
+  out.new_vaccinations = nda_capture(i_hv.new_vaccinations);
   out.hiv_mu = nda_capture(i_hv.hiv_mu);
   out.hiv_lambda = nda_capture(i_hv.hiv_lambda);
   out.art_alpha = nda_capture(i_hv.art_alpha);
@@ -420,7 +463,11 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.pop_1549 = nda_capture(i_hv.pop_1549);
   out.pop_1549_hiv = nda_capture(i_hv.pop_1549_hiv);
   out.pop_1549_art = nda_capture(i_hv.pop_1549_art);
+  out.aging_denom_1549 = nda_capture(i_hv.aging_denom_1549);
+  out.vac_params = nda_capture(i_hv.vac_params); 
+  out.vac_effect = nda_capture(i_hv.vac_effect);  
 
+  out.epi_start_year = static_cast<int>(p_hv.epi_start_year);
   out.epi_start_year = static_cast<int>(p_hv.epi_start_year);
   out.b_balance_sex_acts = static_cast<int>(p_hv.b_balance_sex_acts);
   out.epi_initial_pulse = static_cast<double>(p_hv.epi_initial_pulse);

@@ -15,8 +15,11 @@
       "pAG_15to49": 35,
       "hIDX_15to49": 0,
       "hAG_15to49": 35,
-      "HIV_STEPS_PER_YEAR": 10
+      "HIV_STEPS_PER_YEAR": 10,
+      "nKP_ART" : 7
     },
+
+    
     "overrides": [
       {
         "applies_if": "use_coarse_stratification",
@@ -198,7 +201,12 @@
       "alias": {
         "r": "frr_scalar"
       }
-    }
+    },
+    
+    "kp_eligible_treat": {
+      "num_type": "real_type",
+      "dims": ["SS::hAG", "SS::NS"]
+      }
   },
   "intermediate": {
     "hiv_negative_pop": {

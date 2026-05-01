@@ -12,7 +12,7 @@
       "nRG": 17,
       "nVAC": 4,
       "nHIV": 5,
-
+      "nART": 3,
       "pIDX_24to35": 2,
       "pIDX_15to49": 15,
       "pAges5Yrs": 17,
@@ -38,6 +38,11 @@
      "epi_start_year": {
       "num_type": "int"
     },
+
+     "epi_months_in_primary": {
+      "num_type": "real_type"
+    },
+      
 
     "b_balance_sex_acts": {
       "num_type": "int"
@@ -109,18 +114,9 @@
 
   },
 
-  "intermediate": {
-    "ex_intermediate": {
-      "num_type": "real_type"
-    },
-
+  "intermediate": { 
     
-    "adults": {
-      "num_type": "real_type",
-      "dims": ["SS::nVAC+1","SS::nRG+1","SS::nCD4+1","SS::nNS+1"]
-    },
-
-
+  
     "riskgroup_proportions": {
       "num_type": "real_type",
       "dims": ["SS::nRG","SS::nNS"]
@@ -296,16 +292,16 @@
 
   },
   "state": {
-    "ex_output": {
-      "num_type": "real_type"
+
+
+   "adults": {
+      "num_type": "real_type",
+      "dims": ["SS::nVAC+1","SS::nRG+1","SS::nCD4+1","SS::nNS+1"]
     },
 
     "total_population": {
       "num_type": "real_type"
-    },
-
-    "b_condom_prop_sum": {
-      "num_type": "real_type"
     }
+
   }
 }

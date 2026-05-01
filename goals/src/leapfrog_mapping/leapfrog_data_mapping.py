@@ -46,6 +46,7 @@ from SpectrumCommon.Const.AM.AMTags import (
     AM_PercentARTDeliveryTag,
     AM_PercInterruptedChildTag,
     AM_PercInterruptedTag,
+    AM_PopsEligTreatTag,
     AM_PregTermAbortionPerNumTag,
     AM_PregTermAbortionTag,
     AM_RatioWomenOnARTTag,
@@ -72,6 +73,7 @@ from SpectrumCommon.Const.DP.DPConst import (
     DP_A5t14,
     DP_A10t14,
     DP_AdvOpt_ART_ExpMort,
+    DP_AdvOpt_ART_PropElig,
     DP_Age12to35Mths,
     DP_Age35to59Mths,
     DP_AgeGT5Years,
@@ -175,6 +177,7 @@ from SpectrumCommon.Const.HV.HVTags import (
     HVBalanceSexActsTag,
     HVBehaviorTag,
     HVCondomPercentTag,
+    HVMonthsInPrimaryStageTag,
     HVPerIDUsharingTag,
     HVPercMarriedTag,
     HVSexActsTag,
@@ -541,6 +544,8 @@ def _hiv_adult_modvars_leapfrog(modvars: Modvars, final_year_idx: int, ss: dict)
 
     initiation_mortality_weight = modvars[AM_NewARTPatAllocTag][DP_AdvOpt_ART_ExpMort]
 
+    kp_eligible_treat = modvars[AM_PopsEligTreatTag]
+   
     pag_incidpop = (
         ss["p_fertility_age_groups"]
         if modvars[AM_EPPPopulationAgesTag] == DP_EPP_15t49
@@ -598,6 +603,7 @@ def _hiv_adult_modvars_leapfrog(modvars: Modvars, final_year_idx: int, ss: dict)
         "cd4fert_rat": fert_mult_off_art,
         "frr_art6mos": fert_mult_on_art,
         "frr_scalar": local_adj_factor,
+        "kp_eligible_treat":kp_eligible_treat,
     }
 
 
@@ -1062,12 +1068,13 @@ def _hiv_child_modvars_leapfrog(modvars: Modvars, final_year_idx: int, ss: dict)
 
 
 def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
-
-    
+   
     epi_start_year = int(modvars[HVEpidemicStYrTag])
 
+    epi_months_in_primary = float(modvars[HVMonthsInPrimaryStageTag])
+
     b_balance_sex_acts = int(modvars[HVBalanceSexActsTag])
-    
+
     epi_initial_pulse = float(modvars[HVInitialPulseTag])
 
     #array[HV_None..HV_MSM_F3] of HV_TDoubleDynYearArray;
@@ -1134,6 +1141,7 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
 
     return {
         "epi_start_year": epi_start_year,
+        "epi_months_in_primary":epi_months_in_primary,
         "b_balance_sex_acts": b_balance_sex_acts,
         "epi_initial_pulse": epi_initial_pulse,
         "b_condom_prop": b_condom_prop,
