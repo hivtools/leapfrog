@@ -554,6 +554,10 @@ type
   private
     adults: PDouble;
     adultsLength: Integer;
+    adultsTs: PDouble;
+    adultsTsLength: Integer;
+    newlyOnArt: PDouble;
+    newlyOnArtLength: Integer;
     totalPopulation: PDouble;
     totalPopulationLength: Integer;
 end;
@@ -562,6 +566,8 @@ type
   LeapfrogGoalsState = class
   public
     adults: TGBFixedArray<Double>;
+    adultsTs: TGBFixedArray<Double>;
+    newlyOnArt: TGBFixedArray<Double>;
     totalPopulation: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsStateView;
     procedure writeToDisk(dir: string);
@@ -1039,6 +1045,8 @@ end;
 destructor LeapfrogGoalsState.Destroy;
 begin;
   adults.Free;
+  adultsTs.Free;
+  newlyOnArt.Free;
   totalPopulation.Free;
   inherited;
 end;
@@ -1085,6 +1093,10 @@ function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
 begin;
   Result.adults := PDouble(adults.data);
   Result.adultsLength := adults.GetLength();
+  Result.adultsTs := PDouble(adultsTs.data);
+  Result.adultsTsLength := adultsTs.GetLength();
+  Result.newlyOnArt := PDouble(newlyOnArt.data);
+  Result.newlyOnArtLength := newlyOnArt.GetLength();
   Result.totalPopulation := PDouble(totalPopulation.data);
   Result.totalPopulationLength := totalPopulation.GetLength();
 end;
@@ -1261,6 +1273,8 @@ begin;
   if not DirectoryExists(dir) then
     ForceDirectories(dir);
   adults.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'adults');
+  adultsTs.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'adultsTs');
+  newlyOnArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newlyOnArt');
 end;
 
 procedure LeapfrogParams.SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);
