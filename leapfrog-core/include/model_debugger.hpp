@@ -33,70 +33,10 @@ inline DpDebugInfo capture_dp(const DpState& dp, const IntermediateDp& i_dp,
 
 template <class HvState, class IntermediateHv, class ParsHv>
   requires requires (const HvState& hv, const IntermediateHv& i_hv, const ParsHv& p_hv) {
-    
-  //State
-  hv.adults;
-  hv.total_population;
-
-  //Intermediate
-  i_hv.riskgroup_proportions;
-  i_hv.behave_change_rate;
-  i_hv.totpop_1549;
-  i_hv.migration_num;
-  i_hv.migration_denom;
-  i_hv.migration_rate;
-  i_hv.totpop_deaths_background;
-  i_hv.background_death_rate;
-  i_hv.deaths_art;
-  i_hv.entrants_age_15;
-  i_hv.rate_aging_50;
-  i_hv.hiv_exit_rates;
-  i_hv.art_exit_rates;
-  i_hv.hiv_stage_exits;
-  i_hv.hiv_stage_progressors;
-  i_hv.art_stage_exits;
-  i_hv.stage_entrants;
-  i_hv.migrants;
-  i_hv.new_vaccinations;
-  i_hv.hiv_mu;
-  i_hv.hiv_lambda;
-  i_hv.art_alpha;
-  i_hv.hiv_cd4_mort_no_art;
-  i_hv.hiv_cd4_mort_art;
-  i_hv.hiv_cd4_progression;
-  i_hv.aging_15;
-  i_hv.aging_50;
-  i_hv.pop_sex_age_hiv;
-  i_hv.pop_1549;
-  i_hv.pop_1549_hiv;
-  i_hv.pop_1549_art;
-  i_hv.aging_denom_1549;
-  i_hv.vac_params;
-  i_hv.vac_effect;
-  i_hv.art_coverage_rg;
-  
-  //Pars
-  p_hv.epi_start_year;
-  p_hv.epi_months_in_primary;
-  p_hv.b_balance_sex_acts;
-  p_hv.epi_initial_pulse;
-  p_hv.b_condom_prop;
-  p_hv.b_behav_dur;
-  p_hv.b_sex_acts;
-  p_hv.b_num_partners;
-  p_hv.b_incr_recruit;
-  p_hv.b_married_prop;
-  p_hv.b_age_first_sex;
-  p_hv.b_idu_share_prop;
-  p_hv.rn_poc_cov;
-  p_hv.rn_vac_params;
-  p_hv.rn_vac_coverage;
-  p_hv.rn_vac_cov_type;
-  p_hv.rn_vac_targetting; 
-  p_hv.epi_infectiousness;
-  p_hv.epi_inf_mult_art;
-
-
+    hv.adults;
+    hv.total_population;
+    i_hv.riskgroup_proportions;
+    p_hv.epi_start_year;
   }
 inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   const ParsHv& p_hv);
@@ -310,8 +250,8 @@ struct HvDebugInfo {
   NdaInfo rn_poc_cov;
   NdaInfo rn_vac_params;
   NdaInfo rn_vac_coverage;
-  NdaInfo epi_inf_mult_art;
-  NdaInfo rn_vac_coverage;
+  int rn_vac_cov_type;
+  int rn_vac_targetting;
   NdaInfo epi_infectiousness;
   NdaInfo epi_inf_mult_art;
     
@@ -480,6 +420,7 @@ inline DpDebugInfo capture_dp(const DpState& dp, const IntermediateDp& i_dp,
 template <class HvState, class IntermediateHv, class ParsHv>
   requires requires (const HvState& hv, const IntermediateHv& i_hv, const ParsHv& p_hv) {
     hv.adults;
+    hv.total_population;
     i_hv.riskgroup_proportions;
     p_hv.epi_start_year;
   }
@@ -488,7 +429,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   HvDebugInfo out{};
 
   out.adults = nda_capture(hv.adults);
-  out.total_population = static_cast<double>(p_hv.epi_start_year);
+  out.total_population = static_cast<double>(hv.total_population);
 
   out.riskgroup_proportions = nda_capture(i_hv.riskgroup_proportions);
   out.behave_change_rate = nda_capture(i_hv.behave_change_rate);
@@ -524,7 +465,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.aging_denom_1549 = nda_capture(i_hv.aging_denom_1549);
   out.vac_params = nda_capture(i_hv.vac_params); 
   out.vac_effect = nda_capture(i_hv.vac_effect);  
-  out.art_coverage_rg = nda_capture(p_hv.art_coverage_rg);
+  out.art_coverage_rg = nda_capture(i_hv.art_coverage_rg);
 
   out.epi_start_year = static_cast<int>(p_hv.epi_start_year);
   out.epi_months_in_primary = static_cast<double>(p_hv.epi_months_in_primary);
@@ -705,11 +646,11 @@ inline ModelDebugInfo capture_model(const State& state,
     const Intermediate& intermediate, const Pars& pars) {
   ModelDebugInfo out{};
   out.dp = capture_dp(state.dp, intermediate.dp, pars.dp);
-  if constexpr (requires {
-    capture_hv(state.hv, intermediate.hv, pars.hv);
-  }) {
-    out.hv = capture_hv(state.hv, intermediate.hv, pars.hv);
-  }
+  out.hv = capture_hv(state.hv, intermediate.hv, pars.hv);
+  // if constexpr (requires {
+  //   capture_hv(state.hv, intermediate.hv, pars.hv);
+  // }) {
+  // }
   out.ha = capture_ha(state.ha, intermediate.hv, pars.ha);
   out.hc = capture_hc(state.hc, intermediate.hc, pars.hc);
   return out;
