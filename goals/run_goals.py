@@ -46,7 +46,7 @@ with open("zimbabwe_modvars.pickle", "wb") as handle:
 #     modvars = pickle.load(handle)
 
 modvars, param, epp, shiny90 = GB_ImportProjectionFromFile(
-    r".\tests\resources\SouthAfrica.pjnz"
+    r"C:\work\LeapFrog\V2\Files_PJNZ\SouthAfrica.pjnz"
 )
 
 
@@ -71,8 +71,8 @@ lf_data = modvars_to_leapfrog(modvars, ss)
 
 # lf_data["b_condom_prop_sum"] = np.full((81), 0)
 
-# output = run_goals(lf_data)
-# print(output)
+#output = run_goals(lf_data)
+#print(output)
 
 output = run_goals(
    lf_data,

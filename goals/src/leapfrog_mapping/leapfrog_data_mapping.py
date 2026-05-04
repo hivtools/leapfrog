@@ -179,6 +179,8 @@ from SpectrumCommon.Const.HV.HVTags import (
     HVBalanceSexActsTag,
     HVBehaviorTag,
     HVCondomPercentTag,
+    HVInfectMultiplierOnARTTag,
+    HVInfectiousnessTag,
     HVMonthsInPrimaryStageTag,
     HVPerIDUsharingTag,
     HVPercMarriedTag,
@@ -200,7 +202,7 @@ from SpectrumCommon.Const.RN.RNTags import (
 
 )
 
-from SpectrumCommon.Const.HV.HVConst import HV_MSMHR, HV_MSMIDU, HV_MSM_F3, HV_AvgDur, HV_Female
+from SpectrumCommon.Const.HV.HVConst import HV_MSMHR, HV_MSMIDU, HV_MSM_F3, HV_AvgDur, HV_Female, HV_SympART
 from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 from SpectrumCommon.Const.DP.DPConst import GB_Female
 from SpectrumCommon.Const.RN.RNConst import RN_POC_VL, RN_Duration
@@ -1143,10 +1145,15 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
 
     rn_vac_targetting = int(modvars[RNVaccineTargetingTag])
 
-    art_coverage_rg = modvars[HVARTInputCoverageByRGTag][
-        : (GB_Female+1), : (HV_MSMIDU + 1), : (final_year_idx + 1)
+    epi_infectiousness = modvars[HVInfectiousnessTag ][
+        : (HV_SympART+1) 
     ].copy(order="F")
 
+    epi_inf_mult_art = modvars[HVInfectMultiplierOnARTTag ][
+        : (final_year_idx + 1) 
+    ].copy(order="F")
+
+    epi_inf_mult_art
 
     return {
         "epi_start_year": epi_start_year,
@@ -1166,7 +1173,8 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "rn_vac_cov_type":rn_vac_cov_type,
         "rn_vac_targetting":rn_vac_targetting,
         "rn_vac_coverage":rn_vac_coverage,
-        "art_coverage_rg":art_coverage_rg
+        "epi_infectiousness":epi_infectiousness,
+        "epi_inf_mult_art":epi_inf_mult_art,
     }
 
 

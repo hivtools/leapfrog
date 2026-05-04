@@ -28,7 +28,8 @@
       "hTS": 3,
       "hCD4_ALL_HIV": 17,
       "hCD4_LT50": 7,
-      "hHIV_Cats": 5
+      "hHIV_Cats": 5,
+      "nINF": 4
     }
   },
 
@@ -111,11 +112,15 @@
       "num_type": "int"
     },
 
-      "art_coverage_rg": {
-      "num_type": "real_type",
-      "dims": ["SS::nNS+1", "SS::nRG+1","opts.proj_steps"]
-    }
+    "epi_infectiousness": {
+      "num_type": "int",
+       "dims": ["SS::nINF+1"]
+    },
 
+    "epi_inf_mult_art": {
+      "num_type": "int",
+       "dims": ["opts.proj_steps"]
+    }
 
   },
 
@@ -293,9 +298,15 @@
     "vac_effect": {
       "num_type": "real_type",
       "dims": ["SS::vVAC_NUM_ACTTYPE","SS::vVAC_NUM_PARS"]
+    },
+
+   "art_coverage_rg": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS+1", "SS::rRG_TOTAL+1","opts.proj_steps"]
     }
 
   },
+
   "state": {
 
 
@@ -309,6 +320,16 @@
       "dims": ["SS::nVAC+1","SS::nRG+1","SS::nCD4+1","SS::nNS+1"]
     },
 
+    "deaths": {
+      "num_type": "real_type",
+      "dims": ["SS::nVAC+1","SS::nRG+1","SS::nCD4+1","SS::nNS+1"]
+    },
+
+    "new_infections": {
+      "num_type": "real_type",
+      "dims": ["SS::nVAC+1","SS::nRG+1","SS::nNS+1"]
+    },
+
     "newly_on_art": {
       "num_type": "real_type",
       "dims": ["SS::nCD4+1","SS::nNS+1"]
@@ -316,6 +337,21 @@
 
     "total_population": {
       "num_type": "real_type"
+    },
+
+     "mult_no_art": {
+      "num_type": "real_type",
+      "dims": ["SS::nCD4p+1"]
+    },
+
+     "mult_art": {
+      "num_type": "real_type",
+      "dims": ["SS::nCD4a+1"]
+    },
+
+      "r_mult": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS+1","SS::nRG+1"]
     }
 
   }

@@ -519,8 +519,10 @@ type
     rnVacCovTypeLength: Integer;
     rnVacTargetting: Integer;
     rnVacTargettingLength: Integer;
-    artCoverageRg: PDouble;
-    artCoverageRgLength: Integer;
+    epiInfectiousness: PInteger;
+    epiInfectiousnessLength: Integer;
+    epiInfMultArt: PInteger;
+    epiInfMultArtLength: Integer;
 end;
 
 type
@@ -542,7 +544,8 @@ type
     rnVacCoverage: TGBFixedArray<Double>;
     rnVacCovType: Integer;
     rnVacTargetting: Integer;
-    artCoverageRg: TGBFixedArray<Double>;
+    epiInfectiousness: TGBFixedArray<Integer>;
+    epiInfMultArt: TGBFixedArray<Integer>;
     function getView(): LeapfrogGoalsParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -556,10 +559,20 @@ type
     adultsLength: Integer;
     adultsTs: PDouble;
     adultsTsLength: Integer;
+    deaths: PDouble;
+    deathsLength: Integer;
+    newInfections: PDouble;
+    newInfectionsLength: Integer;
     newlyOnArt: PDouble;
     newlyOnArtLength: Integer;
     totalPopulation: PDouble;
     totalPopulationLength: Integer;
+    multNoArt: PDouble;
+    multNoArtLength: Integer;
+    multArt: PDouble;
+    multArtLength: Integer;
+    rMult: PDouble;
+    rMultLength: Integer;
 end;
 
 type
@@ -567,8 +580,13 @@ type
   public
     adults: TGBFixedArray<Double>;
     adultsTs: TGBFixedArray<Double>;
+    deaths: TGBFixedArray<Double>;
+    newInfections: TGBFixedArray<Double>;
     newlyOnArt: TGBFixedArray<Double>;
     totalPopulation: TGBFixedArray<Double>;
+    multNoArt: TGBFixedArray<Double>;
+    multArt: TGBFixedArray<Double>;
+    rMult: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsStateView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -1038,7 +1056,8 @@ begin;
   bIduShareProp.Free;
   rnVacParams.Free;
   rnVacCoverage.Free;
-  artCoverageRg.Free;
+  epiInfectiousness.Free;
+  epiInfMultArt.Free;
   inherited;
 end;
 
@@ -1046,8 +1065,13 @@ destructor LeapfrogGoalsState.Destroy;
 begin;
   adults.Free;
   adultsTs.Free;
+  deaths.Free;
+  newInfections.Free;
   newlyOnArt.Free;
   totalPopulation.Free;
+  multNoArt.Free;
+  multArt.Free;
+  rMult.Free;
   inherited;
 end;
 
@@ -1085,8 +1109,10 @@ begin;
   Result.rnVacCovTypeLength := 1;
   Result.rnVacTargetting := rnVacTargetting;
   Result.rnVacTargettingLength := 1;
-  Result.artCoverageRg := PDouble(artCoverageRg.data);
-  Result.artCoverageRgLength := artCoverageRg.GetLength();
+  Result.epiInfectiousness := PInteger(epiInfectiousness.data);
+  Result.epiInfectiousnessLength := epiInfectiousness.GetLength();
+  Result.epiInfMultArt := PInteger(epiInfMultArt.data);
+  Result.epiInfMultArtLength := epiInfMultArt.GetLength();
 end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
@@ -1095,10 +1121,20 @@ begin;
   Result.adultsLength := adults.GetLength();
   Result.adultsTs := PDouble(adultsTs.data);
   Result.adultsTsLength := adultsTs.GetLength();
+  Result.deaths := PDouble(deaths.data);
+  Result.deathsLength := deaths.GetLength();
+  Result.newInfections := PDouble(newInfections.data);
+  Result.newInfectionsLength := newInfections.GetLength();
   Result.newlyOnArt := PDouble(newlyOnArt.data);
   Result.newlyOnArtLength := newlyOnArt.GetLength();
   Result.totalPopulation := PDouble(totalPopulation.data);
   Result.totalPopulationLength := totalPopulation.GetLength();
+  Result.multNoArt := PDouble(multNoArt.data);
+  Result.multNoArtLength := multNoArt.GetLength();
+  Result.multArt := PDouble(multArt.data);
+  Result.multArtLength := multArt.GetLength();
+  Result.rMult := PDouble(rMult.data);
+  Result.rMultLength := rMult.GetLength();
 end;
 
 procedure LeapfrogDemProjParams.writeToDisk(dir: string);
@@ -1265,7 +1301,8 @@ begin;
   bIduShareProp.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'bIduShareProp');
   rnVacParams.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnVacParams');
   rnVacCoverage.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnVacCoverage');
-  artCoverageRg.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCoverageRg');
+  epiInfectiousness.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'epiInfectiousness');
+  epiInfMultArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'epiInfMultArt');
 end;
 
 procedure LeapfrogGoalsState.writeToDisk(dir: string);
@@ -1274,7 +1311,12 @@ begin;
     ForceDirectories(dir);
   adults.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'adults');
   adultsTs.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'adultsTs');
+  deaths.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'deaths');
+  newInfections.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newInfections');
   newlyOnArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newlyOnArt');
+  multNoArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'multNoArt');
+  multArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'multArt');
+  rMult.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rMult');
 end;
 
 procedure LeapfrogParams.SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);

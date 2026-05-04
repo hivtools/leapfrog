@@ -73,6 +73,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
   i_hv.aging_denom_1549;
   i_hv.vac_params;
   i_hv.vac_effect;
+  i_hv.art_coverage_rg;
   
   //Pars
   p_hv.epi_start_year;
@@ -91,7 +92,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
   p_hv.rn_vac_coverage;
   p_hv.rn_vac_cov_type;
   p_hv.rn_vac_targetting; 
-  p_hv.art_coverage_rg;
+  
 
 
   }
@@ -289,6 +290,7 @@ struct HvDebugInfo {
   NdaInfo aging_denom_1549;
   NdaInfo vac_params;
   NdaInfo vac_effect;
+  NdaInfo art_coverage_rg;
   
   // Pars
   int epi_start_year;
@@ -307,7 +309,7 @@ struct HvDebugInfo {
   NdaInfo rn_vac_coverage;
   int rn_vac_cov_type;
   int rn_vac_targetting;
-  NdaInfo art_coverage_rg;
+  
  
 };
 
@@ -517,6 +519,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.aging_denom_1549 = nda_capture(i_hv.aging_denom_1549);
   out.vac_params = nda_capture(i_hv.vac_params); 
   out.vac_effect = nda_capture(i_hv.vac_effect);  
+  out.art_coverage_rg = nda_capture(p_hv.art_coverage_rg);
 
   out.epi_start_year = static_cast<int>(p_hv.epi_start_year);
   out.epi_months_in_primary = static_cast<double>(p_hv.epi_months_in_primary);
@@ -534,7 +537,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.rn_vac_coverage = nda_capture(p_hv.rn_vac_coverage);
   out.rn_vac_cov_type = static_cast<int>(p_hv.rn_vac_cov_type);
   out.rn_vac_targetting = static_cast<int>(p_hv.rn_vac_targetting);
-  out.art_coverage_rg = nda_capture(p_hv.art_coverage_rg);
+  
 
   return out;
 }
