@@ -310,11 +310,10 @@ struct HvDebugInfo {
   NdaInfo rn_poc_cov;
   NdaInfo rn_vac_params;
   NdaInfo rn_vac_coverage;
+  int     rn_vac_cov_type;
+  int     rn_vac_targetting;
   NdaInfo epi_inf_mult_art;
-  NdaInfo rn_vac_coverage;
   NdaInfo epi_infectiousness;
-  NdaInfo epi_inf_mult_art;
-    
  
 };
 

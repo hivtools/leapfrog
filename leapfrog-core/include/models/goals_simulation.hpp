@@ -336,6 +336,8 @@ struct GoalsSimulation<Config> {
 
   nda_print_info(dbg_model.dp.p_totpop);
   nda_print_info(dbg_model.hv.b_condom_prop);
+
+  //nda_print_info(dbg_model.hv.b_condom_prop);
   //nda_print_info(dbg_model.hv.b_behav_dur);
 
   // p_hv.epi_start_year;
@@ -1376,7 +1378,7 @@ for (int s = S_MALE; s <= S_FEMALE; ++s) {
 
 
 
-// Set ART coverage for all risk groups to AIM 15‑49 coverage
+// Set ART coverage for all risk groups to AIM 15 to 49 coverage
 if (sex_age_hiv[POP_H_OnART][S_MALE] > 0.0){
     for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg)
     {
