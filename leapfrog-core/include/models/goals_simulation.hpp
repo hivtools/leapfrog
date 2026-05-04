@@ -332,15 +332,11 @@ struct GoalsSimulation<Config> {
 
  void print_goals_inputs() {
 
-  //art_coverage_rg = modvars[HVARTInputCoverageByRGTag][
-  //    : (GB_Female+1), : (HV_MSMIDU + 1), : (final_year_idx + 1)
-  //].copy(order="F")
-
   auto dbg_model = capture_model(state_next, intermediate, pars);
 
-  //nda_print_info(dbg_model.dp.p_totpop);
+  nda_print_info(dbg_model.dp.p_totpop);
   nda_print_info(dbg_model.hv.b_condom_prop);
-  nda_print_info(dbg_model.hv.b_behav_dur);
+  //nda_print_info(dbg_model.hv.b_behav_dur);
 
   // p_hv.epi_start_year;
   //  p_hv.epi_months_in_primary;

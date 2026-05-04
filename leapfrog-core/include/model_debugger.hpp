@@ -88,11 +88,13 @@ template <class HvState, class IntermediateHv, class ParsHv>
   p_hv.b_married_prop;
   p_hv.b_age_first_sex;
   p_hv.b_idu_share_prop;
+  p_hv.rn_poc_cov;
   p_hv.rn_vac_params;
   p_hv.rn_vac_coverage;
   p_hv.rn_vac_cov_type;
   p_hv.rn_vac_targetting; 
-  
+  p_hv.epi_infectiousness;
+  p_hv.epi_inf_mult_art;
 
 
   }
@@ -305,11 +307,14 @@ struct HvDebugInfo {
   NdaInfo b_married_prop;
   NdaInfo b_age_first_sex;
   NdaInfo b_idu_share_prop;
+  NdaInfo rn_poc_cov;
   NdaInfo rn_vac_params;
   NdaInfo rn_vac_coverage;
-  int rn_vac_cov_type;
-  int rn_vac_targetting;
-  
+  NdaInfo epi_inf_mult_art;
+  NdaInfo rn_vac_coverage;
+  NdaInfo epi_infectiousness;
+  NdaInfo epi_inf_mult_art;
+    
  
 };
 
@@ -533,10 +538,13 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.b_married_prop = nda_capture(p_hv.b_married_prop);
   out.b_age_first_sex = nda_capture(p_hv.b_age_first_sex);
   out.b_idu_share_prop = nda_capture(p_hv.b_idu_share_prop);
+  out.rn_poc_cov = nda_capture(p_hv.rn_poc_cov);
   out.rn_vac_params = nda_capture(p_hv.rn_vac_params);
   out.rn_vac_coverage = nda_capture(p_hv.rn_vac_coverage);
   out.rn_vac_cov_type = static_cast<int>(p_hv.rn_vac_cov_type);
   out.rn_vac_targetting = static_cast<int>(p_hv.rn_vac_targetting);
+  out.epi_infectiousness =nda_capture(p_hv.epi_infectiousness);
+  out.epi_inf_mult_art = nda_capture(p_hv.epi_inf_mult_art);
   
 
   return out;

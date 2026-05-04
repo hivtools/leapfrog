@@ -129,7 +129,7 @@ struct Leapfrog {
         hiv_dp.run_hivpop_demographic_projection();
 
         if constexpr (ModelVariant::run_goals) {
-          //goals_sim.run_goals_pre_hiv_loop();
+          goals_sim.run_goals_pre_hiv_loop();
         }
         
         hiv_sim.run_hiv_adult_pre_hiv_loop();
@@ -153,7 +153,7 @@ struct Leapfrog {
       }
 
       if constexpr (ModelVariant::run_goals) {
-        //goals_sim.run_goals_simulation();
+        goals_sim.run_goals_simulation();
       }
 
       if (args.opts.proj_period_int == SS::PROJPERIOD_CALENDAR) {
