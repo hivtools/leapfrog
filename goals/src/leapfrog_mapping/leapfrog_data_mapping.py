@@ -202,7 +202,7 @@ from SpectrumCommon.Const.RN.RNTags import (
 
 )
 
-from SpectrumCommon.Const.HV.HVConst import HV_MSMHR, HV_MSMIDU, HV_MSM_F3, HV_AvgDur, HV_Female, HV_SympART
+from SpectrumCommon.Const.HV.HVConst import HV_MSMHR, HV_MSMIDU, HV_MSM_F3, HV_AvgDur, HV_Female, HV_SympART, HV_PercPop
 from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 from SpectrumCommon.Const.DP.DPConst import GB_Female
 from SpectrumCommon.Const.RN.RNConst import RN_POC_VL, RN_Duration
@@ -548,9 +548,14 @@ def _hiv_adult_modvars_leapfrog(modvars: Modvars, final_year_idx: int, ss: dict)
 
     initiation_mortality_weight = modvars[AM_NewARTPatAllocTag][DP_AdvOpt_ART_ExpMort]
 
-    kp_eligible_treat = modvars[AM_PopsEligTreatTag]
+    # TODO: map AM_PopsEligTreatTag list-of-dicts to (hAG, NS) float64 properly.
+    # Source is a per-risk-group structure; the age/sex mapping is not yet implemented.
+    kp_eligible_treat = np.zeros((ss["hAG"], ss["NS"]), dtype=np.float64, order="F")
 
-    art_cov_num_percent = int(modvars[AM_ARTCoverageSelectionTag])
+    # C++ expects a 1-D int array of length (nART_NUM_PERC+1); broadcast the scalar selection.
+    art_cov_num_percent = np.full(
+        (ss["nART_NUM_PERC"] + 1,), int(modvars[AM_ARTCoverageSelectionTag]), dtype=np.int32, order="F"
+    )
 
   
     pag_incidpop = (
@@ -584,8 +589,8 @@ def _hiv_adult_modvars_leapfrog(modvars: Modvars, final_year_idx: int, ss: dict)
             (final_year_idx + 1) * ss["HIV_STEPS_PER_YEAR"], 0.0
         ),  # Only used by incidence model
         "initial_incidence": 0.0,  # Only used by incidence model
-        "epidemic_start_hts": (final_year_idx + 1)
-        * ss["HIV_STEPS_PER_YEAR"],  # Only used by incidence model
+        "epidemic_start_hts": int((final_year_idx + 1)
+        * ss["HIV_STEPS_PER_YEAR"]),  # Only used by incidence model
         "relative_infectiousness_art": 0.1,  # Only used by incidence model
         "incrr_age": incidence_rate_ratio_age,
         "incrr_sex": incidence_rate_ratio_sex,
@@ -1091,9 +1096,13 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
     ].copy(order="F")
 
     #array [HV_AllRisk..HV_MSM_F3,HV_PercPop..HV_AvgDur] of Double;
-    b_behav_dur = modvars[HVBehaviorTag][: (HV_MSM_F3 + 1), : (HV_AvgDur + 1)].copy(
-        order="F"
-    )
+    # Source is shape (nRG, 3): cols are [unused, HV_PercPop(%), HV_AvgDur(duration)].
+    # C++ expects (nRG+1, rRG_DUR=2): col 0 = PERC_POP, col 1 = DUR_AVG.
+    # Select the two meaningful columns, then pad one zero row for RG_ALL (index nRG).
+    _behav_raw = modvars[HVBehaviorTag][:, HV_PercPop : HV_AvgDur + 1]
+    b_behav_dur = np.vstack(
+        [_behav_raw, np.zeros((1, HV_AvgDur - HV_PercPop + 1), dtype=_behav_raw.dtype)]
+    ).copy(order="F")
 
     #array[HV_AllRisk..{HV_IDU_F1}HV_MSM_F3] of HV_TDoubleDynYearArray;
     b_sex_acts = modvars[HVSexActsTag][
@@ -1167,7 +1176,7 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "b_married_prop": b_married_prop, 
         "b_age_first_sex":b_age_first_sex,
         "b_idu_share_prop":b_idu_share_prop,
-        "rn_poc_cov":rn_poc_cov,
+        # "rn_poc_cov":rn_poc_cov,
         "rn_vac_params":rn_vac_params,
         "rn_vac_coverage":rn_vac_coverage,
         "rn_vac_cov_type":rn_vac_cov_type,
