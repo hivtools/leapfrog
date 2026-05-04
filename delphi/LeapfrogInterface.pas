@@ -519,9 +519,9 @@ type
     rnVacCovTypeLength: Integer;
     rnVacTargetting: Integer;
     rnVacTargettingLength: Integer;
-    epiInfectiousness: PInteger;
+    epiInfectiousness: PDouble;
     epiInfectiousnessLength: Integer;
-    epiInfMultArt: PInteger;
+    epiInfMultArt: PDouble;
     epiInfMultArtLength: Integer;
 end;
 
@@ -544,8 +544,8 @@ type
     rnVacCoverage: TGBFixedArray<Double>;
     rnVacCovType: Integer;
     rnVacTargetting: Integer;
-    epiInfectiousness: TGBFixedArray<Integer>;
-    epiInfMultArt: TGBFixedArray<Integer>;
+    epiInfectiousness: TGBFixedArray<Double>;
+    epiInfMultArt: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -1109,9 +1109,9 @@ begin;
   Result.rnVacCovTypeLength := 1;
   Result.rnVacTargetting := rnVacTargetting;
   Result.rnVacTargettingLength := 1;
-  Result.epiInfectiousness := PInteger(epiInfectiousness.data);
+  Result.epiInfectiousness := PDouble(epiInfectiousness.data);
   Result.epiInfectiousnessLength := epiInfectiousness.GetLength();
-  Result.epiInfMultArt := PInteger(epiInfMultArt.data);
+  Result.epiInfMultArt := PDouble(epiInfMultArt.data);
   Result.epiInfMultArtLength := epiInfMultArt.GetLength();
 end;
 
