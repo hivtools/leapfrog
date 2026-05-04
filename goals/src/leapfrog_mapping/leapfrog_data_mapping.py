@@ -1145,7 +1145,7 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
 
     rn_vac_targetting = int(modvars[RNVaccineTargetingTag])
 
-    epi_infectiousness = modvars[HVInfectiousnessTag ][
+    epi_infectiousness = modvars[HVInfectiousnessTag][
         : (HV_SympART+1) 
     ].copy(order="F")
 
@@ -1153,7 +1153,6 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         : (final_year_idx + 1) 
     ].copy(order="F")
 
-    epi_inf_mult_art
 
     return {
         "epi_start_year": epi_start_year,
@@ -1170,14 +1169,15 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "b_idu_share_prop":b_idu_share_prop,
         "rn_poc_cov":rn_poc_cov,
         "rn_vac_params":rn_vac_params,
+        "rn_vac_coverage":rn_vac_coverage,
         "rn_vac_cov_type":rn_vac_cov_type,
         "rn_vac_targetting":rn_vac_targetting,
-        "rn_vac_coverage":rn_vac_coverage,
         "epi_infectiousness":epi_infectiousness,
         "epi_inf_mult_art":epi_inf_mult_art,
     }
 
 
+ 
 def _rn_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
 
     return {}

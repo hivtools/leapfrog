@@ -163,6 +163,9 @@ struct GoalsSimulation<Config> {
       ART_CD4_NUMBER        =2,
       ART_NEW_PATS          =3,
       ART_RG_PERCENT        =4,
+
+      POC_CD4 = 0,
+      POC_VL  = 1,
      
   };
 
@@ -207,7 +210,7 @@ struct GoalsSimulation<Config> {
     print_goals_inputs();
 
     //from goals
-    auto& p_hv = pars.hv;
+    const auto& p_hv = pars.hv;
     auto& i_hv = intermediate.hv;
 
     //CDP: temp, using i_hv change back to p_hv
@@ -302,6 +305,7 @@ struct GoalsSimulation<Config> {
 
 
   //infectiousness on art
+  //CDP check CD4 dependency
   nda::fill(n_hv.mult_art, 0.0);
   for (int hd = CD4_NEG; hd <= CD4_LT50_ART; ++hd){
       n_hv.mult_no_art(hd) = p_hv.epi_inf_mult_art(t) * p_hv.epi_infectiousness(INF_ASYMPT);
@@ -421,10 +425,10 @@ void set_initial_pop() {
     const auto& p_ha = pars.ha;
 
     //from goals
-    const auto& c_hv = state_next.hv;
+    const auto& c_hv = state_curr.hv;
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
-    auto& p_hv = pars.hv;
+    const auto& p_hv = pars.hv;
     
     real_type pulse =0;
     real_type distr =0;
@@ -475,7 +479,7 @@ void calc_new_vaccinations()
 {
   auto& n_hv = state_next.hv;
   auto& i_hv = intermediate.hv;
-  auto& p_hv = pars.hv;
+  const auto& p_hv = pars.hv;
 
   nda::fill(i_hv.new_vaccinations, 0.0);
   nda::fill(i_hv.vac_effect, 0.0);
@@ -757,7 +761,7 @@ void calc_newrecruits_distribution(int t)
 {
   auto& n_hv = state_next.hv;
   auto& i_hv = intermediate.hv;
-  auto& p_hv = pars.hv;
+  const auto& p_hv = pars.hv;
 
   real_type value=0;
   real_type rg_sum=0;
@@ -816,7 +820,7 @@ void progress_norisk_hiv_neg(int t)
     const auto& c_hv = state_curr.hv;
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
-    auto& p_hv = pars.hv;
+    const auto& p_hv = pars.hv;
 
     real_type dt = 1/opts.hts_per_year;
     real_type value = 0;
@@ -901,7 +905,7 @@ void progress_atrisk_hiv_neg(int t)
     const auto& c_hv = state_next.hv;
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
-    auto& p_hv = pars.hv;
+    const auto& p_hv = pars.hv;
 
     real_type dt = 1/opts.hts_per_year;
     real_type value = 0;
@@ -1002,7 +1006,7 @@ void progress_hivn_hivp_art(int t)
     //from goals
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
-    auto& p_hv = pars.hv;
+    const auto& p_hv = pars.hv;
 
     real_type dt = 1/opts.hts_per_year;
     real_type value = 0;
@@ -1151,7 +1155,7 @@ void calc_r_multiplier(int t)
     
   //from goals
   auto& n_hv = state_next.hv;
-  auto& p_hv = pars.hv; 
+  const auto& p_hv = pars.hv; 
 
   const double rMultEqlb = 1.7;// 2.44 in previous version of Goals
   double rMultNumeratorAll = 0.0;
@@ -1225,7 +1229,7 @@ const auto& p_ha = pars.ha;
 //from goals
 auto& n_hv = state_next.hv;
 auto& i_hv = intermediate.hv;
-auto& p_hv = pars.hv;
+const auto& p_hv = pars.hv;
 
 real_type not_receiving_art_vrhs[nVAC][nRG][nCD4p][nNS]; 
 real_type eligible_art_vrhs[nVAC][nRG][nCD4p][nNS]; 

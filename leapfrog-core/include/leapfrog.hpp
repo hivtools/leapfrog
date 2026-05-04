@@ -153,7 +153,7 @@ struct Leapfrog {
       }
 
       if constexpr (ModelVariant::run_goals) {
-        goals_sim.run_goals_simulation();
+        //goals_sim.run_goals_simulation();
       }
 
       if (args.opts.proj_period_int == SS::PROJPERIOD_CALENDAR) {
