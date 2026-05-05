@@ -938,7 +938,7 @@ void progress_norisk_hiv_neg(int t)
 void progress_atrisk_hiv_neg(int t)
 {
 
-    const auto& c_hv = state_next.hv;
+    const auto& c_hv = state_curr.hv;
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
@@ -1275,7 +1275,7 @@ real_type not_receiving_art_vrs[nVAC][nRG][nNS] ;
 real_type start_art[nVAC][nRG][nNS]  ; 
 real_type sum_elig_art[nVAC][nRG][nNS]   ;       
 
-real_type  sex_age_hiv[POP_H_OnART][nNS];         
+real_type  sex_age_hiv[POP_H_ALL][nNS];         
 real_type  art_cov[RG_TOTAL1][nNS];             
 bool  kp_cd4_elig[RG_TOTAL1][nNS];  
 
@@ -1365,7 +1365,7 @@ if (ltfu > 0) {
                         n_hv.adults(v,rg,hd,s)   += prop_lt12m * num_ltfu;
                     }
                     // note offset on h
-                    n_hv.adults(v,hd+hOnArt,rg,s)   -= num_ltfu;
+                    n_hv.adults(v,rg,hd+hOnArt,s)   -= num_ltfu;
                 }
             }
         }//hd
