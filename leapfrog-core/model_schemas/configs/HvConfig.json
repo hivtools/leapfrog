@@ -61,7 +61,7 @@
 
     "b_behav_dur": {
       "num_type": "real_type",
-      "dims": ["SS::rRG_DUR", "SS::nRG+1"]
+      "dims": ["SS::nRG", "SS::rRG_DUR"]
     },
 
    "b_sex_acts": {

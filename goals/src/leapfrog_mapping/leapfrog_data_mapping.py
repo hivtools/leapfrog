@@ -1096,7 +1096,13 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
     ].copy(order="F")
 
     #array [HV_AllRisk..HV_MSM_F3,HV_PercPop..HV_AvgDur] of Double;
-    b_behav_dur = modvars[HVBehaviorTag][: (HV_MSM_F3 + 1), : (HV_AvgDur + 1)].copy(order="F")
+    # Source is shape (nRG, 3): cols are [unused, HV_PercPop(%), HV_AvgDur(duration)].
+    # C++ expects (nRG+1, rRG_DUR=2): col 0 = PERC_POP, col 1 = DUR_AVG.
+    # Select the two meaningful columns, then pad one zero row for RG_ALL (index nRG).
+    b_behav_dur = modvars[HVBehaviorTag][:, HV_PercPop : HV_AvgDur + 1].copy(order="F")
+    # b_behav_dur = np.vstack(
+    #     [_behav_raw, np.zeros((1, HV_AvgDur - HV_PercPop + 1), dtype=_behav_raw.dtype)]
+    # ).copy(order="F")
 
     #array[HV_AllRisk..{HV_IDU_F1}HV_MSM_F3] of HV_TDoubleDynYearArray;
     b_sex_acts = modvars[HVSexActsTag][
@@ -1163,7 +1169,7 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "b_balance_sex_acts": b_balance_sex_acts,
         "epi_initial_pulse": epi_initial_pulse,
         "b_condom_prop": b_condom_prop,
-        "b_behav_dur": b_behav_dur,
+        "b_behav_dur": b_behav_dur/100,
         "b_sex_acts": b_sex_acts,
         "b_num_partners": b_num_partners,
         "b_incr_recruit": b_incr_recruit,

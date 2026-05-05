@@ -136,7 +136,7 @@ struct Leapfrog {
 
         for (int hiv_step = 0; hiv_step < args.opts.hts_per_year; ++hiv_step) {
           if constexpr (ModelVariant::run_goals) {
-           // goals_sim.run_goals_hiv_loop(hiv_step);
+            goals_sim.run_goals_hiv_loop(hiv_step);
           }
 
           hiv_sim.run_hiv_adult_hiv_loop(hiv_step);
