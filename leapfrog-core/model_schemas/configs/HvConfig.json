@@ -348,12 +348,12 @@
 
      "mult_no_art": {
       "num_type": "real_type",
-      "dims": ["SS::nCD4"]
+      "dims": ["SS::nCD4p"]
     },
 
      "mult_art": {
       "num_type": "real_type",
-      "dims": ["SS::nCD4"]
+      "dims": ["SS::nCD4p"]
     },
 
       "r_mult": {

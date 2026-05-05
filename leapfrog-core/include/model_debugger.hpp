@@ -40,14 +40,14 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
     i_hv.riskgroup_proportions;
     i_hv.behave_change_rate;
-    i_hv.totpop_1549;
+
 
     i_hv.totpop_deaths_background;
-    i_hv.totpop_1549;
-    i_hv.pop_1549;
-    i_hv.entrants_age_15;
-    i_hv.aging_50;
-    i_hv.aging_denom_1549;
+    //i_hv.totpop_1549;
+    //i_hv.pop_1549;
+    //i_hv.entrants_age_15;
+    //i_hv.aging_50;
+    //i_hv.aging_denom_1549;
 
     //p_hv.epi_start_year;
     //p_hv.b_balance_sex_acts;
@@ -463,14 +463,14 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
     i_hv.riskgroup_proportions;
     i_hv.behave_change_rate;
-    i_hv.totpop_1549;
+   
 
     i_hv.totpop_deaths_background;
-    i_hv.totpop_1549;
-    i_hv.pop_1549;
-    i_hv.entrants_age_15;
-    i_hv.aging_50;
-    i_hv.aging_denom_1549;
+    //i_hv.totpop_1549;
+    //i_hv.pop_1549;
+    //i_hv.entrants_age_15;
+    //i_hv.aging_50;
+    //i_hv.aging_denom_1549;
 
 
 /*     i_hv.totpop_deaths_background
@@ -522,15 +522,15 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
 
   out.riskgroup_proportions = nda_capture(i_hv.riskgroup_proportions);
   out.behave_change_rate = nda_capture(i_hv.behave_change_rate);
-  out.totpop_1549 = nda_capture(i_hv.totpop_1549);
 
 
-  out.riskgroup_proportions = nda_capture(i_hv.totpop_deaths_background);
-  out.riskgroup_proportions = nda_capture(i_hv.totpop_1549);
-  out.riskgroup_proportions = nda_capture(i_hv.pop_1549);
-  out.riskgroup_proportions = nda_capture(i_hv.entrants_age_15);
-  out.riskgroup_proportions = nda_capture(i_hv.aging_50);
-  out.riskgroup_proportions = nda_capture(i_hv.aging_denom_1549);
+  out.totpop_deaths_background = nda_capture(i_hv.totpop_deaths_background);
+  //out.riskgroup_proportions = nda_capture(i_hv.totpop_1549);
+
+  //out.riskgroup_proportions = nda_capture(i_hv.pop_1549);
+  //out.riskgroup_proportions = nda_capture(i_hv.entrants_age_15);
+  //out.riskgroup_proportions = nda_capture(i_hv.aging_50);
+  //out.riskgroup_proportions = nda_capture(i_hv.aging_denom_1549);
 
   
 

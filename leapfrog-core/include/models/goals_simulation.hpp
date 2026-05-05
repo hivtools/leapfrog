@@ -679,12 +679,12 @@ void calc_new_vaccinations()
 
   auto dbg_model = capture_model(state_next, intermediate, pars);
   
-  nda_print_info(dbg_model.hv.totpop_deaths_background);
-  nda_print_info(dbg_model.hv.totpop_1549);
-  nda_print_info(dbg_model.hv.pop_1549);
-  nda_print_info(dbg_model.hv.entrants_age_15);
-  nda_print_info(dbg_model.hv.aging_50);
-  nda_print_info(dbg_model.hv.aging_denom_1549);
+  //nda_print_info(dbg_model.hv.totpop_deaths_background);
+  //nda_print_info(dbg_model.hv.totpop_1549);
+ // nda_print_info(dbg_model.hv.pop_1549);
+  //nda_print_info(dbg_model.hv.entrants_age_15);
+  //nda_print_info(dbg_model.hv.aging_50);
+  //nda_print_info(dbg_model.hv.aging_denom_1549);
 
 }
 
@@ -742,7 +742,7 @@ void calc_goals_rates(int t) {
             i_hv.hiv_lambda(CD4_GT500,s) = 1-exp(-1/stage_duration);//remove time in primary stage
             i_hv.hiv_mu(CD4_PRIM,s) = i_hv.hiv_mu(CD4_GT500,s);
           } 
-          if(hd==CD4_LT50) i_hv.hiv_lambda(hd,s) = 0;
+          if(hd==CD4_LT50) i_hv.hiv_lambda(hd,s) = 0;//no progession out of this stage
           
           i_hv.rate_aging_50(POP_H_NoART, CD4_NEG, s) = (i_hv.aging_denom_1549(POP_H_NoART, CD4_NEG, s) !=0) ? i_hv.aging_50(POP_H_NoART, CD4_NEG, s)/i_hv.aging_denom_1549(POP_H_NoART, CD4_NEG, s) : 0; 
       
@@ -757,7 +757,7 @@ void calc_goals_rates(int t) {
       }
 
 
-      //aggregate exit rates  
+      //aggregate exit rates  CDP review if still needed
       for (int hd = CD4_GT500; hd < CD4_LT50; ++hd) {
 
         for (int rg = RG_NONE; rg <= RG_TOTAL; ++rg) {
@@ -776,20 +776,6 @@ void calc_goals_rates(int t) {
 
 
       }
-
-      //risk group proportions, and behaviur change rates
-      for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
-
-        i_hv.riskgroup_proportions(rg,S_MALE) = p_hv.b_behav_dur(rg, PERC_POP) / 100.0;
-        if (rg > RG_LRH) i_hv.behave_change_rate(rg,S_MALE) = (p_hv.b_behav_dur(rg, DUR_AVG)!=0) ? 1 / p_hv.b_behav_dur(rg, DUR_AVG) : 0;
-        
-        if (rg != RG_MSM) {
-          i_hv.riskgroup_proportions(rg,S_FEMALE) = p_hv.b_behav_dur(rg+RG_NONE_F3, PERC_POP) / 100.0;
-          if (rg > RG_LRH) i_hv.behave_change_rate(rg,S_FEMALE) = (p_hv.b_behav_dur(rg+RG_NONE_F3, DUR_AVG)!=0) ? 1 / p_hv.b_behav_dur(rg, DUR_AVG) : 0;
-        }
-
-      }
-
 
 }
 
