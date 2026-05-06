@@ -124,7 +124,7 @@
 
     "epi_infectiousness": {
       "num_type": "real_type",
-       "dims": ["SS::nINF+1"]
+       "dims": ["SS::nINF"]
     },
 
     "epi_inf_mult_art": {
@@ -137,25 +137,25 @@
        "dims": ["SS::nNS+1","SS::nRG1+1","SS::nVAC+1","opts.proj_steps"]
     },
 
-     "trans_mult_M": {
+     "epi_trans_mult_M": {
       "num_type": "real_type"
     },
 
-     "trans_hiv_F": {
+     "epi_trans_hiv_F": {
       "num_type": "real_type"
     },
 
-    "trans_mult_STI": {
+    "epi_trans_sti_mult": {
       "num_type": "real_type"
     },
 
-     "condom_effect": {
+     "epi_condom_effect": {
       "num_type": "real_type"
     },
 
     "epi_redwhen_circum": {
       "num_type": "real_type",
-       "dims": ["SS::nHVINF+1"]
+       "dims": ["SS::nHVINF"]
     },
 
     "epi_sti_prev": {
@@ -165,12 +165,12 @@
 
      "prep_cov": {
       "num_type": "real_type",
-      "dims": ["SS::nNS+1","SS::nRG+1","opts.proj_steps"]
+      "dims": ["SS::nNS+1","SS::nRG1+1","opts.proj_steps"]
     },
    
      "rn_coverage": {
       "num_type": "real_type",
-      "dims": ["SS::nIntervn+1", "opts.proj_steps"]
+      "dims": ["43", "opts.proj_steps"]
     }
 
 

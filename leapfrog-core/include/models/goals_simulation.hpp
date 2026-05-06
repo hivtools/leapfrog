@@ -301,20 +301,20 @@ struct GoalsSimulation<Config> {
 
   //infectiousness not on art
   nda::fill(n_hv.mult_no_art, 0.0);
-  n_hv.mult_no_art(CD4_PRIM) = p_hv.epi_infectiousness(2); //INF_PRIM
-  n_hv.mult_no_art(CD4_GT500) =  p_hv.epi_infectiousness(3); //INF_ASYMPT
-  n_hv.mult_no_art(CD4_350_500) =  p_hv.epi_infectiousness(3); //INF_ASYMPT
-  n_hv.mult_no_art(CD4_250_349) = p_hv.epi_infectiousness(3); //INF_ASYMPT
-  n_hv.mult_no_art(CD4_200_249) = p_hv.epi_infectiousness(3); //INF_ASYMPT
-  n_hv.mult_no_art(CD4_100_199) = p_hv.epi_infectiousness(4); //INF_SYMPT_NO_ART
-  n_hv.mult_no_art(CD4_50_99) = p_hv.epi_infectiousness(4); //INF_SYMPT_NO_ART
-  n_hv.mult_no_art(CD4_LT50) = p_hv.epi_infectiousness(4); //INF_SYMPT_NO_ART
+  n_hv.mult_no_art(CD4_PRIM) = p_hv.epi_infectiousness(INF_PRIM); //INF_PRIM
+  n_hv.mult_no_art(CD4_GT500) =  p_hv.epi_infectiousness(INF_ASYMPT); //INF_ASYMPT
+  n_hv.mult_no_art(CD4_350_500) =  p_hv.epi_infectiousness(INF_ASYMPT); //INF_ASYMPT
+  n_hv.mult_no_art(CD4_250_349) = p_hv.epi_infectiousness(INF_ASYMPT); //INF_ASYMPT
+  n_hv.mult_no_art(CD4_200_249) = p_hv.epi_infectiousness(INF_ASYMPT); //INF_ASYMPT
+  n_hv.mult_no_art(CD4_100_199) = p_hv.epi_infectiousness(INF_SYMPT_NO_ART); //INF_SYMPT_NO_ART
+  n_hv.mult_no_art(CD4_50_99) = p_hv.epi_infectiousness(INF_SYMPT_NO_ART); //INF_SYMPT_NO_ART
+  n_hv.mult_no_art(CD4_LT50) = p_hv.epi_infectiousness(INF_SYMPT_NO_ART); //INF_SYMPT_NO_ART
 
   //infectiousness on art
   //CDP check CD4 dependency
   nda::fill(n_hv.mult_art, 0.0);
   for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd){
-      n_hv.mult_art(hd) = p_hv.epi_inf_mult_art(t) * p_hv.epi_infectiousness(4);
+      n_hv.mult_art(hd) = p_hv.epi_inf_mult_art(t) * p_hv.epi_infectiousness(INF_SYMPT_NO_ART);
   }
     
   auto dbg_model = capture_model(state_next, intermediate, pars);
@@ -409,13 +409,13 @@ struct GoalsSimulation<Config> {
     for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
 
       //CDP note +1 on inputs
-      i_hv.riskgroup_proportions(rg,S_MALE) = p_hv.b_behav_dur(rg+1, PERC_POP) / 100.0;
-      if (rg > RG_LRH) i_hv.behave_change_rate(rg,S_MALE) = (p_hv.b_behav_dur(rg+1, DUR_AVG)!=0) ? 1 / p_hv.b_behav_dur(rg, DUR_AVG) : 0;
+      i_hv.riskgroup_proportions(rg,S_MALE) = p_hv.b_behav_dur(rg, PERC_POP) / 100.0;
+      if (rg > RG_LRH) i_hv.behave_change_rate(rg,S_MALE) = (p_hv.b_behav_dur(rg, DUR_AVG)!=0) ? 1 / p_hv.b_behav_dur(rg, DUR_AVG) : 0;
       
       if (rg != RG_MSM) {
         //CDP note offset for women
-        i_hv.riskgroup_proportions(rg,S_FEMALE) = p_hv.b_behav_dur(rg+1+RG_NONE_F3 , PERC_POP) / 100.0;
-        if (rg > RG_LRH) i_hv.behave_change_rate(rg,S_FEMALE) = (p_hv.b_behav_dur(rg+1+RG_NONE_F3, DUR_AVG)!=0) ? 1 / p_hv.b_behav_dur(rg, DUR_AVG) : 0;
+        i_hv.riskgroup_proportions(rg,S_FEMALE) = p_hv.b_behav_dur(rg+RG_NONE_F3 , PERC_POP) / 100.0;
+        if (rg > RG_LRH) i_hv.behave_change_rate(rg,S_FEMALE) = (p_hv.b_behav_dur(rg+RG_NONE_F3, DUR_AVG)!=0) ? 1 / p_hv.b_behav_dur(rg, DUR_AVG) : 0;
       }
 
     }
@@ -1793,7 +1793,7 @@ void sum_adult_pop_dims(int t)
                 {
                     // Exclude female MSM and higher risk groups
                     if (!((s == S_FEMALE) && (rg >= RG_MSM)))
-                        sum += n_hv.adults(VAC_ALL,hd,rg,s);
+                        sum += n_hv.adults(VAC_ALL,rg,hd,s);
                 }
                 n_hv.adults(VAC_ALL,rg,hd,s) = sum;
             }
@@ -1807,7 +1807,7 @@ void sum_adult_pop_dims(int t)
                 {
                     // Exclude female MSM and higher risk groups
                     if (!((s == S_FEMALE) && (rg >= RG_MSM)))
-                        sum += n_hv.adults(VAC_ALL,hd,rg,s);
+                        sum += n_hv.adults(v,rg,hd,s);
                 }
                 n_hv.adults(v,RG_ALL,hd,s) = sum;
             } 
