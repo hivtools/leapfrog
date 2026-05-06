@@ -368,7 +368,7 @@
     },
     "h_artpop": {
       "num_type": "real_type",
-      "dims": ["SS::hTS", "SS::hDS", "SS::hAG", "SS::NS"]
+      "dims": ["SS::hTS+1", "SS::hDS", "SS::hAG", "SS::NS"]
     },
     "h_hiv_deaths_no_art": {
       "num_type": "real_type",

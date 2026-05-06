@@ -7,12 +7,12 @@
     "default": {
       "nNS": 2,
       "nCD4": 16,
-      "nCD4p": 8,
+      "nCD4p": 11,
       "nCD4a": 7,
       "nRG": 17,
       "nRG1": 9,  
       "nVAC": 4,
-      "nHIV": 5,
+      "nHIV": 6,
       "nART": 3,
       "pIDX_24to35": 2,
       "pIDX_15to49": 15,
@@ -124,7 +124,7 @@
 
     "epi_infectiousness": {
       "num_type": "real_type",
-       "dims": ["SS::nINF+1"]
+       "dims": ["SS::nINF"]
     },
 
     "epi_inf_mult_art": {
@@ -137,25 +137,25 @@
        "dims": ["SS::nNS+1","SS::nRG1+1","SS::nVAC+1","opts.proj_steps"]
     },
 
-     "trans_mult_M": {
+     "epi_trans_mult_M": {
       "num_type": "real_type"
     },
 
-     "trans_hiv_F": {
+     "epi_trans_hiv_F": {
       "num_type": "real_type"
     },
 
-    "trans_mult_STI": {
+    "epi_trans_sti_mult": {
       "num_type": "real_type"
     },
 
-     "condom_effect": {
+     "epi_condom_effect": {
       "num_type": "real_type"
     },
 
     "epi_redwhen_circum": {
       "num_type": "real_type",
-       "dims": ["SS::nHVINF+1"]
+       "dims": ["SS::nHVINF"]
     },
 
     "epi_sti_prev": {
@@ -165,12 +165,12 @@
 
      "prep_cov": {
       "num_type": "real_type",
-      "dims": ["SS::nNS+1","SS::nRG+1","opts.proj_steps"]
+      "dims": ["SS::nNS+1","SS::nRG1+1","opts.proj_steps"]
     },
    
      "rn_coverage": {
       "num_type": "real_type",
-      "dims": ["SS::nIntervn+1", "opts.proj_steps"]
+      "dims": ["43", "opts.proj_steps"]
     }
 
 
@@ -234,7 +234,7 @@
 
    "rate_aging_50": {
       "num_type": "real_type",
-      "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
+      "dims": ["SS::nHIV", "SS::nCD4","SS::nNS"]
     },
 
     "hiv_exit_rates": {
@@ -289,7 +289,7 @@
 
      "art_alpha": {
       "num_type": "real_type",
-      "dims": ["SS::nCD4p","SS::nNS"]
+      "dims": ["SS::nCD4","SS::nNS"]
     },
     
     "hiv_cd4_mort_no_art": {
