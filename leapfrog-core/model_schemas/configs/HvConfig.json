@@ -7,12 +7,12 @@
     "default": {
       "nNS": 2,
       "nCD4": 16,
-      "nCD4p": 8,
+      "nCD4p": 11,
       "nCD4a": 7,
       "nRG": 17,
       "nRG1": 9,  
       "nVAC": 4,
-      "nHIV": 5,
+      "nHIV": 6,
       "nART": 3,
       "pIDX_24to35": 2,
       "pIDX_15to49": 15,
@@ -234,7 +234,7 @@
 
    "rate_aging_50": {
       "num_type": "real_type",
-      "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
+      "dims": ["SS::nHIV", "SS::nCD4","SS::nNS"]
     },
 
     "hiv_exit_rates": {
@@ -244,7 +244,7 @@
 
      "art_exit_rates": {
       "num_type": "real_type",
-      "dims": ["SS::nHIV", "SS::nCD4a","SS::nNS"]
+      "dims": ["SS::nRG", "SS::nCD4a+1","SS::nNS"]
     },
 
     "hiv_stage_exits": {
@@ -289,7 +289,7 @@
 
      "art_alpha": {
       "num_type": "real_type",
-      "dims": ["SS::nCD4p","SS::nNS"]
+      "dims": ["SS::nCD4","SS::nNS"]
     },
     
     "hiv_cd4_mort_no_art": {
