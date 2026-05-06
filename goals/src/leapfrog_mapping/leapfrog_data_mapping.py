@@ -201,6 +201,7 @@ from SpectrumCommon.Const.RN.RNTags import (
     RNADHTreatCovTag,
     RNADHTreatReducMortTag,
     RNCoverageTag,
+    RNMethodMixTag,
     RNPointOfCareTag,
     RNPOCEffectTag,
     RNPrEPCoverageTag,
@@ -214,7 +215,7 @@ from SpectrumCommon.Const.RN.RNTags import (
 from SpectrumCommon.Const.HV.HVConst import HV_MSMHR, HV_MSMIDU, HV_MSM_F3, HV_AvgDur, HV_Female, HV_Infect, HV_SympART, HV_PercPop
 from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 from SpectrumCommon.Const.DP.DPConst import GB_Female
-from SpectrumCommon.Const.RN.RNConst import RN_POC_VL, RN_Duration, RN_MaxInterventions, RN_NoProt
+from SpectrumCommon.Const.RN.RNConst import RN_POC_VL, RN_Duration, RN_MaxInterventions, RN_NoProt, RN_PrepInterventions
 
 
 Modvars = dict[str, int | float | bool | np.ndarray | dict]
@@ -1197,6 +1198,10 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         : (GB_Female+1), : (HV_MSMIDU+1), : (final_year_idx + 1) 
     ].copy(order="F")
 
+    prep_method_mix = modvars[RNMethodMixTag ][
+        : (GB_Female+1), : (HV_MSMIDU+1), : (RN_PrepInterventions+1), : (final_year_idx + 1) 
+    ].copy(order="F")
+
     rn_coverage = modvars[RNCoverageTag ][  
         : (RN_MaxInterventions+1), : (final_year_idx + 1) 
     ].copy(order="F")
@@ -1231,6 +1236,7 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "epi_redwhen_circum":epi_redwhen_circum,
         "epi_sti_prev":epi_sti_prev,
         "prep_cov":prep_cov,
+        "prep_method_mix":prep_method_mix,
         "rn_coverage":rn_coverage,
 
     }

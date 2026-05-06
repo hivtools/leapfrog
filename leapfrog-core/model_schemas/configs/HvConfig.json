@@ -33,7 +33,8 @@
       "nINF": 4,
       "nPOC":2,
       "nHVINF":2,
-      "nIntervn":50
+      "nIntervn":43,
+      "nPREP":9
     }
   },
 
@@ -167,10 +168,16 @@
       "num_type": "real_type",
       "dims": ["SS::nNS+1","SS::nRG1+1","opts.proj_steps"]
     },
+
+     "prep_method_mix": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS+1","SS::nRG1+1","SS::nPREP+1","opts.proj_steps"]
+    },
+   
    
      "rn_coverage": {
       "num_type": "real_type",
-      "dims": ["43", "opts.proj_steps"]
+      "dims": ["SS:nIntervn", "opts.proj_steps"]
     }
 
 
