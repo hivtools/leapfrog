@@ -141,6 +141,7 @@ from SpectrumCommon.Const.DP.DPConst import (
     DP_TripleARTDurPreg_Late,
     DP_WHO2006DualARV,
     DP_FIRST_INDEX,
+    GB_BothSexes,
 )
 from SpectrumCommon.Const.DP.DPTags import (
     DP_ASFRTag,
@@ -174,6 +175,7 @@ from SpectrumCommon.Const.GB.GBConst import (
 
 from SpectrumCommon.Const.HV.HVTags import (
     HVARTInputCoverageByRGTag,
+    HVCondomEffTag,
     HVEpidemicStYrTag, 
     HVAgeFirstSexTag,
     HVBalanceSexActsTag,
@@ -182,19 +184,26 @@ from SpectrumCommon.Const.HV.HVTags import (
     HVInfectMultiplierOnARTTag,
     HVInfectiousnessTag,
     HVMonthsInPrimaryStageTag,
+    HVNewInfectionsTag,
     HVPerIDUsharingTag,
     HVPercMarriedTag,
+    HVRedWHenCircumTag,
+    HVSTIPrevTag,
     HVSexActsTag,
     HVNumPartTag,
     HVInitialPulseTag,
     HVIncRecruitmentTag,
+    HVTransHIVFTag,
+    HVTransMultMTag,
 )
 
 from SpectrumCommon.Const.RN.RNTags import (
     RNADHTreatCovTag,
     RNADHTreatReducMortTag,
+    RNCoverageTag,
     RNPointOfCareTag,
     RNPOCEffectTag,
+    RNPrEPCoverageTag,
     RNVacCoverageTag,
     RNVaccineCovTypeTag,
     RNVaccineEffectivenessTag,
@@ -202,10 +211,10 @@ from SpectrumCommon.Const.RN.RNTags import (
 
 )
 
-from SpectrumCommon.Const.HV.HVConst import HV_MSMHR, HV_MSMIDU, HV_MSM_F3, HV_AvgDur, HV_Female, HV_SympART, HV_PercPop
+from SpectrumCommon.Const.HV.HVConst import HV_MSMHR, HV_MSMIDU, HV_MSM_F3, HV_AvgDur, HV_Female, HV_Infect, HV_SympART, HV_PercPop
 from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 from SpectrumCommon.Const.DP.DPConst import GB_Female
-from SpectrumCommon.Const.RN.RNConst import RN_POC_VL, RN_Duration
+from SpectrumCommon.Const.RN.RNConst import RN_POC_VL, RN_Duration, RN_MaxInterventions, RN_NoProt
 
 
 Modvars = dict[str, int | float | bool | np.ndarray | dict]
@@ -1162,7 +1171,38 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         : (final_year_idx + 1) 
     ].copy(order="F")
 
+    out_new_inf = modvars[HVNewInfectionsTag ][
+        : (GB_Female+1), : (HV_MSMIDU+1), : (RN_NoProt+1), : (final_year_idx + 1) 
+    ].copy(order="F")
 
+    epi_trans_mult_M = float(modvars[HVTransMultMTag])
+
+    epi_trans_hiv_F = float(modvars[HVTransHIVFTag])
+
+    epi_trans_sti_mult = float(modvars[HVTransHIVFTag])
+
+    epi_condom_effect = float(modvars[HVCondomEffTag])
+
+    epi_redwhen_circum = modvars[HVRedWHenCircumTag][
+        : (HV_Infect+1) 
+    ].copy(order="F")
+
+
+    epi_sti_prev = modvars[HVSTIPrevTag][
+        : (HV_MSM_F3 + 1), : (final_year_idx + 1)
+    ].copy(order="F")
+
+   
+    prep_cov = modvars[RNPrEPCoverageTag ][
+        : (GB_Female+1), : (HV_MSMIDU+1), : (final_year_idx + 1) 
+    ].copy(order="F")
+
+    rn_coverage = modvars[RNCoverageTag ][  
+        : (RN_MaxInterventions+1), : (final_year_idx + 1) 
+    ].copy(order="F")
+
+
+ 
     return {
         "epi_start_year": epi_start_year,
         "epi_months_in_primary":epi_months_in_primary,
@@ -1183,6 +1223,16 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "rn_vac_targetting":rn_vac_targetting,
         "epi_infectiousness":epi_infectiousness,
         "epi_inf_mult_art":epi_inf_mult_art,
+        "out_new_inf":out_new_inf,
+        "epi_trans_mult_M":epi_trans_mult_M,
+        "epi_trans_hiv_F":epi_trans_hiv_F,
+        "epi_trans_sti_mult": epi_trans_sti_mult,
+        "epi_condom_effect":epi_condom_effect,
+        "epi_redwhen_circum":epi_redwhen_circum,
+        "epi_sti_prev":epi_sti_prev,
+        "prep_cov":prep_cov,
+        "rn_coverage":rn_coverage,
+
     }
 
 

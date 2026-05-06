@@ -10,6 +10,7 @@
       "nCD4p": 8,
       "nCD4a": 7,
       "nRG": 17,
+      "nRG1": 9,  
       "nVAC": 4,
       "nHIV": 5,
       "nART": 3,
@@ -30,7 +31,9 @@
       "hCD4_LT50": 7,
       "hHIV_Cats": 5,
       "nINF": 4,
-      "nPOC":2
+      "nPOC":2,
+      "nHVINF":2,
+      "nIntervn":50
     }
   },
 
@@ -127,7 +130,50 @@
     "epi_inf_mult_art": {
       "num_type": "real_type",
        "dims": ["opts.proj_steps"]
+    },
+
+    "out_new_inf": {
+      "num_type": "real_type",
+       "dims": ["SS::nNS+1","SS::nRG1+1","SS::nVAC+1","opts.proj_steps"]
+    },
+
+     "trans_mult_M": {
+      "num_type": "real_type"
+    },
+
+     "trans_hiv_F": {
+      "num_type": "real_type"
+    },
+
+    "trans_mult_STI": {
+      "num_type": "real_type"
+    },
+
+     "condom_effect": {
+      "num_type": "real_type"
+    },
+
+    "epi_redwhen_circum": {
+      "num_type": "real_type",
+       "dims": ["SS::nHVINF+1"]
+    },
+
+    "epi_sti_prev": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG+1","opts.proj_steps"]
+    },
+
+     "prep_cov": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS+1","SS::nRG+1","opts.proj_steps"]
+    },
+   
+     "rn_coverage": {
+      "num_type": "real_type",
+      "dims": ["SS::nIntervn+1", "opts.proj_steps"]
     }
+
+
 
   },
 
@@ -307,10 +353,24 @@
       "dims": ["SS::vVAC_NUM_ACTTYPE","SS::vVAC_NUM_PARS"]
     },
 
+    "prep_effect": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG","SS::nNS"]
+    },
+
+    "cured_prop": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG","SS::nNS"]
+    },
+
    "art_coverage_rg": {
       "num_type": "real_type",
       "dims": ["SS::nNS+1", "SS::rRG_TOTAL+1","opts.proj_steps"]
     }
+
+
+
+    
 
   },
 
@@ -337,6 +397,11 @@
       "dims": ["SS::nVAC+1","SS::nRG+1","SS::nNS+1"]
     },
 
+    "prevalence": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG+1","SS::nNS+1"]
+    },
+
     "newly_on_art": {
       "num_type": "real_type",
       "dims": ["SS::nCD4+1","SS::nNS+1"]
@@ -359,6 +424,16 @@
       "r_mult": {
       "num_type": "real_type",
       "dims": ["SS::nNS+1","SS::nRG+1"]
+    },
+
+     "new_inf_vrs": {
+      "num_type": "real_type",
+      "dims": ["SS::nVAC+1","SS::nRG+1","SS::nNS+1"]
+    },
+
+     "new_inf_s": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS+1"]
     }
 
   }
