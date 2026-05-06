@@ -70,6 +70,9 @@ template <class HvState, class IntermediateHv, class ParsHv>
     
     p_hv.epi_infectiousness;
     p_hv.epi_inf_mult_art;
+    
+    p_hv.prep_method_mix;
+    p_hv.prep_effectiveness;
 
 
   }
@@ -291,6 +294,8 @@ struct HvDebugInfo {
   //int rn_vac_targetting;
   NdaInfo epi_infectiousness;
   NdaInfo epi_inf_mult_art;
+  NdaInfo prep_method_mix;
+  NdaInfo prep_effectiveness;
     
  
 };
@@ -509,6 +514,8 @@ template <class HvState, class IntermediateHv, class ParsHv>
     //p_hv.rn_vac_targetting;
     p_hv.epi_infectiousness;
     p_hv.epi_inf_mult_art;
+    p_hv.prep_method_mix;
+    p_hv.prep_effectiveness;
 
   }
 inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
@@ -590,6 +597,8 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.epi_infectiousness =nda_capture(p_hv.epi_infectiousness);
   out.epi_inf_mult_art = nda_capture(p_hv.epi_inf_mult_art);
   
+  out.prep_method_mix = nda_capture(p_hv.prep_method_mix);
+  out.prep_effectiveness = nda_capture(p_hv.prep_effectiveness);
 
   return out;
 }

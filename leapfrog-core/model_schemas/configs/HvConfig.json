@@ -34,7 +34,8 @@
       "nPOC":2,
       "nHVINF":2,
       "nIntervn":43,
-      "nPREP":9
+      "nPREP":9,
+      "RN_DurationMonths": 4
     }
   },
 
@@ -171,13 +172,17 @@
 
      "prep_method_mix": {
       "num_type": "real_type",
-      "dims": ["SS::nNS+1","SS::nRG1+1","SS::nPREP+1","opts.proj_steps"]
+      "dims": ["SS::nNS","SS::rRG_TOTAL","SS::nIntervn","opts.proj_steps"]
     },
-   
+
+     "prep_effectiveness": {
+      "num_type": "real_type",
+      "dims": ["SS::nPREP+1",  "SS::RN_DurationMonths+1"]
+    },
    
      "rn_coverage": {
       "num_type": "real_type",
-      "dims": ["SS:nIntervn", "opts.proj_steps"]
+      "dims": ["SS::nIntervn", "opts.proj_steps"]
     }
 
 

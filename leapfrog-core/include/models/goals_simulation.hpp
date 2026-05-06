@@ -171,19 +171,19 @@ struct GoalsSimulation<Config> {
       HV_INF  = 1,
 
       INTVN_MC15_49 = 19,
-      INTVN_ALL = 43;
+      INTVN_ALL = 43,
 
-      PREP_OralDaily = 0;
-      PREP_OralMonthly = 1;
-      PREP_OralPlusCon = 2;
-      PREP_Inject1Mo = 3;
-      PREP_Inject2Mo = 4;
-      PREP_Inject6Mo = 5;
-      PREP_Ring = 6;
-      PREP_bNABs = 7;
-      PREP_Implant = 8;
-      PREP_PEP = 9;
-      PREP_NUM = 9;
+      PREP_OralDaily = 0,
+      PREP_OralMonthly = 1,
+      PREP_OralPlusCon = 2,
+      PREP_Inject1Mo = 3,
+      PREP_Inject2Mo = 4,
+      PREP_Inject6Mo = 5,
+      PREP_Ring = 6,
+      PREP_bNABs = 7,
+      PREP_Implant = 8,
+      PREP_PEP = 9,
+      PREP_NUM = 9
 
      
   };
@@ -334,25 +334,27 @@ struct GoalsSimulation<Config> {
   }
    
          
+  auto dbg_model = capture_model(state_next, intermediate, pars);
   
   for (int s = S_MALE; s <= S_FEMALE; ++s)              
   {
-      for (int r = RG_LRH; rg <= RG_TOTAL1; ++rg)         
+      for (int rg = RG_LRH; rg <= RG_TOTAL1; ++rg)         
       {
-          for (int m = HV_RN_PrEPOralDaily; m <= HV_RN_PrEP_PEP; ++m)
-          {
+          double method_mix = p_hv.prep_method_mix(s, rg, 0, t);
+          double effectiveness = p_hv.prep_effectiveness( 0, 0);
+          // for (int m = HV_RN_PrEPOralDaily; m <= HV_RN_PrEP_PEP; ++m)
+          // {
     
-              i_hv.prep_effect +=  ( HV_GetRNPrEPEffectiveness(p, HV_RN_Effectiveness, m) / 100.0 )
-                                  * ( HV_GetRNPrEPEffectiveness(p, HV_RN_Adherence,    m) / 100.0 )
-                                  * ( p_hv.prep_method_mix(m,r,s,t) / 100.0 );
-          }
+          //     i_hv.prep_effect +=  ( HV_GetRNPrEPEffectiveness(p, HV_RN_Effectiveness, m) / 100.0 )
+          //                         * ( HV_GetRNPrEPEffectiveness(p, HV_RN_Adherence,    m) / 100.0 )
+          //                         * ( p_hv.prep_method_mix(m,r,s,t) / 100.0 );
+          // }
 
-          // Store the result for the current (s, r, t) combination
-          _PrEPEff[s][r][t] = sum;
+          // // Store the result for the current (s, r, t) combination
+          // _PrEPEff[s][r][t] = sum;
       }
   }
   
-  auto dbg_model = capture_model(state_next, intermediate, pars);
   nda_print_info(dbg_model.hv.epi_infectiousness);
   
   //##nda_print_info(dbg_model.hv.epi_inf_mult_art);
@@ -1388,6 +1390,7 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
     double circum=p_hv.rn_coverage(INTVN_MC15_49,t);
     
     //men
+    int s = S_MALE;
     new_inf  =    1     - std::pow(
                   PrevF * std::pow(
                         (1 - p_hv.trans_hiv_F * rMultF *
