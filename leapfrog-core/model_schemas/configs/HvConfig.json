@@ -139,15 +139,19 @@
        "dims": ["SS::nNS+1","SS::nRG1+1","SS::nVAC+1","opts.proj_steps"]
     },
 
-     "epi_trans_mult_M": {
+     "epi_transm_mult_M": {
       "num_type": "real_type"
     },
 
-     "epi_trans_hiv_F": {
+     "epi_transm_hiv_F": {
       "num_type": "real_type"
     },
 
-    "epi_trans_sti_mult": {
+    "epi_transm_sti_mult": {
+      "num_type": "real_type"
+    },
+
+    "epi_transm_mult_MSM": {
       "num_type": "real_type"
     },
 
@@ -163,6 +167,11 @@
     "epi_sti_prev": {
       "num_type": "real_type",
       "dims": ["SS::nRG+1","opts.proj_steps"]
+    },
+
+     "b_foi_idu": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS+1", "opts.proj_steps"]
     },
 
      "prep_cov": {
@@ -435,7 +444,7 @@
 
       "r_mult": {
       "num_type": "real_type",
-      "dims": ["SS::nNS+1","SS::nRG+1"]
+      "dims": ["SS::nRG+1","SS::nNS+1"]
     },
 
      "new_inf_vrs": {

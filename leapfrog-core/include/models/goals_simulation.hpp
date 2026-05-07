@@ -183,8 +183,12 @@ struct GoalsSimulation<Config> {
       PREP_bNABs = 7,
       PREP_Implant = 8,
       PREP_PEP = 9,
-      PREP_NUM = 9
+      PREP_NUM = 9,
 
+      PREP_EFFECT = 0,
+      PREP_ADH = 1,
+      PREP_SUB = 2,
+      PREP_DUR  = 3
      
   };
 
@@ -337,23 +341,18 @@ struct GoalsSimulation<Config> {
   auto dbg_model = capture_model(state_next, intermediate, pars);
   
   for (int s = S_MALE; s <= S_FEMALE; ++s)              
-  {
       for (int rg = RG_LRH; rg <= RG_TOTAL1; ++rg)         
-      {
-          double method_mix = p_hv.prep_method_mix(s, rg, 0, t);
-          double effectiveness = p_hv.prep_effectiveness( 0, 0);
-          // for (int m = HV_RN_PrEPOralDaily; m <= HV_RN_PrEP_PEP; ++m)
-          // {
+          for (int m = PREP_OralDaily; m <= PREP_PEP ; ++m)
+         {
     
-          //     i_hv.prep_effect +=  ( HV_GetRNPrEPEffectiveness(p, HV_RN_Effectiveness, m) / 100.0 )
-          //                         * ( HV_GetRNPrEPEffectiveness(p, HV_RN_Adherence,    m) / 100.0 )
-          //                         * ( p_hv.prep_method_mix(m,r,s,t) / 100.0 );
-          // }
+             i_hv.prep_effect(rg,s) +=  ( p_hv.prep_effectiveness(PREP_EFFECT, m) / 100.0 )
+                                      * ( p_hv.prep_effectiveness(PREP_ADH, m) / 100.0 )
+                                      * ( p_hv.prep_method_mix(m,rg,s,t) / 100.0 );
+          }//s,r,m
 
-          // // Store the result for the current (s, r, t) combination
-          // _PrEPEff[s][r][t] = sum;
-      }
-  }
+      
+          
+
   
   nda_print_info(dbg_model.hv.epi_infectiousness);
   
@@ -1274,7 +1273,7 @@ void calc_r_multiplier(int t)
 
           if (rMultDenominator > 0.0)
           {
-            n_hv.r_mult(s,rg) = vaccine_factor * (rMultNumerator / rMultDenominator) / rMultEqlb;
+            n_hv.r_mult(rg, s) = vaccine_factor * (rMultNumerator / rMultDenominator) / rMultEqlb;
                                 
           }
 
@@ -1284,7 +1283,7 @@ void calc_r_multiplier(int t)
 
     if (rMultDenominatorAll > 0.0)
     {
-      n_hv.r_mult(S_ALL, RG_ALL) = vaccine_factor * (rMultNumeratorAll / rMultDenominatorAll) / rMultEqlb;                                       
+      n_hv.r_mult(RG_ALL, S_ALL) = vaccine_factor * (rMultNumeratorAll / rMultDenominatorAll) / rMultEqlb;                                       
     }
 
 }
@@ -1332,6 +1331,7 @@ auto& n_hv = state_next.hv;
 auto& i_hv = intermediate.hv; 
 const auto& p_hv = pars.hv;   
 
+double totalSexActs  = 0.0;
 double totalSexActsF = 0.0;
 double totalSexActsM = 0.0;
 
@@ -1341,7 +1341,26 @@ double PrevML = 0.0;
 double PrevFL = 0.0;
 double denom  = 0.0;
 
-double new_inf = 0;
+double rMultM =1;
+double rMultF =1;
+
+double foi = 0;
+
+// Sex‑acts ratio, toggled by balanceSexActs
+double SexActsRatioM   = 1.0;
+double SexActsRatioF   = 1.0;
+
+//for idu
+double PrevM_IDU =0;
+double PrevF_IDU =0;
+
+double rMultM_IDU =1;
+double rMultF_IDU =1;
+
+double SexActsRatioM_IDU =1;
+double SexActsRatioF_IDU =1;
+
+double circum=p_hv.rn_coverage(INTVN_MC15_49,t);
 
 for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
 {
@@ -1384,32 +1403,248 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
       PrevF = std::max(n_hv.prevalence(rg,S_FEMALE),PrevFL);
     }  
 
+    
 
-    double rMultF=1;
-    double SexActsRatioM=1;
-    double circum=p_hv.rn_coverage(INTVN_MC15_49,t);
+    // Global multiplier
+    rMultM  = n_hv.r_mult(RG_ALL, S_ALL);
+    rMultF =  n_hv.r_mult(RG_ALL, S_ALL);
+
+    // Assume equal adjustment for men and women
+    double totalSexActs = (totalSexActsM + totalSexActsF) / 2.0;
+    SexActsRatioM = (totalSexActsM > 0) ? totalSexActs / totalSexActsM : 1;
+    SexActsRatioF = (totalSexActsF > 0) ? totalSexActs / totalSexActsF : 1;
+
+    // Toggle balancing
+    if (p_hv.b_balance_sex_acts = 0)
+    {
+      SexActsRatioM = 1.0;   
+      SexActsRatioF = 1.0;  
+    }
+
+    // Assuming IDU have medium‑risk sexual behaviour and are exposed to the same risk as HV_MRH
+    if (rg == RG_MRH)
+    {
+      PrevM_IDU   = PrevM;
+      PrevF_IDU   = PrevF;
+
+      rMultM_IDU   = rMultM;
+      rMultF_IDU   = rMultF;
+
+      SexActsRatioM_IDU = SexActsRatioM;
+      SexActsRatioF_IDU = SexActsRatioF;
+    }
+
     
     //men
     int s = S_MALE;
-    new_inf  =    1     - std::pow(
-                  PrevF * std::pow(
-                        (1 - p_hv.trans_hiv_F * rMultF *
-                            ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum) *
-                            (1 + (p_hv.trans_mult_STI - 1) * p_hv.sti_prev(rg,t)) *
-                            (1 - p_hv.b_condom_prop(rg,t) * p_hv.condom_effect) *
-                            (1 - p_hv.prep_cov(s,rg,t) * i_hv.prep_effect(rg,t)) *
-                            (1 - i_hv.cured_prop(rg,t))
-                        ),
-                        p_hv.b_sex_acts(rg,t) * SexActsRatioM
-                    ) + (1 - PrevF),
-                    p_hv.b_num_partners(rg,t));
+
+    for (int v = VAC_UNV; v <= VAC_ALL; ++v)
+    {
+    
+       double vacc_effect = 0;
+
+      //no new infections in take category 
+      if(v==VAC_TAKE) continue;
+
+      //no_protection category same as un vaccinated
+      if(v==VAC_PARTIAL) vacc_effect = 1;
+
+      foi  =    1     - std::pow(
+                    PrevF * std::pow(
+                          (1 - p_hv.transm_hiv_F * (1-vacc_effect) * rMultF *
+                              ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum) *
+                              (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.sti_prev(rg,t)) *
+                              (1 - p_hv.b_condom_prop(rg,t) * p_hv.condom_effect) *
+                              (1 - p_hv.prep_cov(S_MALE,rg,t) * i_hv.prep_effect(rg,t)) *
+                              (1 - i_hv.cured_prop(rg,S_MALE))
+                          ),
+                          p_hv.b_sex_acts(rg,t) * SexActsRatioM) + (1 - PrevF),
+                          p_hv.b_num_partners(rg,t));
+        
+      n_hv.new_inf_vrs(v,rg,S_MALE)=foi*n_hv.adults(v,rg,CD4_NEG,S_MALE); 
+      
+
+    } //v, S_MALE   
+
+    //women
+    int s = S_FEMALE;
+    for (int v = VAC_UNV; v <= VAC_ALL; ++v)
+    {
+    
+       double vacc_effect = 0;
+
+      //no new infections in take category 
+      if(v==VAC_TAKE) continue;
+
+      //no_protection category same as un vaccinated
+      if(v==VAC_PARTIAL) vacc_effect = 1;
+
+      foi  =    1     - std::pow(
+                    PrevM * std::pow(
+                          (1 - p_hv.epi_transm_hiv_F * p_hv.epi_transm_mult_M * rMultM * //CDP check per act prob
+                              ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_INF)) * circum) *
+                              (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.sti_prev(rg,t)) * //check index
+                              (1 - p_hv.b_condom_prop(rg,t) * p_hv.condom_effect)   *   //
+                              (1 - p_hv.prep_cov(S_FEMALE,rg,t) * i_hv.prep_effect(rg,t))  *
+                              (1 - i_hv.cured_prop(rg,S_FEMALE))
+                          ),
+                          p_hv.b_sex_acts(rg,t) * SexActsRatioF) + (1 - PrevM),
+                          p_hv.b_num_partners(rg,t));
+        
+      n_hv.new_inf_vrs(v,rg,S_FEMALE)=foi*n_hv.adults(v,rg,CD4_NEG,S_FEMALE); 
+      
+      
+    }//v, S_FEMALE  
+    
+  
+}//rg
+
+
+for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg)
+{
+
+    //MSM multiplier calculated among MSM groups only
+    rMultM =n_hv.r_mult(rg, S_MALE);
+
+    //men
+    int s = S_MALE;
+    double circum=p_hv.rn_coverage(INTVN_MC15_49,t);
+
+    for (int v = VAC_UNV; v <= VAC_ALL; ++v)
+    {
+    
+       double vacc_effect = 0;
+
+      //no new infections in take category 
+      if(v==VAC_TAKE) continue;
+
+      //no_protection category same as un vaccinated
+      if(v==VAC_PARTIAL) vacc_effect = 1;
+
+      foi  =    1     - std::pow(
+                    PrevM * std::pow(
+                          (1 - p_hv.epi_transm_hiv_F * (1-vacc_effect) * rMultM *
+                              ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum) *
+                               p_hv.epi_transm_mult_MSM *
+                              (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.sti_prev(rg,t)) *
+                              (1 - p_hv.b_condom_prop(rg,t) * p_hv.condom_effect) *
+                              (1 - p_hv.prep_cov(S_MALE,rg,t) * i_hv.prep_effect(rg,t)) *
+                              (1 - i_hv.cured_prop(rg,S_MALE))
+                          ),
+                          p_hv.b_sex_acts(rg,t) * SexActsRatioM) + (1 - PrevM),
+                          p_hv.b_num_partners(rg,t));
+        
+      n_hv.new_inf_vrs(v,rg,S_MALE)=foi*n_hv.adults(v,rg,CD4_NEG,S_MALE); 
+      
+
+    } //v, S_MALE
+
+
+
+} //rg MSM
+
+
+ int rg = RG_IDU;
+
+  //Assuming IDU have medium risk sexual behavior, see r=HV_MRH above
+  PrevM=PrevM_IDU;
+  PrevF=PrevF_IDU;
+  SexActsRatioM=SexActsRatioM_IDU;
+  SexActsRatioF=SexActsRatioF_IDU;
+
+  rMultM = n_hv.r_mult(RG_ALL, S_MALE);
+  rMultF = n_hv.r_mult(RG_ALL, S_MALE);
+
+  //IDU risk, partner prevalence calc
+  double PrevB = 0;
+  if(adults(VAC_ALL,RG_IDU,CD4_ALL,S_MALE) +
+            adults(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)+
+            adults(VAC_ALL,RG_MSMIDU,CD4_ALL,S_MALE)>0)
+
+    PrevB = (n_hv.prevalence(RG_IDU,S_MALE)    * adults(VAC_ALL,RG_IDU,CD4_ALL,S_MALE) +
+              n_hv.prevalence(RG_IDU,S_FEMALE)  * adults(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)+
+              n_hv.prevalence(RG_MSMIDU,S_MALE) * adults(VAC_ALL,RG_MSMIDU,CD4_ALL,S_MALE)) /
+            (adults(VAC_ALL,RG_IDU,CD4_ALL,S_MALE) +
+            adults(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)+
+            adults(VAC_ALL,RG_MSMIDU,CD4_ALL,S_MALE));
+
+   PrevB = (p_hv.b_idu_share_prop(t)>0) ? PrevB / p_hv.b_idu_share_prop(t) : PrevB;  
+   
+   PrevB = std::max(PrevB,  std::min(prevalence(RG_LRH,S_MALE),prevalence(RG_LRH),S_FEMALE)) ;
+
+   double SusceptibleIDU =0;
+   double foi_idu_sex=0;
+   for (int s = S_MALE; s <= S_FEMALE; ++s)
+   {
+      for (int v = VAC_UNV; v <= VAC_ALL; ++v)
+      {
+      
+        SusceptibleIDU = adults(v,RG_IDU,CD4_NEG,s); 
+        if( SusceptibleIDU > adults(v,RG_IDU,CD4_ALL,s) * p_hv.b_idu_share_prop(t) -
+                            (adults(v,RG_IDU,CD4_ALL,s) - adults(v,RG_IDU,CD4_NEG,s)))
+        {                    
+            SusceptibleIDU = adults(v,RG_IDU,CD4_ALL,s) * p_hv.b_idu_share_prop(t) -
+                          (adults(v,RG_IDU,CD4_ALL,s) - adults(v,RG_IDU,CD4_NEG,s));
+        }
+
+        double vacc_effect = 0;
+
+        //no new infections in take category 
+        if(v==VAC_TAKE) continue;
+
+        //no_protection category same as un vaccinated
+        if(v==VAC_PARTIAL) vacc_effect = 1;
+
+        if(s=S_MALE)
+        {
+    
+          foi_idu_sex  =    1     - std::pow(
+                        PrevF * std::pow(
+                              (1 - p_hv.transm_hiv_F * (1-vacc_effect) * rMultF *
+                                  ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum) *
+                                  (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.sti_prev(rg,t)) *
+                                  (1 - p_hv.b_condom_prop(rg,t) * p_hv.condom_effect) *
+                                  (1 - p_hv.prep_cov(S_MALE,rg,t) * i_hv.prep_effect(rg,t)) *
+                                  (1 - i_hv.cured_prop(rg,S_MALE))
+                              ),
+                              p_hv.b_sex_acts(rg,t) * SexActsRatioM) + (1 - PrevF),
+                              p_hv.b_num_partners(rg,t));
+        
+
+        }
+        else
+        {
+          foi_idu_sex  =    1     - std::pow(
+                    PrevM * std::pow(
+                          (1 - p_hv.epi_transm_hiv_F * p_hv.epi_transm_mult_M * rMultM * //CDP check per act prob
+                              ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_INF)) * circum) *
+                              (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.sti_prev(rg,t)) * //check index
+                              (1 - p_hv.b_condom_prop(rg,t) * p_hv.condom_effect)   *   //
+                              (1 - p_hv.prep_cov(S_FEMALE,rg,t) * i_hv.prep_effect(rg,t))  *
+                              (1 - i_hv.cured_prop(rg,S_FEMALE))
+                          ),
+                          p_hv.b_sex_acts(rg,t) * SexActsRatioF) + (1 - PrevM),
+                          p_hv.b_num_partners(rg,t));
+        
+          
+
+        }
+
+        //needle sharing
+        n_hv.new_inf_vrs(v,rg,s)+= p_hv.b_foi_idu(s,t) * n_hv.r_mult(RG_ALL, S_MALE) * PrevB * SusceptibleIDU *
+                                                      (1-p_hv.prep_cov(s,rg,t) * i_hv.prep_effect(rg,t));
+                                                      //+_ForceNeedleTransmIDU*SusceptibleIDU;//no explicit needle sharing mechanism 
+      
+        //sexual transmission 
+        n_hv.new_inf_vrs(v,RG_IDU,s) += foi_idu_sex * n_hv.adults(v,RG_IDU,CD4_NEG,s);                                             
+
+
+   }//v                    
+
+  }//s
+
 
 }
-
-
-} 
-
-
 
 
 

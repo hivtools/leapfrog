@@ -181,6 +181,7 @@ from SpectrumCommon.Const.HV.HVTags import (
     HVBalanceSexActsTag,
     HVBehaviorTag,
     HVCondomPercentTag,
+    HVForceInfTag,
     HVInfectMultiplierOnARTTag,
     HVInfectiousnessTag,
     HVMonthsInPrimaryStageTag,
@@ -194,6 +195,7 @@ from SpectrumCommon.Const.HV.HVTags import (
     HVInitialPulseTag,
     HVIncRecruitmentTag,
     HVTransHIVFTag,
+    HVTransMultMSMTag,
     HVTransMultMTag,
 )
 
@@ -1177,11 +1179,13 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         : (GB_Female+1), : (HV_MSMIDU+1), : (RN_NoProt+1), : (final_year_idx + 1) 
     ].copy(order="F")
 
-    epi_trans_mult_M = float(modvars[HVTransMultMTag])
+    epi_transm_mult_M = float(modvars[HVTransMultMTag])
 
-    epi_trans_hiv_F = float(modvars[HVTransHIVFTag])
+    epi_transm_mult_MSM = float(modvars[HVTransMultMSMTag])
 
-    epi_trans_sti_mult = float(modvars[HVTransHIVFTag])
+    epi_transm_hiv_F = float(modvars[HVTransHIVFTag])
+
+    epi_transm_sti_mult = float(modvars[HVTransHIVFTag])
 
     epi_condom_effect = float(modvars[HVCondomEffTag])
 
@@ -1194,6 +1198,10 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         : (HV_MSM_F3 + 1), : (final_year_idx + 1)
     ].copy(order="F")
 
+
+    b_foi_idu = modvars[HVForceInfTag][
+         : (GB_Female+1), : (final_year_idx + 1)
+    ].copy(order="F")
    
     prep_cov = modvars[RNPrEPCoverageTag ][
         : (GB_Female+1), : (HV_MSMIDU+1), : (final_year_idx + 1) 
@@ -1234,9 +1242,10 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "epi_infectiousness":epi_infectiousness,
         "epi_inf_mult_art":epi_inf_mult_art,
         "out_new_inf":out_new_inf,
-        "epi_trans_mult_M":epi_trans_mult_M,
-        "epi_trans_hiv_F":epi_trans_hiv_F,
-        "epi_trans_sti_mult": epi_trans_sti_mult,
+        "epi_transm_mult_M":epi_transm_mult_M,
+        "epi_transm_hiv_F":epi_transm_hiv_F,
+        "epi_transm_sti_mult": epi_transm_sti_mult,
+        "epi_transm_mult_MSM":epi_transm_mult_MSM,
         "epi_condom_effect":epi_condom_effect,
         "epi_redwhen_circum":epi_redwhen_circum,
         "epi_sti_prev":epi_sti_prev,
@@ -1244,6 +1253,7 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "prep_method_mix":prep_method_mix,
         "prep_effectiveness":prep_effectiveness,
         "rn_coverage":rn_coverage,
+        "b_foi_idu":b_foi_idu,
 
     }
 
