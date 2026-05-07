@@ -73,6 +73,8 @@ template <class HvState, class IntermediateHv, class ParsHv>
     
     p_hv.prep_method_mix;
     p_hv.prep_effectiveness;
+    p_hv.b_foi_idu;
+
 
 
   }
@@ -296,6 +298,7 @@ struct HvDebugInfo {
   NdaInfo epi_inf_mult_art;
   NdaInfo prep_method_mix;
   NdaInfo prep_effectiveness;
+  NdaInfo b_foi_idu;
     
  
 };
@@ -516,6 +519,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
     p_hv.epi_inf_mult_art;
     p_hv.prep_method_mix;
     p_hv.prep_effectiveness;
+    p_hv.b_foi_idu;
 
   }
 inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
@@ -599,6 +603,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   
   out.prep_method_mix = nda_capture(p_hv.prep_method_mix);
   out.prep_effectiveness = nda_capture(p_hv.prep_effectiveness);
+  out.b_foi_idu = nda_capture(p_hv.b_foi_idu);
 
   return out;
 }
