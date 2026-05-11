@@ -204,6 +204,7 @@ from SpectrumCommon.Const.RN.RNTags import (
     RNADHTreatReducMortTag,
     RNCoverageTag,
     RNMethodMixTag,
+    RNMethodMixTag5,
     RNPrEPEffectivenessTag,
     RNPointOfCareTag,
     RNPOCEffectTag,
@@ -1203,13 +1204,10 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
          : (GB_Female+1), : (final_year_idx + 1)
     ].copy(order="F")
    
-    prep_cov = modvars[RNPrEPCoverageTag ][
+    prep_cov = modvars[RNPrEPCoverageTag][
         : (GB_Female+1), : (HV_MSMIDU+1), : (final_year_idx + 1) 
     ].copy(order="F")
 
-    prep_method_mix = modvars[RNMethodMixTag ][
-        : (GB_Female+1), : (HV_MSMIDU+1), : (RN_MaxInterventions), : (final_year_idx + 1) 
-    ].copy(order="F")
 
     prep_effectiveness = modvars[RNPrEPEffectivenessTag][
         : (RN_MaxInterventions),  : (RN_DurationMonths+1)
@@ -1219,7 +1217,10 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         : (RN_MaxInterventions+1), : (final_year_idx + 1) 
     ].copy(order="F")
 
-
+    prep_method_mix = modvars[RNMethodMixTag5][
+        : (GB_Female+1), : (HV_MSMIDU+1), : (RN_MaxInterventions), : (final_year_idx + 1) 
+    ].copy(order="F")
+    
  
     return {
         "epi_start_year": epi_start_year,

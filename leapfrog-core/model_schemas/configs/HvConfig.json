@@ -211,17 +211,17 @@
       "dims": ["SS::nRG","SS::nNS"]
     },
 
-    "totpop_1549": {
+    "dp_totpop_1549": {
       "num_type": "real_type",
       "dims": ["SS::nNS"]
     },
 
-    "migration_num": {
+    "dp_migration_num": {
       "num_type": "real_type",
       "dims": ["SS::nNS"]
     },
 
-    "migration_denom": {
+    "dp_migration_denom": {
       "num_type": "real_type",
       "dims": ["SS::nNS"]
     },
@@ -232,7 +232,7 @@
     },
 
 
-    "totpop_deaths_background": {
+    "dp_totpop_deaths_background": {
       "num_type": "real_type",
       "dims": ["SS::nNS"]
     },
@@ -248,7 +248,7 @@
     },
 
     
-    "entrants_age_15": {
+    "dp_entrants_age_15": {
       "num_type": "real_type",
       "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
     },
@@ -313,35 +313,36 @@
       "dims": ["SS::nCD4","SS::nNS"]
     },
     
-    "hiv_cd4_mort_no_art": {
+    "dp_hiv_cd4_mort_no_art": {
       "num_type": "real_type",
       "dims": ["SS::nCD4p","SS::nNS"]
     },
 
-    "hiv_cd4_mort_art": {
+    "dp_hiv_cd4_mort_art": {
       "num_type": "real_type",
       "dims": ["SS::nCD4a","SS::nNS"]
     },
 
-    "hiv_cd4_progression": {
+    "dp_hiv_cd4_progression": {
       "num_type": "real_type",
       "dims": ["SS::nCD4p","SS::nNS"]
     },
 
-    "aging_15": {
+
+      "dp_aging_50": {
       "num_type": "real_type",
       "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
     },
 
-      "aging_50": {
-      "num_type": "real_type",
-      "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
-    },
 
-
-    "pop_sex_age_hiv": {
+    "dp_pop_sex_age_hiv": {
       "num_type": "real_type",
       "dims": ["SS::nHIV","SS::nNS"]
+    },
+
+    "dp_pop_1549": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
     },
 
     "pop_1549": {
@@ -349,17 +350,17 @@
       "dims": ["SS::nNS"]
     },
 
-    "pop_1549_hiv": {
+    "dp_pop_1549_hiv": {
       "num_type": "real_type",
       "dims": ["SS::nCD4p","SS::nNS"]
     },
 
-     "pop_1549_art": {
+     "dp_pop_1549_art": {
       "num_type": "real_type",
       "dims": ["SS::nCD4p","SS::nNS"]
     },
 
-     "aging_denom_1549": {
+     "dp_aging_denom_1549": {
       "num_type": "real_type",
       "dims": ["SS::nHIV","SS::nCD4p","SS::nNS" ]
     },

@@ -241,14 +241,14 @@ struct HvDebugInfo {
   // Intermediate
   NdaInfo riskgroup_proportions;
   NdaInfo behave_change_rate;
-  NdaInfo totpop_1549;
-  NdaInfo migration_num;
-  NdaInfo migration_denom;
+  NdaInfo dp_totpop_1549;
+  NdaInfo dp_migration_num;
+  NdaInfo dp_migration_denom;
   NdaInfo migration_rate;
-  NdaInfo totpop_deaths_background;
+  NdaInfo dp_totpop_deaths_background;
   NdaInfo background_death_rate;
   NdaInfo deaths_art;
-  NdaInfo entrants_age_15;
+  NdaInfo dp_entrants_age_15;
   NdaInfo rate_aging_50;
   NdaInfo hiv_exit_rates;
   NdaInfo art_exit_rates;
@@ -261,16 +261,17 @@ struct HvDebugInfo {
   NdaInfo hiv_mu;
   NdaInfo hiv_lambda;
   NdaInfo art_alpha;
-  NdaInfo hiv_cd4_mort_no_art;
-  NdaInfo hiv_cd4_mort_art;
-  NdaInfo hiv_cd4_progression;
+  NdaInfo dp_hiv_cd4_mort_no_art;
+  NdaInfo dp_hiv_cd4_mort_art;
+  NdaInfo dp_hiv_cd4_progression;
   NdaInfo aging_15;
-  NdaInfo aging_50;
-  NdaInfo pop_sex_age_hiv;
+  NdaInfo dp_aging_50;
+  NdaInfo dp_pop_sex_age_hiv;
+  NdaInfo dp_pop_1549;
   NdaInfo pop_1549;
-  NdaInfo pop_1549_hiv;
-  NdaInfo pop_1549_art;
-  NdaInfo aging_denom_1549;
+  NdaInfo dp_pop_1549_hiv;
+  NdaInfo dp_pop_1549_art;
+  NdaInfo dp_aging_denom_1549;
   NdaInfo vac_params;
   NdaInfo vac_effect;
   NdaInfo art_coverage_rg;
@@ -473,7 +474,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
     i_hv.behave_change_rate;
    
 
-    i_hv.totpop_deaths_background;
+    i_hv.dp_totpop_deaths_background;
     //i_hv.totpop_1549;
     //i_hv.pop_1549;
     //i_hv.entrants_age_15;
@@ -535,7 +536,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.behave_change_rate = nda_capture(i_hv.behave_change_rate);
 
 
-  out.totpop_deaths_background = nda_capture(i_hv.totpop_deaths_background);
+  out.dp_totpop_deaths_background = nda_capture(i_hv.dp_totpop_deaths_background);
   //out.riskgroup_proportions = nda_capture(i_hv.totpop_1549);
 
   //out.riskgroup_proportions = nda_capture(i_hv.pop_1549);
