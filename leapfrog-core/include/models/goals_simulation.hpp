@@ -338,28 +338,34 @@ struct GoalsSimulation<Config> {
   }
    
          
-  auto dbg_model = capture_model(state_next, intermediate, pars);
-  
+ 
   for (int s = S_MALE; s <= S_FEMALE; ++s)              
       for (int rg = RG_LRH; rg <= RG_TOTAL1; ++rg)         
           for (int m = PREP_OralDaily; m <= PREP_PEP ; ++m)
          {
     
-             i_hv.prep_effect(rg,s) +=  ( p_hv.prep_effectiveness(PREP_EFFECT, m) / 100.0 )
-                                      * ( p_hv.prep_effectiveness(PREP_ADH, m) / 100.0 )
-                                      * ( p_hv.prep_method_mix(m,rg,s,t) / 100.0 );
+             i_hv.prep_effect(rg,s) +=  p_hv.prep_effectiveness(PREP_EFFECT, m)  
+                                      * p_hv.prep_effectiveness(PREP_ADH, m)
+                                      * p_hv.prep_method_mix(m,rg,s,t);
           }//s,r,m
 
       
           
 
   
+  auto dbg_model = capture_model(state_next, intermediate, pars);
+  
   nda_print_info(dbg_model.hv.epi_infectiousness);
   
-  //##nda_print_info(dbg_model.hv.epi_inf_mult_art);
+  nda_print_info(dbg_model.hv.epi_inf_mult_art);
   
-  //nda_print_info(dbg_model.hv.mult_no_art);
-  //nda_print_info(dbg_model.hv.mult_art);
+  nda_print_info(dbg_model.hv.mult_no_art);
+  
+  nda_print_info(dbg_model.hv.mult_art);
+
+  nda_print_info(dbg_model.hv.prep_effect);
+
+
 
  }
 
@@ -444,12 +450,12 @@ struct GoalsSimulation<Config> {
     for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
 
       //CDP note +1 on inputs
-      i_hv.riskgroup_proportions(rg,S_MALE) = p_hv.b_behav_dur(rg, PERC_POP) / 100.0;
+      i_hv.riskgroup_proportions(rg,S_MALE) = p_hv.b_behav_dur(rg, PERC_POP); 
       if (rg > RG_LRH) i_hv.behave_change_rate(rg,S_MALE) = (p_hv.b_behav_dur(rg, DUR_AVG)!=0) ? 1 / p_hv.b_behav_dur(rg, DUR_AVG) : 0;
       
       if (rg != RG_MSM) {
         //CDP note offset for women
-        i_hv.riskgroup_proportions(rg,S_FEMALE) = p_hv.b_behav_dur(rg+RG_NONE_F3 , PERC_POP) / 100.0;
+        i_hv.riskgroup_proportions(rg,S_FEMALE) = p_hv.b_behav_dur(rg+RG_NONE_F3 , PERC_POP);
         if (rg > RG_LRH) i_hv.behave_change_rate(rg,S_FEMALE) = (p_hv.b_behav_dur(rg+RG_NONE_F3, DUR_AVG)!=0) ? 1 / p_hv.b_behav_dur(rg, DUR_AVG) : 0;
       }
 
@@ -458,7 +464,6 @@ struct GoalsSimulation<Config> {
     //auto dbg_model = capture_model(state_next, intermediate, pars);
     //nda_print_info(dbg_model.hv.riskgroup_proportions);
     //nda_print_info(dbg_model.hv.behave_change_rate);
-
 
 }  
 
@@ -488,8 +493,8 @@ void set_initial_pop() {
   }  
 
 
-  //auto dbg_model = capture_model(state_next, intermediate, pars);
-  //nda_print_info(dbg_model.hv.totpop_1549);
+  auto dbg_model = capture_model(state_next, intermediate, pars);
+  nda_print_info(dbg_model.hv.pop_1549);
   //nda_print_info(dbg_model.hv.adults);
 
 }
@@ -586,7 +591,7 @@ void calc_new_vaccinations()
                 nr = rg;
               }
 
-              value =  p_hv.rn_vac_coverage(nr,t)/100 * //dt *
+              value =  p_hv.rn_vac_coverage(nr,t) * //dt *
                           (n_hv.adults(VAC_ALL,hd,rg,s)  +
                           i_hv.dp_entrants_age_15(POP_H_HIVNeg,CD4_NEG,s) *
                           n_hv.adults(VAC_ALL,hd,rg,s)  / n_hv.adults(VAC_ALL,CD4_ALL,rg,s))-
@@ -859,7 +864,7 @@ void calc_newrecruits_distribution(int t)
                     (1-i_hv.behave_change_rate(rg,s))*
                     n_hv.adults(VAC_ALL,CD4_ALL,rg,s)/
                     n_hv.adults(VAC_ALL,CD4_ALL,RG_ALL,s)*
-                    p_hv.b_incr_recruit(s,rg)/100;
+                    p_hv.b_incr_recruit(s,rg);
             }
 
             if(value<0) value=0;
@@ -1233,7 +1238,7 @@ void calc_r_multiplier(int t)
   double rMultDenominatorAll = 0.0;
   
   //CDP check goals calc
-  double vaccine_factor = 1.0 -  p_hv.rn_vac_params(VAC_EFF)/100 * 
+  double vaccine_factor = 1.0 -  p_hv.rn_vac_params(VAC_EFF) * 
                                  (n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_ALL)-n_hv.adults(VAC_UNV,RG_ALL,CD4_ALL,S_ALL))
                                  /n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_ALL);                  
 

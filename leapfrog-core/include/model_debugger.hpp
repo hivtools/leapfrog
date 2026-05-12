@@ -43,6 +43,11 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
 
     i_hv.totpop_deaths_background;
+
+    i_hv.prep_effect;
+
+    i_hv.pop_1549;
+       
     //i_hv.totpop_1549;
     //i_hv.pop_1549;
     //i_hv.entrants_age_15;
@@ -275,7 +280,9 @@ struct HvDebugInfo {
   NdaInfo vac_params;
   NdaInfo vac_effect;
   NdaInfo art_coverage_rg;
-  
+  NdaInfo prep_effect;
+
+    
   // Pars
   //int epi_start_year;
   //int b_balance_sex_acts;
@@ -475,6 +482,10 @@ template <class HvState, class IntermediateHv, class ParsHv>
    
 
     i_hv.dp_totpop_deaths_background;
+    i_hv.prep_effect;
+
+    i_hv.pop_1549;
+
     //i_hv.totpop_1549;
     //i_hv.pop_1549;
     //i_hv.entrants_age_15;
@@ -537,9 +548,12 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
 
 
   out.dp_totpop_deaths_background = nda_capture(i_hv.dp_totpop_deaths_background);
+  out.prep_effect = nda_capture(i_hv.prep_effect);
+  
   //out.riskgroup_proportions = nda_capture(i_hv.totpop_1549);
 
-  //out.riskgroup_proportions = nda_capture(i_hv.pop_1549);
+  out.riskgroup_proportions = nda_capture(i_hv.pop_1549);
+  
   //out.riskgroup_proportions = nda_capture(i_hv.entrants_age_15);
   //out.riskgroup_proportions = nda_capture(i_hv.aging_50);
   //out.riskgroup_proportions = nda_capture(i_hv.aging_denom_1549);

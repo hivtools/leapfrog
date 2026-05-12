@@ -219,7 +219,7 @@ from SpectrumCommon.Const.RN.RNTags import (
 from SpectrumCommon.Const.HV.HVConst import HV_MSMHR, HV_MSMIDU, HV_MSM_F3, HV_AvgDur, HV_Female, HV_Infect, HV_SympART, HV_PercPop
 from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 from SpectrumCommon.Const.DP.DPConst import GB_Female
-from SpectrumCommon.Const.RN.RNConst import RN_POC_VL, RN_Duration, RN_MaxInterventions, RN_NoProt, RN_PrepInterventions, RN_DurationMonths
+from SpectrumCommon.Const.RN.RNConst import RN_POC_VL, RN_Duration, RN_MaxInterventions, RN_NoProt, RN_NumPrepInterventions, RN_PrepInterventions, RN_DurationMonths
 
 
 Modvars = dict[str, int | float | bool | np.ndarray | dict]
@@ -1210,14 +1210,14 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
 
 
     prep_effectiveness = modvars[RNPrEPEffectivenessTag][
-        : (RN_MaxInterventions),  : (RN_DurationMonths+1)
+        : (RN_NumPrepInterventions+1),  : (RN_DurationMonths+1)
     ].copy(order="F") 
 
     rn_coverage = modvars[RNCoverageTag ][  
         : (RN_MaxInterventions+1), : (final_year_idx + 1) 
     ].copy(order="F")
 
-    prep_method_mix = modvars[RNMethodMixTag5][
+    prep_method_mix = modvars[RNMethodMixTag][
         : (GB_Female+1), : (HV_MSMIDU+1), : (RN_MaxInterventions), : (final_year_idx + 1) 
     ].copy(order="F")
     
@@ -1231,13 +1231,13 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "b_behav_dur": b_behav_dur/100,
         "b_sex_acts": b_sex_acts,
         "b_num_partners": b_num_partners,
-        "b_incr_recruit": b_incr_recruit,
-        "b_married_prop": b_married_prop, 
+        "b_incr_recruit": b_incr_recruit/100,
+        "b_married_prop": b_married_prop/100, 
         "b_age_first_sex":b_age_first_sex,
-        "b_idu_share_prop":b_idu_share_prop,
-        "rn_poc_cov":rn_poc_cov,
+        "b_idu_share_prop":b_idu_share_prop/100,
+        "rn_poc_cov":rn_poc_cov/100,
         "rn_vac_params":rn_vac_params,
-        "rn_vac_coverage":rn_vac_coverage,
+        "rn_vac_coverage":rn_vac_coverage/100,
         "rn_vac_cov_type":rn_vac_cov_type,
         "rn_vac_targetting":rn_vac_targetting,
         "epi_infectiousness":epi_infectiousness,
@@ -1247,13 +1247,13 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
         "epi_transm_hiv_F":epi_transm_hiv_F,
         "epi_transm_sti_mult": epi_transm_sti_mult,
         "epi_transm_mult_MSM":epi_transm_mult_MSM,
-        "epi_condom_effect":epi_condom_effect,
-        "epi_redwhen_circum":epi_redwhen_circum,
+        "epi_condom_effect":epi_condom_effect/100,
+        "epi_redwhen_circum":epi_redwhen_circum/100,
         "epi_sti_prev":epi_sti_prev,
-        "prep_cov":prep_cov,
-        "prep_method_mix":prep_method_mix,
-        "prep_effectiveness":prep_effectiveness,
-        "rn_coverage":rn_coverage,
+        "prep_cov":prep_cov/100,
+        "prep_method_mix":prep_method_mix/100,
+        "prep_effectiveness":prep_effectiveness/100,
+        "rn_coverage":rn_coverage/100,
         "b_foi_idu":b_foi_idu,
 
     }
