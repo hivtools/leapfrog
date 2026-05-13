@@ -52,7 +52,7 @@
     "run_hiv_simulation": "true",
     "use_coarse_stratification": "false",
     "run_child_model": "true",
-    "run_spectrum_model": "false",
+    "run_spectrum_model": "true",
     "run_goals": "true"
   }
 }
