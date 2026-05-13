@@ -215,7 +215,7 @@
 <col width="20%">
 <col width="20%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Method</th>
 <th>
 <code>configure</code> runs in</th>
@@ -224,7 +224,7 @@
 <th>Notes</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code><a href="https://devtools.r-lib.org/reference/load_all.html" class="external-link">devtools::load_all()</a></code></td>
 <td>
 <code>leapfrogr/</code> (source)</td>
@@ -234,7 +234,7 @@
 <td>Run codegen <code>../scripts/generate</code> manually on first run or when schemas change.</td>
 <td>When headers in <code>leapfrog-core/include/</code> change, C++ recompiles automatically via <code>Config/build/extra-sources</code>.</td>
 </tr>
-<tr class="even">
+<tr>
 <td>
 <code><a href="https://devtools.r-lib.org/reference/install.html" class="external-link">devtools::install()</a></code> (default)</td>
 <td>Temp dir (tarball)</td>
@@ -245,7 +245,7 @@
 <td>
 <code>configure</code> runs from temp dir so <code>../leapfrog-core</code> is absent.</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>R CMD INSTALL leapfrogr/</code></td>
 <td>
 <code>leapfrogr/</code> (source)</td>
@@ -253,7 +253,7 @@
 <td>Nothing (in monorepo)</td>
 <td>Will need <code>LEAPFROG_INCLUDE</code> env var if using R CMD build</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>remotes::install_github(..., ref = "r-release")</code></td>
 <td>Temp dir (subdir only)</td>
 <td>
@@ -261,7 +261,7 @@
 <td>Nothing</td>
 <td>Self-contained. <code>r-release</code> branch has headers bundled. Other branches will fail — use <code>build=FALSE</code> from a clone instead.</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>R-universe</td>
 <td>Build server</td>
 <td>
