@@ -243,7 +243,7 @@ struct GoalsSimulation<Config> {
 
     //at hiv first year, apply initial pulse, t starts at 0
     int proj_start_year = opts.proj_start_year;
-    //if(t==(p_hv.epi_start_year-proj_start_year)){
+    //if(t==(p_hv.epi_start_year-proj_start_year)){ //CDP reinstate coorect time for pulse
     if(t==1){
       set_initial_pulse();
     }
@@ -258,6 +258,9 @@ struct GoalsSimulation<Config> {
   }
 
    void run_goals_hiv_loop(int hiv_step) {
+
+    //sum over the dimensions of adult pop 
+    sum_adult_pop_dims(t);
 
     //initialize inner loop varaibles
     init_vars_hiv_loop();
@@ -299,7 +302,7 @@ struct GoalsSimulation<Config> {
   void run_goals_post_hiv_loop() {
 
     //sum over dimensions of adult pop structure
-    sum_adult_pop_dims(t);
+    //sum_adult_pop_dims(t);
 
   }
 
@@ -447,7 +450,7 @@ struct GoalsSimulation<Config> {
     nda::fill(i_hv.behave_change_rate, 0.0);//risk group proportions
 
     //risk group proportions, and behaviur change rates
-    for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
+    for (int rg = RG_NONE; rg <= RG_TOTAL; ++rg) {
 
       //CDP note +1 on inputs
       i_hv.riskgroup_proportions(rg,S_MALE) = p_hv.b_behav_dur(rg, PERC_POP); 
@@ -483,18 +486,19 @@ void set_initial_pop() {
 
       i_hv.pop_1549(s) += c_dp.p_totpop(a, s);
 
-    }
+    }//a
 
-    for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
+    for (int rg = RG_NONE; rg <= RG_TOTAL; ++rg) {
 
       n_hv.adults(VAC_UNV,CD4_NEG,rg,s)=i_hv.riskgroup_proportions(rg,s)*i_hv.pop_1549(s);
 
-    }
-  }  
+    }//rg
+
+  } //s 
 
 
-  auto dbg_model = capture_model(state_next, intermediate, pars);
-  nda_print_info(dbg_model.hv.pop_1549);
+  //auto dbg_model = capture_model(state_next, intermediate, pars);
+  //nda_print_info(dbg_model.hv.pop_1549);
   //nda_print_info(dbg_model.hv.adults);
 
 }
@@ -508,7 +512,7 @@ void set_initial_pop() {
     //from goals
     const auto& c_hv = state_curr.hv;
     auto& n_hv = state_next.hv;
-    auto& i_hv = intermediate.hv;
+    //auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
     
     real_type pulse =0;
@@ -516,7 +520,7 @@ void set_initial_pop() {
 
     for (int s = S_MALE; s <= S_FEMALE; ++s) { 
 
-      for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
+      for (int rg = RG_NONE; rg <= RG_TOTAL; ++rg) {
 
         pulse = p_hv.epi_initial_pulse * c_hv.adults_ts(VAC_UNV,CD4_NEG,rg,s);
 
@@ -540,16 +544,16 @@ void set_initial_pop() {
 
           const int hd_hds = (hd == CD4_PRIM) ? 0 : (hd - CD4_GT500);
 
-          distr = p_ha.cd4_initial_distribution(hd_hds, pIDX_15to49, s);
+          distr = p_ha.cd4_initial_distribution(hd_hds, pIDX_15to49+10, s);//CDP note the use of one age category for distr from AIM
 
           n_hv.adults(VAC_UNV,hd,rg,s)  = n_hv.adults(VAC_UNV,hd,rg,s) + pulse*distr;
           n_hv.adults(VAC_UNV,CD4_NEG,rg,s) = n_hv.adults(VAC_UNV,CD4_NEG,rg,s) - pulse*distr;
 
         }
 
-    }
+    }//rg
 
-  }
+  }//s
 
  }
 
@@ -564,9 +568,12 @@ void calc_new_vaccinations()
 
   //real_type dt = 1/opts.hts_per_year;
 
+  real_type vac_waning_rate=0;
+  vac_waning_rate = (p_hv.rn_vac_params(VAC_DUR)>0) ? 1/p_hv.rn_vac_params(VAC_DUR) : 0;
+
   //vac effect
-  i_hv.vac_effect(VAC_TAKEACTION,VAC_TAKE)       = p_hv.rn_vac_params(VAC_EFF)/100;
-  i_hv.vac_effect(VAC_TAKEACTION,VAC_NO_PROT)    = p_hv.rn_vac_params(VAC_EFF)/100;
+  i_hv.vac_effect(VAC_TAKEACTION,VAC_TAKE)       = p_hv.rn_vac_params(VAC_EFF)/100;//CDP: this /100 can be done in modvar mapping
+  i_hv.vac_effect(VAC_TAKEACTION,VAC_NO_PROT)    = 1-p_hv.rn_vac_params(VAC_EFF)/100;
   i_hv.vac_effect(VAC_DEGREEACTION,VAC_PARTIAL)  = 1;
 
    real_type value = 0;
@@ -583,6 +590,7 @@ void calc_new_vaccinations()
           for (int hd = CD4_NEG; hd <= h1; ++hd) {
           
               int nr = RG_TOTAL1;
+
               // Determine the risk index (nr) used for coverage lookup
               if (p_hv.rn_vac_cov_type != VAC_COV_SINGLE){
                 nr = RG_TOTAL1;
@@ -593,11 +601,12 @@ void calc_new_vaccinations()
 
               value =  p_hv.rn_vac_coverage(nr,t) * //dt *
                           (n_hv.adults(VAC_ALL,hd,rg,s)  +
+                          //note it assume no one is vaccined below age 15
                           i_hv.dp_entrants_age_15(POP_H_HIVNeg,CD4_NEG,s) *
                           n_hv.adults(VAC_ALL,hd,rg,s)  / n_hv.adults(VAC_ALL,CD4_ALL,rg,s))-
                           (n_hv.adults(VAC_TAKE,hd,rg,s) +
                           n_hv.adults(VAC_PARTIAL,hd,rg,s) +
-                          n_hv.adults(VAC_NO_PROT,hd,rg,s) ) * (1 - (1 / p_hv.rn_vac_params(VAC_DUR)));
+                          n_hv.adults(VAC_NO_PROT,hd,rg,s)) * (1 - vac_waning_rate);
 
               if(value<0) value=0;                 
               i_hv.new_vaccinations(rg,hd,s)+=value;
