@@ -56,6 +56,10 @@ def test_goals_model():
         "mtct_by_source_women",
         "mtct_by_source_hc_infections",
         "pmtct_coverage_at_delivery",
+        "p_deaths_nonaids_artpop",
+        "p_deaths_nonaids_hivpop",
+        "p_excess_deaths_nonaids_on_art",
+        "p_excess_deaths_nonaids_no_art",
         "ex_output",
     ]
     returned_vars.sort()
