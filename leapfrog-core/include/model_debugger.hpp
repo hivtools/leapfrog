@@ -47,6 +47,23 @@ template <class HvState, class IntermediateHv, class ParsHv>
     i_hv.prep_effect;
 
     i_hv.pop_1549;
+
+    i_hv.dp_totpop_deaths_background;
+    i_hv.dp_totpop_1549;
+    i_hv.dp_pop_1549;
+    i_hv.dp_entrants_age_15;
+    i_hv.dp_aging_50;
+    i_hv.dp_aging_denom_1549;
+
+    i_hv.background_death_rate;
+    i_hv.migration_rate;
+    i_hv.dp_migration_num;
+    i_hv.dp_migration_denom;
+    i_hv.rate_aging_50;
+
+
+
+
        
     //i_hv.totpop_1549;
     //i_hv.pop_1549;
@@ -480,11 +497,24 @@ template <class HvState, class IntermediateHv, class ParsHv>
     i_hv.riskgroup_proportions;
     i_hv.behave_change_rate;
    
-
-    i_hv.dp_totpop_deaths_background;
     i_hv.prep_effect;
 
     i_hv.pop_1549;
+
+    i_hv.dp_totpop_deaths_background;
+    i_hv.dp_totpop_1549;
+    i_hv.dp_pop_1549;
+    i_hv.dp_entrants_age_15;
+    i_hv.dp_aging_50;
+    i_hv.dp_aging_denom_1549;
+
+    i_hv.background_death_rate;
+    i_hv.migration_rate;
+    i_hv.dp_migration_num;
+    i_hv.dp_migration_denom;
+    i_hv.rate_aging_50;
+
+
 
     //i_hv.totpop_1549;
     //i_hv.pop_1549;
@@ -546,13 +576,25 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.riskgroup_proportions = nda_capture(i_hv.riskgroup_proportions);
   out.behave_change_rate = nda_capture(i_hv.behave_change_rate);
 
-
-  out.dp_totpop_deaths_background = nda_capture(i_hv.dp_totpop_deaths_background);
   out.prep_effect = nda_capture(i_hv.prep_effect);
   
   //out.riskgroup_proportions = nda_capture(i_hv.totpop_1549);
 
-  out.riskgroup_proportions = nda_capture(i_hv.pop_1549);
+  out.pop_1549 = nda_capture(i_hv.pop_1549);
+
+  out.dp_totpop_deaths_background = nda_capture(i_hv.dp_totpop_deaths_background);
+  out.dp_totpop_1549 = nda_capture(i_hv.dp_totpop_1549);
+  out.dp_pop_1549 = nda_capture(i_hv.dp_pop_1549);
+  out.dp_entrants_age_15 = nda_capture(i_hv.dp_entrants_age_15);
+  out.dp_aging_50 = nda_capture(i_hv.dp_aging_50);
+  out.dp_aging_denom_1549 = nda_capture(i_hv.dp_aging_denom_1549);
+
+  out.background_death_rate = nda_capture(i_hv.background_death_rate);
+  out.migration_rate = nda_capture(i_hv.migration_rate);
+  out.dp_migration_num = nda_capture(i_hv.dp_migration_num);
+  out.dp_migration_denom = nda_capture(i_hv.dp_migration_denom);
+  out.rate_aging_50 = nda_capture(i_hv.rate_aging_50);
+
   
   //out.riskgroup_proportions = nda_capture(i_hv.entrants_age_15);
   //out.riskgroup_proportions = nda_capture(i_hv.aging_50);
