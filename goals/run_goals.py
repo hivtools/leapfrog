@@ -5,7 +5,7 @@ import numpy as np
 
 from leapfrog_goals import get_goals_ss, run_goals
 from src.leapfrog_mapping.leapfrog_data_mapping import modvars_to_leapfrog
-from Tools.ImportPJNZ.Importer import GB_ImportProjectionFromFile
+from src._spectrum.Tools.ImportPJNZ.Importer import GB_ImportProjectionFromFile
 from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 
 
