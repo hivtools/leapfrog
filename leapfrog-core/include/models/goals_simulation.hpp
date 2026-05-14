@@ -23,37 +23,38 @@ struct GoalsSimulation<Config> {
   using Pars = Config::Pars;
   using State = Config::State;
   using Intermediate = Config::Intermediate;
+  using InternalState = Config::InternalState;
   using Args = Config::Args;
 
   // private members of this struct
   private:
   // state space
-  static constexpr int nNS = SS::nNS; 
-  static constexpr int nRG = SS::nRG; 
+  static constexpr int nNS = SS::nNS;
+  static constexpr int nRG = SS::nRG;
   static constexpr int nVAC = SS::nVAC;
   static constexpr int nHIV = SS::nHIV;
   static constexpr int nART = SS::nART;
-  static constexpr int nCD4 = SS::nCD4; 
-  static constexpr int nCD4p = SS::nCD4p; 
+  static constexpr int nCD4 = SS::nCD4;
+  static constexpr int nCD4p = SS::nCD4p;
   static constexpr int nCD4a = SS::nCD4a;
 
 
-  static constexpr int pIDX_24to35 = SS::pIDX_24to35; 
-  static constexpr int pIDX_15to49 = SS::pIDX_15to49; 
-  static constexpr int pAges5Yrs = SS::pAges5Yrs; 
-  static constexpr int rRG_TOTAL = SS::rRG_TOTAL; 
-  static constexpr int rRG_MSM_F3 = SS::rRG_MSM_F3; 
-  static constexpr int rRG_DUR = SS::rRG_DUR; 
-  static constexpr int vVAC_NO_PROT = SS::vVAC_NO_PROT; 
-  static constexpr int vVAC_NUM_PARS = SS::vVAC_NUM_PARS; 
-  static constexpr int vVAC_NUM_EFFECTS = SS::vVAC_NUM_EFFECTS; 
-  static constexpr int hDS = SS::hDS; 
+  static constexpr int pIDX_24to35 = SS::pIDX_24to35;
+  static constexpr int pIDX_15to49 = SS::pIDX_15to49;
+  static constexpr int pAges5Yrs = SS::pAges5Yrs;
+  static constexpr int rRG_TOTAL = SS::rRG_TOTAL;
+  static constexpr int rRG_MSM_F3 = SS::rRG_MSM_F3;
+  static constexpr int rRG_DUR = SS::rRG_DUR;
+  static constexpr int vVAC_NO_PROT = SS::vVAC_NO_PROT;
+  static constexpr int vVAC_NUM_PARS = SS::vVAC_NUM_PARS;
+  static constexpr int vVAC_NUM_EFFECTS = SS::vVAC_NUM_EFFECTS;
+  static constexpr int hDS = SS::hDS;
   static constexpr int hTS = SS::hTS;
   static constexpr int hCD4_ALL_HIV = SS::hCD4_ALL_HIV;
   static constexpr int hCD4_LT50 = SS::hCD4_LT50;
-  static constexpr int hHIV_Cats = SS::hHIV_Cats; 
+  static constexpr int hHIV_Cats = SS::hHIV_Cats;
 
-/* 
+/*
      "pNumSexes": 2,
       "pIDX_24to35": 2,
       "pIDX_15to49": 15,
@@ -67,9 +68,9 @@ struct GoalsSimulation<Config> {
       "hCD4_ALL_HIV": 17,
       "hCD4_LT50": 7,
       "hHIV_Cats": 5
-      
+
       */
-  
+
 
   enum Index {
 
@@ -128,7 +129,7 @@ struct GoalsSimulation<Config> {
       CD4_50_99_ART = 14,
       CD4_LT50_ART = 15,
       CD4_ALL = 16,
-    
+
       POP_H_HIVNeg     = 0,
       POP_H_NoART      = 1,
       POP_H_ARTlt6m    = 2,
@@ -152,7 +153,7 @@ struct GoalsSimulation<Config> {
       VAC_INF               = 1,
       VAC_PROG              = 2,
       VAC_DUR               = 3,
-      VAC_TYPE              = 4, 
+      VAC_TYPE              = 4,
 
       VAC_TAKEACTION        = 0,
       VAC_DEGREEACTION      = 1,
@@ -191,12 +192,11 @@ struct GoalsSimulation<Config> {
       PREP_ADH = 1,
       PREP_SUB = 2,
       PREP_DUR  = 3
-     
+
   };
 
   //stsatic constexpr int MALE = SS::MALE;
   //static constexpr int FEMALE = SS::FEMALE;
-
 
   // function args
   int t;
@@ -204,6 +204,7 @@ struct GoalsSimulation<Config> {
   const State& state_curr;
   State& state_next;
   Intermediate& intermediate;
+  InternalState& internal_state;
   const Options<real_type>& opts;
 
   // only exposing the constructor and some methods
@@ -214,14 +215,30 @@ struct GoalsSimulation<Config> {
     state_curr(args.state_curr),
     state_next(args.state_next),
     intermediate(args.intermediate),
+    internal_state(args.internal_state),
     opts(args.opts)
   {};
 
+  static void init_internal_state(const Pars& pars, InternalState& internal_state) {
+    const auto& p_hv = pars.hv;
+    auto& s_hv = internal_state.hv;
+
+    for (int rg = RG_NONE; rg <= RG_TOTAL; ++rg) {
+      s_hv.riskgroup_proportions(rg, S_MALE) = p_hv.b_behav_dur(rg, PERC_POP);
+      if (rg > RG_LRH) s_hv.behave_change_rate(rg, S_MALE) = (p_hv.b_behav_dur(rg, DUR_AVG) != 0) ? 1 / p_hv.b_behav_dur(rg, DUR_AVG) : 0;
+
+      if (rg != RG_MSM) {
+        s_hv.riskgroup_proportions(rg, S_FEMALE) = p_hv.b_behav_dur(rg + RG_NONE_F3, PERC_POP);
+        if (rg > RG_LRH) s_hv.behave_change_rate(rg, S_FEMALE) = (p_hv.b_behav_dur(rg + RG_NONE_F3, DUR_AVG) != 0) ? 1 / p_hv.b_behav_dur(rg, DUR_AVG) : 0;
+      }
+    }
+  };
+
   void run_goals_simulation() {
     const auto& c_dp = state_curr.dp;
-    
+
     auto& n_hv = state_next.hv;
-    
+
     //auto dbg_model = capture_model(state_next, intermediate, pars);
 
     n_hv.total_population += t; //c_dp.p_totpop(20,S_MALE);
@@ -231,15 +248,14 @@ struct GoalsSimulation<Config> {
 
   void run_goals_pre_hiv_loop() {
 
-    //check goals inputs 
+    //check goals inputs
     //print_goals_inputs();
-    
+
     //initialize annual variables
     init_vars_pre_hiv_loop();
-  
+
     //initilize adult population
     if(t==1){
-      set_riskgroup_proportions();
       set_initial_pop();
     }
 
@@ -253,7 +269,7 @@ struct GoalsSimulation<Config> {
     //calc new vaccinations
     calc_new_vaccinations();
 
-  
+
     //auto dbg_model = capture_model(state_next, intermediate, pars);
     //nda_print_info(dbg_model.hv.adults);
 
@@ -265,22 +281,22 @@ struct GoalsSimulation<Config> {
     //initialize inner loop varaibles
     init_vars_hiv_loop();
 
-    //sum over the dimensions of adult pop 
+    //sum over the dimensions of adult pop
     sum_adult_pop_dims(t);
 
     //make inner-time loop copy of adult structure
     set_adults_hiv_loop();
-     
+
     //collect info from dp/aim to set demographical and HIV rates
     set_goals_vars_from_dp(t);
-    
+
     //set these rates to vars in goals
     calc_goals_rates(t);
 
     //adjust distribution of new entrants into different risk groups
     //if( t>=2 && hiv_step=1)
       //calc_newrecruits_distribution(t);
-    
+
     //progress, hiv-neg, not at risk (RG_NONE)
     progress_norisk_hiv_neg(t);
 
@@ -296,14 +312,14 @@ struct GoalsSimulation<Config> {
     //calc new infections
     calc_r_multiplier(t);
     //calc_new_infections(t);
-    
-    //add new infections 
+
+    //add new infections
     add_new_infections();
 
     //ART allocation
      //if (t >= opts.ts_art_start)
      //allocate_art(t);
-    
+
   }
 
   void run_goals_post_hiv_loop() {
@@ -315,10 +331,10 @@ struct GoalsSimulation<Config> {
 
  void init_vars_pre_hiv_loop() {
 
-  auto& n_hv = state_next.hv; 
+  auto& n_hv = state_next.hv;
   auto& i_hv = intermediate.hv;
   const auto& p_hv = pars.hv;
-  
+
   nda::fill(n_hv.deaths, 0.0);//deaths for each t
   nda::fill(n_hv.new_infections, 0.0);//new infections for each v, rg,  t
 
@@ -346,31 +362,31 @@ struct GoalsSimulation<Config> {
   for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd){
       n_hv.mult_art(hd) = p_hv.epi_inf_mult_art(t) * p_hv.epi_infectiousness(INF_SYMPT_NO_ART);
   }
-   
-         
- 
-  for (int s = S_MALE; s <= S_FEMALE; ++s)              
-      for (int rg = RG_LRH; rg <= RG_TOTAL1; ++rg)         
+
+
+
+  for (int s = S_MALE; s <= S_FEMALE; ++s)
+      for (int rg = RG_LRH; rg <= RG_TOTAL1; ++rg)
           for (int m = PREP_OralDaily; m <= PREP_PEP ; ++m)
          {
-    
-             i_hv.prep_effect(rg,s) +=  p_hv.prep_effectiveness(PREP_EFFECT, m)  
+
+             i_hv.prep_effect(rg,s) +=  p_hv.prep_effectiveness(PREP_EFFECT, m)
                                       * p_hv.prep_effectiveness(PREP_ADH, m)
                                       * p_hv.prep_method_mix(S_OFFSET+s,RG_OFFSET+rg,m,t);
           }//s,r,m
 
-      
-          
 
-  
+
+
+
   //auto dbg_model = capture_model(state_next, intermediate, pars);
-  
+
   //nda_print_info(dbg_model.hv.epi_infectiousness);
-  
+
   //nda_print_info(dbg_model.hv.epi_inf_mult_art);
-  
+
   //nda_print_info(dbg_model.hv.mult_no_art);
-  
+
   //nda_print_info(dbg_model.hv.mult_art);
 
   //nda_print_info(dbg_model.hv.prep_effect);
@@ -381,17 +397,17 @@ struct GoalsSimulation<Config> {
 
   void init_vars_hiv_loop() {
 
-   auto& n_hv = state_next.hv; 
-  
-    nda::fill(n_hv.newly_on_art, 0.0);//art allocation for time step    
+   auto& n_hv = state_next.hv;
+
+    nda::fill(n_hv.newly_on_art, 0.0);//art allocation for time step
     nda::fill(n_hv.prevalence, 0.0);//prevalence for each rg,  t
 
  }
 
    void set_adults_hiv_loop() {
 
-   auto& n_hv = state_next.hv; 
-  
+   auto& n_hv = state_next.hv;
+
     //init time dependent vars
     for (int s = S_MALE; s <= S_FEMALE; ++s)
         for (int rg = RG_NONE; rg <= RG_ALL; ++rg)
@@ -444,17 +460,17 @@ struct GoalsSimulation<Config> {
   //  p_hv.rn_vac_params;
   //  p_hv.rn_vac_coverage;
   //  p_hv.rn_vac_cov_type;
-  //  p_hv.rn_vac_targetting;   
+  //  p_hv.rn_vac_targetting;
 
- 
- } 
+
+ }
 
 
 //pre inner loop functions
  void set_riskgroup_proportions() {
 
     const auto& p_hv = pars.hv;
-    auto& i_hv = intermediate.hv; 
+    auto& i_hv = intermediate.hv;
 
     nda::fill(i_hv.riskgroup_proportions, 0.0);//risk group proportions
     nda::fill(i_hv.behave_change_rate, 0.0);//risk group proportions
@@ -463,9 +479,9 @@ struct GoalsSimulation<Config> {
     for (int rg = RG_NONE; rg <= RG_MSM; ++rg) { //CDP reset range
 
       //CDP note +1 on inputs
-      i_hv.riskgroup_proportions(rg,S_MALE) = p_hv.b_behav_dur(RG_OFFSET+rg, PERC_POP); 
+      i_hv.riskgroup_proportions(rg,S_MALE) = p_hv.b_behav_dur(RG_OFFSET+rg, PERC_POP);
       if (rg > RG_LRH) i_hv.behave_change_rate(rg,S_MALE) = (p_hv.b_behav_dur(RG_OFFSET+rg, DUR_AVG)!=0) ? 1 / p_hv.b_behav_dur(rg, DUR_AVG) : 0;
-      
+
       if (rg != RG_MSM) {
         //CDP note offset for women
         i_hv.riskgroup_proportions(rg,S_FEMALE) = p_hv.b_behav_dur(RG_OFFSET+rg+RG_NONE_F3, PERC_POP);
@@ -475,13 +491,13 @@ struct GoalsSimulation<Config> {
     }
 
     //auto dbg_model = capture_model(state_next, intermediate, pars);
-    
+
     //nda_print_info(dbg_model.hv.riskgroup_proportions);
     //nda_print_info(dbg_model.hv.behave_change_rate);
     //nda_print_info(dbg_model.hv.b_behav_dur);
 
 
-}  
+}
 
 void set_initial_pop() {
 
@@ -491,7 +507,8 @@ void set_initial_pop() {
   //goals
   auto& n_hv = state_next.hv;
   auto& i_hv = intermediate.hv;
-      
+  auto& s_hv = internal_state.hv;
+
   nda::fill(i_hv.pop_1549, 0.0);
 
   for (int s = S_MALE; s <= S_FEMALE; ++s) {
@@ -503,11 +520,11 @@ void set_initial_pop() {
 
     for (int rg = RG_NONE; rg <= RG_TOTAL; ++rg) {
 
-      n_hv.adults(VAC_UNV,CD4_NEG,rg,s)=i_hv.riskgroup_proportions(rg,s)*i_hv.pop_1549(s);
+      n_hv.adults(VAC_UNV,CD4_NEG,rg,s)=s_hv.riskgroup_proportions(rg,s)*i_hv.pop_1549(s);
 
     }//rg
 
-  } //s 
+  } //s
 
 
   //auto dbg_model = capture_model(state_next, intermediate, pars);
@@ -518,7 +535,7 @@ void set_initial_pop() {
 
 
   void set_initial_pulse() {
-   
+
     //from dp/aim
     const auto& p_ha = pars.ha;
 
@@ -527,11 +544,11 @@ void set_initial_pop() {
     auto& n_hv = state_next.hv;
     //auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
-    
+
     real_type pulse =0;
     real_type distr =0;
 
-    for (int s = S_MALE; s <= S_FEMALE; ++s) { 
+    for (int s = S_MALE; s <= S_FEMALE; ++s) {
 
       for (int rg = RG_NONE; rg <= RG_TOTAL; ++rg) {
 
@@ -540,15 +557,15 @@ void set_initial_pop() {
         if (rg==RG_MRH){
           pulse = 3/5*pulse;
         }
-        
+
         if (rg==RG_LRH){
           pulse = 1/5*pulse;
-        }  
+        }
 
-        if (rg==RG_NONE || rg==RG_IDU) {  
+        if (rg==RG_NONE || rg==RG_IDU) {
           pulse = 0;
-        }  
-        if (rg==S_FEMALE && rg==RG_MSM) {   
+        }
+        if (rg==S_FEMALE && rg==RG_MSM) {
           pulse = 0;
         }
 
@@ -596,16 +613,16 @@ void calc_new_vaccinations()
    real_type value = 0;
    for (int s = S_MALE; s <= S_FEMALE; ++s)
     {
-        for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) 
+        for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg)
         {
 
           if (s == S_FEMALE && rg > RG_IDU) continue; //no female MSM
-        
-          int h1 = CD4_LT50_ART;                     
+
+          int h1 = CD4_LT50_ART;
           if (p_hv.rn_vac_targetting == 1) h1 = CD4_NEG;
-          
+
           for (int hd = CD4_NEG; hd <= h1; ++hd) {
-          
+
               int nr = RG_TOTAL1;
 
               // Determine the risk index (nr) used for coverage lookup
@@ -625,16 +642,16 @@ void calc_new_vaccinations()
                           n_hv.adults(VAC_PARTIAL,hd,rg,s) +
                           n_hv.adults(VAC_NO_PROT,hd,rg,s)) * (1 - vac_waning_rate);
 
-              if(value<0) value=0;                 
+              if(value<0) value=0;
               i_hv.new_vaccinations(rg,hd,s)+=value;
 
             }
-    
+
 
       }//rg
 
-    } //s 
-      
+    } //s
+
 
 }
 
@@ -644,30 +661,30 @@ void calc_new_vaccinations()
     //dp
     const auto& c_dp = state_curr.dp;
     const auto& i_dp = intermediate.dp;
-  
+
 
     //aim
     const auto& c_ha = state_curr.ha;
     const auto& p_ha = pars.ha;
-    
+
     //goals
     auto& i_hv = intermediate.hv;
-     
+
     //vars mapped from DP/AIM
     nda::fill(i_hv.dp_totpop_deaths_background, 0.0);//dp background deaths numerator
     //CDP review name
     nda::fill(i_hv.dp_totpop_1549, 0.0);//dp background deaths denominator
-    
+
     nda::fill(i_hv.dp_pop_1549, 0.0);//denominator for background mortality, check age index (a-1)
 
     nda::fill(i_hv.dp_pop_1549_hiv, 0.0);//denominator for goals mu
     nda::fill(i_hv.dp_pop_1549_art, 0.0);//denominator for goals alpha
-    
+
     nda::fill(i_hv.dp_hiv_cd4_mort_no_art, 0.0);//numerator for  mu
     nda::fill(i_hv.dp_hiv_cd4_mort_art, 0.0);//numerator for alpha
     nda::fill(i_hv.dp_hiv_cd4_progression, 0.0);//numerator for lambda
 
-    
+
     nda::fill(i_hv.dp_pop_sex_age_hiv, 0.0);//used for ART allocation in goals
     nda::fill(i_hv.dp_entrants_age_15, 0.0);//numerator for 15 yr old entrants into goals
     nda::fill(i_hv.dp_aging_50, 0.0);//numerator for aging rate in goals, 50 yrs
@@ -676,43 +693,43 @@ void calc_new_vaccinations()
     nda::fill(i_hv.dp_migration_num, 0.0);//numerator for avg migration rate
     nda::fill(i_hv.dp_migration_denom, 0.0);//denominaor for avg migration rate
 
-  
+
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
-      
+
      for(int a = SS::pIDX_15to49; a < SS::pIDX_15to49 + SS::pAG_15to49; ++a) {
-     
+
       i_hv.dp_totpop_deaths_background(s) += c_dp.p_deaths_background_totpop(a, s);
       i_hv.dp_totpop_1549(s) += c_dp.p_totpop(a - 1, s);
 
       i_hv.dp_migration_num(s) += 2000; //c_dp.p_totpop(a, s) * i_dp.migration_rate(a, s);
       i_hv.dp_migration_denom(s) += c_dp.p_totpop(a, s);
-      
+
       i_hv.dp_pop_1549(s) += c_dp.p_totpop(a, s);
       i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) += c_dp.p_totpop(a, s);
       if(a==SS::pIDX_15to49){
          i_hv.dp_entrants_age_15(POP_H_HIVNeg, CD4_NEG, s) += c_dp.p_totpop(a, s);
       }
-      
+
       if(a==SS::pIDX_15to49 + SS::pAG_15to49 - 1){
           i_hv.dp_aging_50(POP_H_HIVNeg, CD4_NEG, s) += c_dp.p_totpop(a, s);
       }
 
       for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
           const int hd_hds = hd - CD4_GT500;
-  
+
           i_hv.dp_pop_1549_hiv(hd,s) += c_ha.h_hivpop(hd_hds, a, s);
 
           i_hv.dp_pop_sex_age_hiv(POP_H_NoART, s) += c_ha.h_hivpop(hd_hds, a, s);
           i_hv.dp_aging_denom_1549(POP_H_NoART, hd, s) += c_ha.h_hivpop(hd_hds, a, s);
           i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) -= c_ha.h_hivpop(hd_hds, a, s);//remove hiv states
-          
+
           //i_hv.hiv_mu(hd,s) +=  (p_ha.cd4_mortality(hd, a, s)+p_ha.cd4_nonaids_excess_mort(hd, a, s)) * c_ha.h_hivpop(hd, a, s);
-        
+
           if(a==SS::pIDX_15to49){
             i_hv.dp_entrants_age_15(POP_H_NoART, hd, s) += c_ha.h_hivpop(hd_hds, a, s);
             i_hv.dp_entrants_age_15(POP_H_HIVNeg, CD4_NEG, s) -= c_ha.h_hivpop(hd_hds, a, s);
           }
-          
+
           if(a==SS::pIDX_15to49 + SS::pAG_15to49){
             i_hv.dp_aging_50(POP_H_NoART, hd, s) += c_ha.h_hivpop(hd_hds, a, s);
             i_hv.dp_aging_50(POP_H_HIVNeg, CD4_NEG, s) -= c_ha.h_hivpop(hd_hds, a, s);
@@ -724,9 +741,9 @@ void calc_new_vaccinations()
           }
 
           for (int ht = 0; ht < nART; ++ht) {
-            
+
             i_hv.dp_pop_1549_art (hd,s) += c_ha.h_artpop(ht, hd_hds, a, s);
-            
+
             i_hv.dp_pop_sex_age_hiv(POP_H_ARTlt6m+ht, s) += c_ha.h_artpop(ht, hd_hds, a, s);
             i_hv.dp_aging_denom_1549(POP_H_ARTlt6m+ht, hd, s) += c_ha.h_artpop(ht, hd_hds, a, s);
             i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) -= c_ha.h_artpop(ht, hd_hds, a, s);//remove art states
@@ -746,8 +763,8 @@ void calc_new_vaccinations()
 
              i_hv.dp_hiv_cd4_mort_art(hd_hds, s) += c_ha.h_hiv_deaths_art(ht, hd_hds, a, s);
 
-          }//t            
-          
+          }//t
+
         }//h
 
     }//a
@@ -756,7 +773,7 @@ void calc_new_vaccinations()
 
 
   auto dbg_model = capture_model(state_next, intermediate, pars);
-  
+
    //nda_print_info(dbg_model.hv.dp_totpop_deaths_background);
    //nda_print_info(dbg_model.hv.dp_totpop_1549);
    //nda_print_info(dbg_model.hv.dp_pop_1549);
@@ -771,8 +788,8 @@ void calc_new_vaccinations()
 void calc_goals_rates(int t) {
 
   const auto& p_hv = pars.hv;
-  auto& i_hv = intermediate.hv; 
-  
+  auto& i_hv = intermediate.hv;
+
   real_type denominator = 0.0;
   real_type numerator = 0.0;
 
@@ -780,7 +797,7 @@ void calc_goals_rates(int t) {
   nda::fill(i_hv.background_death_rate, 0.0);//dp total pop 1549
   nda::fill(i_hv.rate_aging_50, 0.0);//mort rate, hiv on ART
   nda::fill(i_hv.migration_rate, 0.0);//migration rate
-  
+
 
   //rates for HIV dynamics
   nda::fill(i_hv.hiv_mu, 0.0);//mort rate, hiv not on ART
@@ -789,45 +806,45 @@ void calc_goals_rates(int t) {
 
   //aggregate rates
   nda::fill(i_hv.hiv_exit_rates, 0.0);//total exit rate, hiv not on ART
-  nda::fill(i_hv.art_exit_rates, 0.0);//total exit rate, hiv on ART  
+  nda::fill(i_hv.art_exit_rates, 0.0);//total exit rate, hiv on ART
   nda::fill(i_hv.hiv_stage_progressors, 0.0);//progression rate, hiv not on ART
 
   real_type years_in_primary=p_hv.epi_months_in_primary/12;
 
-  for (int s = S_MALE; s <= S_FEMALE; ++s) { 
-    
+  for (int s = S_MALE; s <= S_FEMALE; ++s) {
+
         //demographical rate
         i_hv.background_death_rate(s) = (i_hv.dp_totpop_1549(s)!=0) ? i_hv.dp_totpop_deaths_background(s)/i_hv.dp_totpop_1549(s) : 0;
 
         //migration rate
         i_hv.migration_rate(s) = (i_hv.dp_migration_denom(s) !=0) ? i_hv.dp_migration_num(s)/i_hv.dp_migration_denom(s) : 0;
-     
-        //set aging rates, out of 15-49 year old population 
-        i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s) = (i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) !=0) ? i_hv.dp_aging_50(POP_H_HIVNeg, CD4_NEG, s)/i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) : 0; 
 
-        //cd4 transition rate for primary stage 
+        //set aging rates, out of 15-49 year old population
+        i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s) = (i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) !=0) ? i_hv.dp_aging_50(POP_H_HIVNeg, CD4_NEG, s)/i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) : 0;
+
+        //cd4 transition rate for primary stage
         i_hv.hiv_lambda(CD4_PRIM,s) = (years_in_primary!=0) ? 1/years_in_primary : 0;
-       
+
         for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
 
           //hiv dynamics: mortality and progression rates
           i_hv.hiv_mu(hd,s) = (i_hv.dp_pop_1549_hiv(hd,s)!=0) ? i_hv.dp_hiv_cd4_mort_no_art(hd,s)/i_hv.dp_pop_1549_hiv(hd,s) : 0;
           i_hv.hiv_lambda(hd,s) = (i_hv.dp_pop_1549_hiv(hd,s)!=0) ? i_hv.dp_hiv_cd4_progression(hd,s)/i_hv.dp_pop_1549_hiv(hd,s) : 0;
           i_hv.art_alpha(hd,s) = (i_hv.dp_pop_1549_art(hd,s)!=0) ? i_hv.dp_hiv_cd4_mort_art(hd - CD4_GT500,s)/i_hv.dp_pop_1549_art(hd,s) : 0;
-          
+
           if(hd==CD4_GT500){
             real_type stage_duration = 1.0 / i_hv.hiv_lambda(CD4_GT500,s)  - years_in_primary;
             i_hv.hiv_lambda(CD4_GT500,s) = 1-exp(-1/stage_duration);//remove time in primary stage
             i_hv.hiv_mu(CD4_PRIM,s) = i_hv.hiv_mu(CD4_GT500,s);
-          } 
+          }
           if(hd==CD4_LT50) i_hv.hiv_lambda(hd,s) = 0;//no progession out of this stage
-          
-          i_hv.rate_aging_50(POP_H_NoART, CD4_NEG, s) = (i_hv.dp_aging_denom_1549(POP_H_NoART, CD4_NEG, s) !=0) ? i_hv.dp_aging_50(POP_H_NoART, CD4_NEG, s)/i_hv.dp_aging_denom_1549(POP_H_NoART, CD4_NEG, s) : 0; 
-      
+
+          i_hv.rate_aging_50(POP_H_NoART, CD4_NEG, s) = (i_hv.dp_aging_denom_1549(POP_H_NoART, CD4_NEG, s) !=0) ? i_hv.dp_aging_50(POP_H_NoART, CD4_NEG, s)/i_hv.dp_aging_denom_1549(POP_H_NoART, CD4_NEG, s) : 0;
+
           denominator = 0.0;
           numerator = 0.0;
           for (int ht = CD4_GT500; ht <= CD4_LT50; ++ht) {
-            numerator +=   i_hv.dp_aging_50(POP_H_ARTlt6m+ht, hd, s);              
+            numerator +=   i_hv.dp_aging_50(POP_H_ARTlt6m+ht, hd, s);
             denominator += i_hv.dp_aging_denom_1549(POP_H_ARTlt6m+ht, hd, s);
           }
           i_hv.rate_aging_50(POP_H_OnART, hd, s) = (denominator !=0) ? numerator/denominator : 0;
@@ -847,23 +864,23 @@ void calc_goals_rates(int t) {
             i_hv.art_exit_rates(rg,hd,s) = i_hv.background_death_rate(s)+
                                         i_hv.art_alpha(hd,s)+
                                         (p_hv.b_behav_dur(RG_OFFSET+rg,DUR_AVG)>0) ? (1 /p_hv.b_behav_dur(RG_OFFSET+rg,DUR_AVG)) : 0 +
-                                        i_hv.rate_aging_50(POP_H_OnART, hd, s);  
-        }                          
-                                        
+                                        i_hv.rate_aging_50(POP_H_OnART, hd, s);
+        }
+
         }
 
 
       }
 
    auto dbg_model = capture_model(state_next, intermediate, pars);
-  
-   nda_print_info(dbg_model.hv.background_death_rate);     
-   nda_print_info(dbg_model.hv.migration_rate);     
-   nda_print_info(dbg_model.hv.rate_aging_50);   
 
-   nda_print_info(dbg_model.hv.dp_migration_denom); 
-   nda_print_info(dbg_model.hv.dp_migration_num); 
-   
+   nda_print_info(dbg_model.hv.background_death_rate);
+   nda_print_info(dbg_model.hv.migration_rate);
+   nda_print_info(dbg_model.hv.rate_aging_50);
+
+   nda_print_info(dbg_model.hv.dp_migration_denom);
+   nda_print_info(dbg_model.hv.dp_migration_num);
+
 }
 
 void calc_newrecruits_distribution(int t)
@@ -871,6 +888,7 @@ void calc_newrecruits_distribution(int t)
   auto& n_hv = state_next.hv;
   auto& i_hv = intermediate.hv;
   const auto& p_hv = pars.hv;
+  auto& s_hv = internal_state.hv;
 
   real_type value=0;
   real_type rg_sum=0;
@@ -881,9 +899,9 @@ void calc_newrecruits_distribution(int t)
     rg_sum = 0;
     for (int rg = RG_LRH; rg <= RG_TOTAL1; ++rg)
     {
-        if (s == S_FEMALE && rg >= RG_MSM) continue; 
+        if (s == S_FEMALE && rg >= RG_MSM) continue;
 
-        if(i_hv.riskgroup_proportions(rg,s)-
+        if(s_hv.riskgroup_proportions(rg,s)-
             n_hv.adults(VAC_ALL,CD4_ALL,rg,s)/n_hv.adults(VAC_ALL,CD4_ALL,rg,s) != 0)
         {
             if ( n_hv.adults(VAC_ALL,CD4_ALL,rg,s) == 0.0 ||
@@ -894,9 +912,9 @@ void calc_newrecruits_distribution(int t)
             }
             else
             {
-                value = i_hv.riskgroup_proportions(rg,s) +
-                       ( (i_hv.riskgroup_proportions(rg,s) -
-                         (1-i_hv.behave_change_rate(rg,s))*
+                value = s_hv.riskgroup_proportions(rg,s) +
+                       ( (s_hv.riskgroup_proportions(rg,s) -
+                         (1-s_hv.behave_change_rate(rg,s))*
                           n_hv.adults(VAC_ALL,CD4_ALL,rg,s)/
                           n_hv.adults(VAC_ALL,CD4_ALL,RG_ALL,s))*
                           p_hv.b_incr_recruit(s+S_OFFSET,rg+RG_OFFSET) );
@@ -905,27 +923,20 @@ void calc_newrecruits_distribution(int t)
             if(value<0) value=0;
               rg_sum += value;
 
-            //i_hv.riskgroup_proportions(rg,s)=value;
-        }  
+            s_hv.riskgroup_proportions(rg,s)=value;
+        }
 
-    }//rg 
+    }//rg
 
     //normalize
     for (int rg = RG_LRH; rg <= RG_TOTAL1; ++rg)
     {
-       // if (s == S_FEMALE && rg >= RG_MSM) continue; 
-       // i_hv.riskgroup_proportions(rg,s)/=rg_sum;
+        if (s == S_FEMALE && rg >= RG_MSM) continue;
+        s_hv.riskgroup_proportions(rg,s)/=rg_sum;
     }
 
    }//s
 
- auto dbg_model = capture_model(state_next, intermediate, pars);
-
- nda_print_info(dbg_model.hv.b_incr_recruit); 
-  
- nda_print_info(dbg_model.hv.riskgroup_proportions);  
-
-   
 }
 
 
@@ -948,26 +959,26 @@ void progress_norisk_hiv_neg(int t)
     //unvaccinated
     for (int s = S_MALE; s <= S_FEMALE; ++s)
     {
-     
+
         temp1=n_hv.adults_ts(VAC_UNV,CD4_NEG,RG_NONE,s);
         temp2=n_hv.adults_ts(VAC_UNV,CD4_ALL,RG_NONE,s);
 
-        value = 
+        value =
         n_hv.adults_ts(VAC_UNV,CD4_NEG,RG_NONE,s) + dt*(
         //new entrants 15 yrs , note that they are not vaccinated by assumption
         i_hv.dp_entrants_age_15(POP_H_HIVNeg,CD4_NEG,s) -
         //exits and migration
         n_hv.adults_ts(VAC_UNV,CD4_NEG,RG_NONE,s) * (
         (std::max(p_hv.b_age_first_sex(S_OFFSET+s,t) - 15.0, 1.0)!=0)? 1/std::max(p_hv.b_age_first_sex(S_OFFSET+s,t) - 15.0, 1.0) : 0 +
-        i_hv.background_death_rate(s) + 
-        i_hv.rate_aging_50(POP_H_HIVNeg,CD4_NEG,s) - 
+        i_hv.background_death_rate(s) +
+        i_hv.rate_aging_50(POP_H_HIVNeg,CD4_NEG,s) -
         i_hv.migration_rate(s) ) -
 
         //new vaccinations
         i_hv.new_vaccinations(RG_NONE,CD4_NEG,s) + // *
         //c_hv.adults(VAC_UNV,CD4_NEG,RG_NONE,s) *
         //(c_hv.adults(VAC_UNV,CD4_ALL,RG_NONE,s)!=0)? 1/ c_hv.adults(VAC_UNV,CD4_ALL,RG_NONE,s) : 0 +
-      
+
         //vaccine waning, entrants
         (n_hv.adults_ts(VAC_TAKE,CD4_NEG,RG_NONE,s) +
           n_hv.adults_ts(VAC_PARTIAL,CD4_NEG,RG_NONE,s) +
@@ -985,20 +996,20 @@ void progress_norisk_hiv_neg(int t)
         //vaccinated
         for (int v = VAC_TAKE; v <= VAC_NO_PROT; ++v)
         {
-              value = 
+              value =
               n_hv.adults_ts(v,CD4_NEG,RG_NONE,s) + dt*( -
               //exits and migration
               n_hv.adults_ts(v,CD4_NEG,RG_NONE,s) * (
               (std::max(p_hv.b_age_first_sex(S_OFFSET+s,t) - 15.0, 1.0)!=0)? 1/std::max(p_hv.b_age_first_sex(S_OFFSET+s,t) - 15.0, 1.0) : 0 +
-              i_hv.background_death_rate(s) + 
-              i_hv.rate_aging_50(POP_H_HIVNeg,CD4_NEG,s) - 
-              i_hv.migration_rate(s) ) + 
+              i_hv.background_death_rate(s) +
+              i_hv.rate_aging_50(POP_H_HIVNeg,CD4_NEG,s) -
+              i_hv.migration_rate(s) ) +
 
               //new vaccinations
               i_hv.new_vaccinations(RG_NONE,CD4_NEG, s) * i_hv.vac_effect(p_hv.rn_vac_targetting,v) -
                - // *
               //temp1 * (temp2!=0)? 1 / temp2 : 0 -
-            
+
               //vaccine, exits
               n_hv.adults_ts(v,CD4_NEG,RG_NONE,s)*
               (i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0  );
@@ -1009,7 +1020,7 @@ void progress_norisk_hiv_neg(int t)
               //keep track of deaths
               n_hv.deaths(v,CD4_NEG,RG_NONE,s) += dt*n_hv.adults_ts(v,CD4_NEG,RG_NONE,s)*
                                                      i_hv.background_death_rate(s);
-           
+
         }//v
 
     }//s
@@ -1022,6 +1033,7 @@ void progress_atrisk_hiv_neg(int t)
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
+    const auto& s_hv = internal_state.hv;
 
     real_type dt = 1/opts.hts_per_year;
     real_type value = 0;
@@ -1033,43 +1045,43 @@ void progress_atrisk_hiv_neg(int t)
     //unvaccinated
     for (int s = S_MALE; s <= S_FEMALE; ++s)
     {
-     
+
         for (int rg = RG_LRH; rg <= RG_TOTAL1; ++rg)
-        { 
-          
-          if (s == S_FEMALE && rg >= RG_MSM) continue; 
-          
+        {
+
+          if (s == S_FEMALE && rg >= RG_MSM) continue;
+
           temp1=c_hv.adults(VAC_UNV,CD4_NEG,rg,s);
           temp2=c_hv.adults(VAC_UNV,CD4_ALL,rg,s);
 
-          value = 
+          value =
           c_hv.adults(VAC_UNV,CD4_NEG,rg,s) + dt*(
-          
+
            //no risk at sexual debut
            c_hv.adults(VAC_UNV,CD4_NEG,RG_NONE,s) *
            (std::max(p_hv.b_age_first_sex(S_OFFSET+s,t) - 15.0, 1.0)!=0)? 1/std::max(p_hv.b_age_first_sex(S_OFFSET+s,t) - 15.0, 1.0) : 0 *
-           i_hv.riskgroup_proportions(rg,s) -
-           
+           s_hv.riskgroup_proportions(rg,s) -
+
           //exits and migration
           c_hv.adults(VAC_UNV,CD4_NEG,rg,s) * (
-          i_hv.background_death_rate(s) + 
+          i_hv.background_death_rate(s) +
           i_hv.rate_aging_50(POP_H_HIVNeg,CD4_NEG,s) +
-          i_hv.behave_change_rate(rg,s) - 
+          s_hv.behave_change_rate(rg,s) -
           i_hv.migration_rate(s) ) -
 
           //new vaccinations
           i_hv.new_vaccinations(rg,CD4_NEG,s) + // *
           //c_hv.adults(VAC_UNV,CD4_NEG,rg,s) *
           //(c_hv.adults(VAC_UNV,CD4_ALL,rg,s)!=0)? 1/ c_hv.adults(VAC_UNV,CD4_ALL,rg,s) : 0 +
-        
+
           //vaccine waning, entrants
           (c_hv.adults(VAC_TAKE,CD4_NEG,rg,s) +
             c_hv.adults(VAC_PARTIAL,CD4_NEG,rg,s) +
             c_hv.adults(VAC_NO_PROT,CD4_NEG,rg,s)) *
-          (i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0 +  
-        
+          (i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0 +
+
           //entrants following behavior change
-          c_hv.adults(VAC_UNV,CD4_NEG,rg-1,s) * i_hv.behave_change_rate(rg-1,s) );
+          c_hv.adults(VAC_UNV,CD4_NEG,rg-1,s) * s_hv.behave_change_rate(rg-1,s) );
 
           if(value<0) value=0;
           n_hv.adults(VAC_UNV,CD4_NEG,rg,s) = value;
@@ -1077,30 +1089,30 @@ void progress_atrisk_hiv_neg(int t)
           //keep track of deaths
           n_hv.deaths(VAC_UNV,CD4_NEG,rg,s) += dt*n_hv.adults_ts(VAC_UNV,CD4_NEG,rg,s)*
                                                i_hv.background_death_rate(s);
-                                                    
+
 
           //vaccinated
           for (int v = VAC_TAKE; v <= VAC_NO_PROT; ++v)
           {
-                value = 
+                value =
                 c_hv.adults(v,CD4_NEG,rg,s) + dt*( -
                 //exits and migration
                 c_hv.adults(v,CD4_NEG,rg,s) * (
-                i_hv.background_death_rate(s) + 
+                i_hv.background_death_rate(s) +
                 i_hv.rate_aging_50(POP_H_HIVNeg,CD4_NEG,s) -
-                i_hv.behave_change_rate(rg,s) - 
+                s_hv.behave_change_rate(rg,s) -
                 i_hv.migration_rate(s) ) -
 
                 //new vaccinations
                 i_hv.new_vaccinations(rg,CD4_NEG,s) * i_hv.vac_effect(p_hv.rn_vac_targetting,v) - // *
                 //temp1 * (temp2!=0)? 1 / temp2 : 0 -
-              
+
                 //vaccine, exits
                 c_hv.adults(v,CD4_NEG,rg,s)*
                 (i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0  +
 
                 //entrants following behavior change
-                c_hv.adults(VAC_UNV,CD4_NEG,rg-1,s) * i_hv.behave_change_rate(rg-1,s) ); 
+                c_hv.adults(VAC_UNV,CD4_NEG,rg-1,s) * s_hv.behave_change_rate(rg-1,s) );
 
                 if(value<0) value=0;
                 n_hv.adults(v,CD4_NEG,rg,s)=value;
@@ -1108,8 +1120,8 @@ void progress_atrisk_hiv_neg(int t)
                 //keep track of deaths
                 n_hv.deaths(v,CD4_NEG,rg,s) += dt*n_hv.adults_ts(v,CD4_NEG,rg,s)*
                                                i_hv.background_death_rate(s);
-                                                    
-            
+
+
           }//v
 
       }//rg
@@ -1123,6 +1135,7 @@ void progress_hivn_hivp_art(int t)
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
+    const auto& s_hv = internal_state.hv;
 
     real_type dt = 1/opts.hts_per_year;
     real_type value = 0;
@@ -1134,25 +1147,25 @@ void progress_hivn_hivp_art(int t)
     //unvaccinated
     for (int s = S_MALE; s <= S_FEMALE; ++s)
     {
-     
+
         for (int rg = RG_LRH; rg <= RG_TOTAL1; ++rg)
-        { 
+        {
 
 
-        for (int hd = CD4_PRIM; hd <= CD4_LT50_ART; ++hd) 
-        {  
-          
+        for (int hd = CD4_PRIM; hd <= CD4_LT50_ART; ++hd)
+        {
+
           if (s == S_FEMALE && rg >= RG_MSM) continue;
 
-          //Mortality 
+          //Mortality
           //hiv-pos or hiv-art mortality rate
           real_type mort_hiv = 0;
           if (CD4_PRIM <= hd && hd <= CD4_LT50) {
             mort_hiv = i_hv.hiv_mu(hd,s);
           }
           else {
-            mort_hiv =  i_hv.art_alpha(hd,s); 
-          }; 
+            mort_hiv =  i_hv.art_alpha(hd,s);
+          };
 
           //Aging out rate
           real_type rate_aging_out = 0;
@@ -1164,7 +1177,7 @@ void progress_hivn_hivp_art(int t)
           }
           else {
             rate_aging_out = i_hv.rate_aging_50(POP_H_OnART,hd,s);
-          }; 
+          };
 
           //Progression rate
           //hiv-pos cd 4 progression rate, not progression on art
@@ -1181,36 +1194,36 @@ void progress_hivn_hivp_art(int t)
           //temp1=n_hv.adults(VAC_UNV,CD4_NEG,rg,s);
           //temp2=n_hv.adults(VAC_UNV,CD4_ALL,rg,s);
 
-          value = 
+          value =
           n_hv.adults(VAC_UNV,hd,rg,s) + dt*(
-          
+
           //no risk at sexual debut
            n_hv.adults(VAC_UNV,hd,RG_NONE,s) *
            (std::max(p_hv.b_age_first_sex(S_OFFSET+s,t) - 15.0, 1.0)!=0)? 1/std::max(p_hv.b_age_first_sex(S_OFFSET+s,t) - 15.0, 1.0) : 0 *
-           i_hv.riskgroup_proportions(rg,s) -
-           
+           s_hv.riskgroup_proportions(rg,s) -
+
           //exits and migration
           n_hv.adults(VAC_UNV,hd,rg,s) * (
-          i_hv.background_death_rate(s) + 
+          i_hv.background_death_rate(s) +
           mort_hiv + //hiv mortality rate
-          progress_out + //hiv progrssion rate 
+          progress_out + //hiv progrssion rate
           rate_aging_out + // aging out at age 50
-          i_hv.behave_change_rate(rg,s) - 
+          s_hv.behave_change_rate(rg,s) -
           i_hv.migration_rate(s) ) -
 
           //new vaccinations
           i_hv.new_vaccinations(rg,hd,s) + //*
           //n_hv.adults(VAC_UNV,CD4_NEG,rg,s) *
          // (n_hv.adults(VAC_UNV,CD4_ALL,rg,s)!=0)? 1/ n_hv.adults(VAC_UNV,CD4_ALL,rg,s) : 0 +
-        
+
           //vaccine waning, entrants
           (n_hv.adults(VAC_TAKE,hd,rg,s) +
             n_hv.adults(VAC_PARTIAL,hd,rg,s) +
             n_hv.adults(VAC_NO_PROT,hd,rg,s)) *
-          (i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0 +  
-        
+          (i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0 +
+
           //entrants following behavior change
-          n_hv.adults(VAC_UNV,hd,rg-1,s) * i_hv.behave_change_rate(rg-1,s) +
+          n_hv.adults(VAC_UNV,hd,rg-1,s) * s_hv.behave_change_rate(rg-1,s) +
 
           //entrants following hiv stage progression
           n_hv.adults(VAC_UNV,hd-1,rg,s) * progress_in);
@@ -1225,29 +1238,29 @@ void progress_hivn_hivp_art(int t)
           //vaccinated
           for (int v = VAC_TAKE; v <= VAC_NO_PROT; ++v)
           {
-                value = 
+                value =
                 n_hv.adults(v,hd,rg,s) + dt*( -
                 //exits and migration
                 n_hv.adults(v,hd,rg,s) * (
-                i_hv.background_death_rate(s) + 
+                i_hv.background_death_rate(s) +
                 mort_hiv + //hiv mortality rate
-                progress_out + //hiv progrssion rate 
+                progress_out + //hiv progrssion rate
                 rate_aging_out + // aging out at age 50
                 i_hv.migration_rate(s) ) -
 
                 //new vaccinations
                 i_hv.new_vaccinations(rg,hd,s)  * i_hv.vac_effect(p_hv.rn_vac_targetting,v) - // *
                 //temp1 * (temp2!=0)? 1 / temp2 : 0 -
-              
+
                 //vaccine, exits
                 n_hv.adults(v,hd,rg,s)*
                 (i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0  +
 
                 //entrants following behavior change
-                n_hv.adults(v,hd,rg-1,s) * i_hv.behave_change_rate(rg-1,s) +
-              
+                n_hv.adults(v,hd,rg-1,s) * s_hv.behave_change_rate(rg-1,s) +
+
                 //entrants following hiv stage progression
-                n_hv.adults(VAC_UNV,hd,rg,s) * progress_in); 
+                n_hv.adults(VAC_UNV,hd,rg,s) * progress_in);
 
                 if(value<0) value=0;
                 n_hv.adults(v,hd,rg,s)=value;
@@ -1255,7 +1268,7 @@ void progress_hivn_hivp_art(int t)
                 //keep track of deaths
                 n_hv.deaths(v,hd,rg,s) += dt*n_hv.adults_ts(v,hd,rg,s)*
                                             (i_hv.background_death_rate(s)+mort_hiv);
-            
+
           }//v
 
         } //hd
@@ -1268,21 +1281,21 @@ void progress_hivn_hivp_art(int t)
 
 void calc_r_multiplier(int t)
 {
-    
+
   //from goals
   auto& n_hv = state_next.hv;
-  const auto& p_hv = pars.hv; 
+  const auto& p_hv = pars.hv;
 
   const double rMultEqlb = 1.7;// 2.44 in previous version of Goals
   double rMultNumerator   = 0.0;
   double rMultDenominator = 0.0;
   double rMultNumeratorAll = 0.0;
   double rMultDenominatorAll = 0.0;
-  
+
   //CDP check goals calc
-  double vaccine_factor = 1.0 -  p_hv.rn_vac_params(VAC_EFF) * 
+  double vaccine_factor = 1.0 -  p_hv.rn_vac_params(VAC_EFF) *
                                  (n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_ALL)-n_hv.adults(VAC_UNV,RG_ALL,CD4_ALL,S_ALL))
-                                 /n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_ALL);                  
+                                 /n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_ALL);
 
 
   nda::fill(n_hv.r_mult, 1.0); //default multiplier
@@ -1291,10 +1304,10 @@ void calc_r_multiplier(int t)
   {
       for (int rg = RG_LRH; rg <= RG_MSM; ++rg)
       {
-        
-        if (rg == RG_IDU) continue; //IDU force of infection is external input 
+
+        if (rg == RG_IDU) continue; //IDU force of infection is external input
         if (s == S_FEMALE && rg >= RG_MSM) continue; //no female MSM
-        
+
           rMultNumerator   = 0.0;
           rMultDenominator = 0.0;
 
@@ -1307,7 +1320,7 @@ void calc_r_multiplier(int t)
               rMultNumeratorAll   +=  n_hv.mult_no_art(hd) * n_hv.adults(VAC_ALL,rg,hd,s);
               rMultDenominatorAll += n_hv.adults(VAC_ALL,rg,hd,s);
           }
-    
+
           //on ART
           for (int hd = CD4_GT500_ART ; hd <= CD4_LT50_ART ; ++hd)
           {
@@ -1321,7 +1334,7 @@ void calc_r_multiplier(int t)
           if (rMultDenominator > 0.0)
           {
             n_hv.r_mult(rg, s) = vaccine_factor * (rMultNumerator / rMultDenominator) / rMultEqlb;
-                                
+
           }
 
       }//r
@@ -1330,43 +1343,43 @@ void calc_r_multiplier(int t)
 
     if (rMultDenominatorAll > 0.0)
     {
-      n_hv.r_mult(RG_ALL, S_ALL) = vaccine_factor * (rMultNumeratorAll / rMultDenominatorAll) / rMultEqlb;                                       
+      n_hv.r_mult(RG_ALL, S_ALL) = vaccine_factor * (rMultNumeratorAll / rMultDenominatorAll) / rMultEqlb;
     }
 
 }
 
 void calc_prevalence()
 {
-   
+
    real_type denom=0;
    real_type plhiv=0;
-   
+
    auto& n_hv = state_next.hv;
    for (int s = S_MALE; s <= S_FEMALE; ++s)
         for (int rg = RG_NONE; rg <= RG_ALL; ++rg)
         {
            denom=0;
-           plhiv=0; 
+           plhiv=0;
            for (int v = VAC_UNV; v <= VAC_ALL; ++v)
            {
               for (int hd = CD4_NEG; hd <= CD4_LT50_ART; ++hd)
               {
-  
+
                   // Exclude female MSM and higher risk groups
                   if (!((s == S_FEMALE) && (rg >= RG_MSM)))
                   {
                       denom += n_hv.adults(VAC_ALL,hd,rg,s);
                       if(hd>=CD4_PRIM)
-                        plhiv += n_hv.adults(VAC_ALL,hd,rg,s); 
+                        plhiv += n_hv.adults(VAC_ALL,hd,rg,s);
                   }
               }
 
             }
-              
+
               if(denom>0)
                 n_hv.prevalence(rg,s) = plhiv/denom;
-                  
-        }//s,rg    
+
+        }//s,rg
 
 }
 
@@ -1375,8 +1388,8 @@ void calc_new_infections(int t)
 
 //from goals
 auto& n_hv = state_next.hv;
-auto& i_hv = intermediate.hv; 
-const auto& p_hv = pars.hv;   
+auto& i_hv = intermediate.hv;
+const auto& p_hv = pars.hv;
 
 double totalSexActs  = 0.0;
 double totalSexActsF = 0.0;
@@ -1414,7 +1427,7 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
 
     if (rg == RG_LRH)
     {
-     
+
       totalSexActsF = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_FEMALE) * p_hv.b_num_partners(RG_OFFSET+RG_LRH,t) * p_hv.b_sex_acts(RG_OFFSET+RG_LRH,t);
       PrevFL = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_FEMALE) * n_hv.prevalence(RG_LRH,S_FEMALE);
       denom = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_FEMALE) * p_hv.b_married_prop(RG_OFFSET+RG_LRH+RG_NONE_F3,t);
@@ -1436,7 +1449,7 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
         totalSexActsF +=  n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_FEMALE) * p_hv.b_num_partners(rg2+RG_NONE_F3,t) * p_hv.b_sex_acts(rg2+RG_NONE_F3,t) * p_hv.b_married_prop(rg2+RG_NONE_F3,t);
         PrevFL += n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_MALE) * n_hv.prevalence(rg2,S_MALE) * p_hv.b_married_prop(RG_OFFSET+rg2,t);
         denom += n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_MALE) * p_hv.b_married_prop(RG_OFFSET+rg2,t);
-      } 
+      }
 
        PrevML = PrevML/denom;
        PrevM  = PrevML;
@@ -1448,9 +1461,9 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
 
       PrevM = std::max(n_hv.prevalence(rg,S_MALE),PrevML);
       PrevF = std::max(n_hv.prevalence(rg,S_FEMALE),PrevFL);
-    }  
+    }
 
-    
+
 
     // Global multiplier
     rMultM  = n_hv.r_mult(RG_ALL, S_ALL);
@@ -1464,8 +1477,8 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
     // Toggle balancing
     if (p_hv.b_balance_sex_acts = 0)
     {
-      SexActsRatioM = 1.0;   
-      SexActsRatioF = 1.0;  
+      SexActsRatioM = 1.0;
+      SexActsRatioF = 1.0;
     }
 
     // Assuming IDU have medium‑risk sexual behaviour and are exposed to the same risk as HV_MRH
@@ -1481,16 +1494,16 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
       SexActsRatioF_IDU = SexActsRatioF;
     }
 
-    
+
     //men
     int s = S_MALE;
 
     for (int v = VAC_UNV; v <= VAC_ALL; ++v)
     {
-    
+
        double vacc_effect = 0;
 
-      //no new infections in take category 
+      //no new infections in take category
       if(v==VAC_TAKE) continue;
 
       //no_protection category same as un vaccinated
@@ -1507,20 +1520,20 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
                           ),
                           p_hv.b_sex_acts(RG_OFFSET+rg,t) * SexActsRatioM) + (1 - PrevF),
                           p_hv.b_num_partners(RG_OFFSET+rg,t));
-        
-      n_hv.new_inf_vrs(v,rg,S_MALE)=foi*n_hv.adults(v,rg,CD4_NEG,S_MALE); 
-      
 
-    } //v, S_MALE   
+      n_hv.new_inf_vrs(v,rg,S_MALE)=foi*n_hv.adults(v,rg,CD4_NEG,S_MALE);
+
+
+    } //v, S_MALE
 
     //women
-    int s = S_FEMALE;
+    s = S_FEMALE;
     for (int v = VAC_UNV; v <= VAC_ALL; ++v)
     {
-    
+
        double vacc_effect = 0;
 
-      //no new infections in take category 
+      //no new infections in take category
       if(v==VAC_TAKE) continue;
 
       //no_protection category same as un vaccinated
@@ -1537,13 +1550,13 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
                           ),
                           p_hv.b_sex_acts(RG_OFFSET+rg,t) * SexActsRatioF) + (1 - PrevM),
                           p_hv.b_num_partners(RG_OFFSET+rg,t));
-        
-      n_hv.new_inf_vrs(v,rg,S_FEMALE)=foi*n_hv.adults(v,rg,CD4_NEG,S_FEMALE); 
-      
-      
-    }//v, S_FEMALE  
-    
-  
+
+      n_hv.new_inf_vrs(v,rg,S_FEMALE)=foi*n_hv.adults(v,rg,CD4_NEG,S_FEMALE);
+
+
+    }//v, S_FEMALE
+
+
 }//rg
 
 
@@ -1559,10 +1572,10 @@ for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg)
 
     for (int v = VAC_UNV; v <= VAC_ALL; ++v)
     {
-    
+
        double vacc_effect = 0;
 
-      //no new infections in take category 
+      //no new infections in take category
       if(v==VAC_TAKE) continue;
 
       //no_protection category same as un vaccinated
@@ -1580,9 +1593,9 @@ for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg)
                           ),
                           p_hv.b_sex_acts(RG_OFFSET+rg,t) * SexActsRatioM) + (1 - PrevM),
                           p_hv.b_num_partners(RG_OFFSET+rg,t));
-        
-      n_hv.new_inf_vrs(v,rg,S_MALE)=foi*n_hv.adults(v,rg,CD4_NEG,S_MALE); 
-      
+
+      n_hv.new_inf_vrs(v,rg,S_MALE)=foi*n_hv.adults(v,rg,CD4_NEG,S_MALE);
+
 
     } //v, S_MALE
 
@@ -1615,8 +1628,8 @@ for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg)
             adults(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)+
             adults(VAC_ALL,RG_MSMIDU,CD4_ALL,S_MALE));
 
-   PrevB = (p_hv.b_idu_share_prop(t)>0) ? PrevB / p_hv.b_idu_share_prop(t) : PrevB;  
-   
+   PrevB = (p_hv.b_idu_share_prop(t)>0) ? PrevB / p_hv.b_idu_share_prop(t) : PrevB;
+
    PrevB = std::max(PrevB,  std::min(prevalence(RG_LRH,S_MALE),prevalence(RG_LRH),S_FEMALE)) ;
 
    double SusceptibleIDU =0;
@@ -1625,18 +1638,18 @@ for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg)
    {
       for (int v = VAC_UNV; v <= VAC_ALL; ++v)
       {
-      
-        SusceptibleIDU = adults(v,RG_IDU,CD4_NEG,s); 
+
+        SusceptibleIDU = adults(v,RG_IDU,CD4_NEG,s);
         if( SusceptibleIDU > adults(v,RG_IDU,CD4_ALL,s) * p_hv.b_idu_share_prop(t) -
                             (adults(v,RG_IDU,CD4_ALL,s) - adults(v,RG_IDU,CD4_NEG,s)))
-        {                    
+        {
             SusceptibleIDU = adults(v,RG_IDU,CD4_ALL,s) * p_hv.b_idu_share_prop(t) -
                           (adults(v,RG_IDU,CD4_ALL,s) - adults(v,RG_IDU,CD4_NEG,s));
         }
 
         double vacc_effect = 0;
 
-        //no new infections in take category 
+        //no new infections in take category
         if(v==VAC_TAKE) continue;
 
         //no_protection category same as un vaccinated
@@ -1644,7 +1657,7 @@ for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg)
 
         if(s=S_MALE)
         {
-    
+
           foi_idu_sex  =    1     - std::pow(
                         PrevF * std::pow(
                               (1 - p_hv.transm_hiv_F * (1-vacc_effect) * rMultF *
@@ -1656,7 +1669,7 @@ for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg)
                               ),
                               p_hv.b_sex_acts(RG_OFFSET+rg,t) * SexActsRatioM) + (1 - PrevF),
                               p_hv.b_num_partners(rg,t));
-        
+
 
         }
         else
@@ -1672,21 +1685,21 @@ for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg)
                           ),
                           p_hv.b_sex_acts(RG_OFFSET+rg,t) * SexActsRatioF) + (1 - PrevM),
                           p_hv.b_num_partners(rg,t));
-        
-          
+
+
 
         }
 
         //needle sharing
         n_hv.new_inf_vrs(v,rg,s)+= p_hv.b_foi_idu(s,t) * n_hv.r_mult(RG_ALL, S_MALE) * PrevB * SusceptibleIDU *
                                                       (1-p_hv.prep_cov(S_OFFSET+s,RG_OFFSET+rg,t) * i_hv.prep_effect(rg,t));
-                                                      //+_ForceNeedleTransmIDU*SusceptibleIDU;//no explicit needle sharing mechanism 
-      
-        //sexual transmission 
-        n_hv.new_inf_vrs(v,RG_IDU,s) += foi_idu_sex * n_hv.adults(v,RG_IDU,CD4_NEG,s);                                             
+                                                      //+_ForceNeedleTransmIDU*SusceptibleIDU;//no explicit needle sharing mechanism
+
+        //sexual transmission
+        n_hv.new_inf_vrs(v,RG_IDU,s) += foi_idu_sex * n_hv.adults(v,RG_IDU,CD4_NEG,s);
 
 
-   }//v                    
+   }//v
 
   }//s
 
@@ -1697,18 +1710,18 @@ for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg)
 
 void add_new_infections()
 {
-    
+
   //from goals
   auto& n_hv = state_next.hv;
 
   real_type dt = 1/opts.hts_per_year;
-  for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)            
+  for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
   {
-      for (int rg = RG_LRH; rg <= RG_MSMIDU; ++rg)          
+      for (int rg = RG_LRH; rg <= RG_MSMIDU; ++rg)
       {
-          for (int s = S_MALE; s <= S_FEMALE; ++s) 
+          for (int s = S_MALE; s <= S_FEMALE; ++s)
           {
-  
+
               if (!((s == S_FEMALE) && (rg >= RG_MSM)))
               {
                   // Remove new infections from HIV‑negative category
@@ -1723,7 +1736,7 @@ void add_new_infections()
 
                   }
               }
-          } //s 
+          } //s
       } //r
   } //v
 
@@ -1741,39 +1754,39 @@ auto& n_hv = state_next.hv;
 auto& i_hv = intermediate.hv;
 const auto& p_hv = pars.hv;
 
-real_type not_receiving_art_vrhs[nVAC][nRG][nCD4p][nNS]; 
-real_type eligible_art_vrhs[nVAC][nRG][nCD4p][nNS]; 
+real_type not_receiving_art_vrhs[nVAC][nRG][nCD4p][nNS];
+real_type eligible_art_vrhs[nVAC][nRG][nCD4p][nNS];
 
-real_type receiving_art_vrs[nVAC][nRG][nNS] ;   
+real_type receiving_art_vrs[nVAC][nRG][nNS] ;
 real_type not_receiving_art_vrs[nVAC][nRG][nNS] ;
-real_type start_art[nVAC][nRG][nNS]  ; 
-real_type sum_elig_art[nVAC][nRG][nNS]   ;       
+real_type start_art[nVAC][nRG][nNS]  ;
+real_type sum_elig_art[nVAC][nRG][nNS]   ;
 
-real_type  sex_age_hiv[POP_H_ALL][nNS];         
-real_type  art_cov[RG_TOTAL1][nNS];             
-bool  kp_cd4_elig[RG_TOTAL1][nNS];  
+real_type  sex_age_hiv[POP_H_ALL][nNS];
+real_type  art_cov[RG_TOTAL1][nNS];
+bool  kp_cd4_elig[RG_TOTAL1][nNS];
 
-real_type new_patients[nCD4p];            
-real_type mort_rate[nCD4p];           
-real_type prop1[nCD4p];           
-real_type prop2[nCD4p];            
-real_type prop_avg[nCD4p]; 
+real_type new_patients[nCD4p];
+real_type mort_rate[nCD4p];
+real_type prop1[nCD4p];
+real_type prop2[nCD4p];
+real_type prop_avg[nCD4p];
 
-real_type prop_gt12m;            
-real_type prop_lt12m;            
-real_type num_ltfu;               
-real_type prop_by_mort;         
-real_type prop_by_elig;            
+real_type prop_gt12m;
+real_type prop_lt12m;
+real_type num_ltfu;
+real_type prop_by_mort;
+real_type prop_by_elig;
 real_type remaining_new_art;
 real_type entrants;
 
 real_type ltfu;
 real_type new_art_cap;
-real_type sum1;  
+real_type sum1;
 
 
 for (int s = S_MALE; s <= S_FEMALE; ++s) {
-    
+
    for (int hd = CD4_GT500; hd <= CD4_LT50 ; ++hd){
       sex_age_hiv[hd][s] =0;
    }
@@ -1781,7 +1794,7 @@ for (int s = S_MALE; s <= S_FEMALE; ++s) {
     for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
       kp_cd4_elig[rg][s] = true;
       art_cov[rg][s] = 0;
-    }    
+    }
 
     for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) {
 
@@ -1790,16 +1803,16 @@ for (int s = S_MALE; s <= S_FEMALE; ++s) {
         not_receiving_art_vrs[v][rg][s]=0;
         start_art[v][rg][s]=0;
         sum_elig_art[v][rg][s]=0;
-      
+
       for (int hd = CD4_GT500; hd <= CD4_LT50 ; ++hd){
         not_receiving_art_vrhs[v][rg][hd][s] =0;
         eligible_art_vrhs[v][rg][hd][s] =0;
       }
-      
+
     }//rg
-    
-  }//v     
-          
+
+  }//v
+
 }//s
 
 prop_by_mort = 1/2;//p_ha.initiation_mortality_weight;
@@ -1829,7 +1842,7 @@ if (ltfu > 0) {
 
             for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
                 for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) {
-                    
+
                     num_ltfu = ltfu / opts.hts_per_year *  n_hv.adults(v,rg,hd+hOnArt,s);
 
                     if (hd == CD4_GT500) {
@@ -1874,7 +1887,7 @@ for (int s = S_MALE; s <= S_FEMALE; ++s) {
             //if ((rg == RG_MSM) && DP.GetPopsEligTreat(DP_EligTreatMSM).Eligible &&
             //    DP.GetPopsEligTreat(DP_EligTreatMSM).Year <= (DP.GetFirstYear + t - 1)) {
             //    kp_cd4_elig[RG_MSM][S_MALE] = false;
-                //not doing these groups, currently 
+                //not doing these groups, currently
                 //kp_cd4_elig[HV_Male][RG_MSMLR] = false;
                 //kp_cd4_elig[HV_Male][RG_MSMMR] = false;
                 //kp_cd4_elig[HV_Male][RG_MSMHR] = false;
@@ -1886,7 +1899,7 @@ for (int s = S_MALE; s <= S_FEMALE; ++s) {
             //}
         }
     }//rg
-}//s 
+}//s
 
 
 
@@ -1894,7 +1907,7 @@ for (int s = S_MALE; s <= S_FEMALE; ++s) {
 if (sex_age_hiv[POP_H_OnART][S_MALE] > 0.0){
     for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg)
     {
-     
+
         art_cov[rg][S_MALE] = sex_age_hiv[POP_H_OnART][S_MALE] /
                                (sex_age_hiv[POP_H_NoART][S_MALE] +
                                 sex_age_hiv[POP_H_OnART][S_MALE]);
@@ -1905,7 +1918,7 @@ if (sex_age_hiv[POP_H_OnART][S_MALE] > 0.0){
     }
 }//if sex_age_hiv[S_MALE][POP_H_OnART] > 0.0
 
-      
+
 //KP coverage from AIM input editor
 //if (p_ha.art_cov_num_percent == ART_RG_PERCENT)
 if (p_ha.art_cov_num_percent == 0)
@@ -1925,15 +1938,15 @@ if (p_ha.art_cov_num_percent == 0)
 
 
 // Calc new ART by sex and allocate it
-for (int s = S_MALE; s <= S_FEMALE; s++)              
+for (int s = S_MALE; s <= S_FEMALE; s++)
 {
 
     //calc numbers eligible
-    for (int hd = CD4_GT500; hd <= CD4_LT50 ; ++hd)   
+    for (int hd = CD4_GT500; hd <= CD4_LT50 ; ++hd)
     {
-        for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg)     
+        for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg)
         {
-            for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) 
+            for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
             {
                 // not receiving ART (by sex & rg)
                 not_receiving_art_vrs[v][rg][s] += n_hv.adults(v,rg,hd,s);//CDP check adults or adultsTS
@@ -1974,7 +1987,7 @@ for (int s = S_MALE; s <= S_FEMALE; s++)
 
             // aggregate both sexes – required for comparison with AIM
             //start_art[v][rg][S_ALL] += start_art[v][rg][s];
-            
+
             //allocate new ART according to eligibility (Prop1) and mortality (Prop2)
             for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
                 prop1[hd]        = 0.0;
@@ -1984,7 +1997,7 @@ for (int s = S_MALE; s <= S_FEMALE; s++)
                 new_patients[hd] = 0.0;
             }
 
-        
+
             if(sum_elig_art[v][rg][s] > 0.0) {
                   for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
                       if (hd == CD4_GT500) {
@@ -1995,10 +2008,10 @@ for (int s = S_MALE; s <= S_FEMALE; s++)
                           prop2[hd] = eligible_art_vrhs[v][rg][hd][s] /
                                       sum_elig_art[v][rg][s];
                       }
-                  }    
+                  }
             }
 
-        
+
               double sum1 = 0.0;
               for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
                   sum1 += (1.0 / opts.hts_per_year) *
@@ -2043,7 +2056,7 @@ for (int s = S_MALE; s <= S_FEMALE; s++)
                 }
 
               }//hd
-                
+
 
               // ---- Calculate proportion starting (Prop2) --------------------
               for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
@@ -2058,10 +2071,10 @@ for (int s = S_MALE; s <= S_FEMALE; s++)
                   prop_avg[hd] = prop_by_elig * prop1[hd] + prop_by_mort * prop2[hd];
               }
 
-              //allocate the new ART by CD4 category 
+              //allocate the new ART by CD4 category
               if (start_art[v][rg][s] > 0.0) {
                   for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
-                      
+
                      entrants = prop_avg[hd] * start_art[v][rg][s];
 
                       // cannot remove ART patients!
@@ -2126,9 +2139,9 @@ void sum_adult_pop_dims(int t)
                         sum += n_hv.adults(v,rg,hd,s);
                 }
                 n_hv.adults(v,RG_ALL,hd,s) = sum;
-            } 
-            
-            
+            }
+
+
        for (int s = S_MALE; s <= S_FEMALE; ++s)
         for (int rg = RG_NONE; rg <= RG_ALL; ++rg)
             for (int v = VAC_UNV; v <= VAC_ALL; ++v)
@@ -2141,9 +2154,9 @@ void sum_adult_pop_dims(int t)
                         sum += n_hv.adults(VAC_ALL,hd,rg,s);
                 }
                 n_hv.adults(v,rg,CD4_ALL,s) = sum;
-            }    
-            
-        
+            }
+
+
         for (int hd = CD4_NEG; hd <= CD4_ALL; ++hd)
         for (int rg = RG_NONE; rg <= RG_ALL; ++rg)
             for (int v = VAC_UNV; v <= VAC_ALL; ++v)
@@ -2156,8 +2169,8 @@ void sum_adult_pop_dims(int t)
                         sum += n_hv.adults(VAC_ALL,hd,rg,s);
                 }
                 n_hv.adults(v,rg,hd,S_ALL) = sum;
-            }          
-     
+            }
+
 
 }
 
@@ -2187,7 +2200,7 @@ void sum_adult_pop_dims_goals(int t)
         double totalAcrossRisks = 0.0;
         for (int rg = RG_NONE; rg <= RG_MSMIDU; ++rg)
         {
-            double sum = 0.0;              
+            double sum = 0.0;
             for (int hd = CD4_NEG; hd <= CD4_LT50_ART; ++hd)
             {
                 for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
@@ -2225,7 +2238,7 @@ void sum_adult_pop_dims_goals(int t)
                 sum += n_hv.adults(v,hd,rg,s);
            }
          n_hv.adults(VAC_ALL,hd,RG_ALL,s) = sum;
-        }      
+        }
 
   }
 
@@ -2237,7 +2250,7 @@ void sum_adult_pop_dims_goals(int t)
     const auto& c_dp = state_curr.dp;
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
-    
+
     //sum the condom percents by year
     n_hv.ex_output = p_hv.epi_initial_pulse;
 
@@ -2257,7 +2270,7 @@ void sum_adult_pop_dims_goals(int t)
   };
 
 
- 
+
 
 
 

@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-
-from pathlib import Path
-
+import os
 import numpy as np
 
 from leapfrog_goals import get_goals_ss, run_goals
@@ -12,43 +10,12 @@ from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 
 
 """
-Note this script is only expected to be used temporarily until the
-proper data reading code is ready to go.
-
-Pickle created via:
-
-def modvars_to_numpy(tag, value):
-    # Taken from FilterUtils.py
-    if type(value) is list:
-        try:
-            if len(value) > 0 and ((type(value[0]) is dict) or (type(value[0]) is str) or (type(value[0]) is bool)):
-                value = np.array(value, order='C')
-            else:
-                value = np.array(value, order='C', dtype=np.dtype(np.float64))
-
-        except:
-            print(f'Failed to convert list to numpy array {tag}')
-
-    return value
-
-pjnz = "C:\\Users\\Test\\Downloads\\Zimbabwe.PJNZ"
-with open(pjnz, "rb") as fh:
-    buf = BytesIO(fh.read())
-projection, params, epp_files, shiny90 = GB_ImportProjection(buf)
-
-numpy_modvars = {tag: modvars_to_numpy(tag, value) for tag, value in projection.items()}
-
-with open("zimbabwe_modvars.pickle", "wb") as handle:
-    pickle.dump(numpy_modvars, handle, protocol=pickle.HIGHEST_PROTOCOL)
+Script for running goals whilst in development. This should be turned
+into a proper pytest test at some point.
 """
 
-# zim_pickle_path = os.path.expanduser("~/Downloads/zimbabwe_modvars.pickle")
-
-# with open(zim_pickle_path, "rb") as handle:
-#     modvars = pickle.load(handle)
-
 modvars, param, epp, shiny90 = GB_ImportProjectionFromFile(
-    r".\tests\resources\SouthAfrica.pjnz"
+    os.path.join("tests", "resources", "SouthAfrica.PJNZ")
 )
 
 
