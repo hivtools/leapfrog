@@ -69,5 +69,7 @@
     "births": {
       "num_type": "real_type"
     }
-  }
+  },
+
+  "internal_state": {}
 }

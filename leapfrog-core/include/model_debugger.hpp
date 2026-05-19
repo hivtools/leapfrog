@@ -38,10 +38,6 @@ template <class HvState, class IntermediateHv, class ParsHv>
     hv.mult_art;
 
 
-    i_hv.riskgroup_proportions;
-    i_hv.behave_change_rate;
-
-
     i_hv.totpop_deaths_background;
 
     i_hv.prep_effect;
@@ -64,7 +60,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
 
 
-       
+
     //i_hv.totpop_1549;
     //i_hv.pop_1549;
     //i_hv.entrants_age_15;
@@ -89,10 +85,10 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
     //p_hv.rn_vac_cov_type;
     //p_hv.rn_vac_targetting;
-    
+
     p_hv.epi_infectiousness;
     p_hv.epi_inf_mult_art;
-    
+
     p_hv.prep_method_mix;
     p_hv.prep_effectiveness;
     p_hv.b_foi_idu;
@@ -261,8 +257,6 @@ struct HvDebugInfo {
   NdaInfo mult_art;
 
   // Intermediate
-  NdaInfo riskgroup_proportions;
-  NdaInfo behave_change_rate;
   NdaInfo dp_totpop_1549;
   NdaInfo dp_migration_num;
   NdaInfo dp_migration_denom;
@@ -299,7 +293,7 @@ struct HvDebugInfo {
   NdaInfo art_coverage_rg;
   NdaInfo prep_effect;
 
-    
+
   // Pars
   //int epi_start_year;
   //int b_balance_sex_acts;
@@ -324,8 +318,8 @@ struct HvDebugInfo {
   NdaInfo prep_method_mix;
   NdaInfo prep_effectiveness;
   NdaInfo b_foi_idu;
-    
- 
+
+
 };
 
 struct HaDebugInfo {
@@ -489,14 +483,11 @@ inline DpDebugInfo capture_dp(const DpState& dp, const IntermediateDp& i_dp,
 
 template <class HvState, class IntermediateHv, class ParsHv>
   requires requires (const HvState& hv, const IntermediateHv& i_hv, const ParsHv& p_hv) {
-    
+
     hv.adults;
     hv.mult_no_art;
     hv.mult_art;
 
-    i_hv.riskgroup_proportions;
-    i_hv.behave_change_rate;
-   
     i_hv.prep_effect;
 
     i_hv.pop_1549;
@@ -525,16 +516,16 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
 /*     i_hv.totpop_deaths_background
     i_hv.totpop_1549
-    i_hv.pop_1549 
+    i_hv.pop_1549
     i_hv.pop_1549_hiv
-    i_hv.pop_1549_art 
+    i_hv.pop_1549_art
     i_hv.hiv_cd4_mort_no_art
-    i_hv.hiv_cd4_mort_art 
+    i_hv.hiv_cd4_mort_art
     i_hv.hiv_cd4_progression
-    i_hv.pop_sex_age_hiv 
+    i_hv.pop_sex_age_hiv
     i_hv.entrants_age_15
     i_hv.aging_50
-    i_hv.aging_denom_1549 
+    i_hv.aging_denom_1549
     i_hv.migration_num
     i_hv.migration_denom */
 
@@ -572,13 +563,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.mult_no_art = nda_capture(hv.mult_no_art);
   out.mult_art = nda_capture(hv.mult_art);
 
-
-  out.riskgroup_proportions = nda_capture(i_hv.riskgroup_proportions);
-  out.behave_change_rate = nda_capture(i_hv.behave_change_rate);
-
   out.prep_effect = nda_capture(i_hv.prep_effect);
-  
-  //out.riskgroup_proportions = nda_capture(i_hv.totpop_1549);
 
   out.pop_1549 = nda_capture(i_hv.pop_1549);
 
@@ -595,15 +580,17 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.dp_migration_denom = nda_capture(i_hv.dp_migration_denom);
   out.rate_aging_50 = nda_capture(i_hv.rate_aging_50);
 
-  
+
   //out.riskgroup_proportions = nda_capture(i_hv.entrants_age_15);
   //out.riskgroup_proportions = nda_capture(i_hv.aging_50);
   //out.riskgroup_proportions = nda_capture(i_hv.aging_denom_1549);
 
-  
 
 
-  /* out.behave_change_rate = nda_capture(i_hv.behave_change_rate);
+
+
+
+  /*
   out.totpop_1549 = nda_capture(i_hv.totpop_1549);
   out.migration_num = nda_capture(i_hv.migration_num);
   out.migration_denom = nda_capture(i_hv.migration_denom);
@@ -634,8 +621,8 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.pop_1549_hiv = nda_capture(i_hv.pop_1549_hiv);
   out.pop_1549_art = nda_capture(i_hv.pop_1549_art);
   out.aging_denom_1549 = nda_capture(i_hv.aging_denom_1549);
-  out.vac_params = nda_capture(i_hv.vac_params); 
-  out.vac_effect = nda_capture(i_hv.vac_effect);  
+  out.vac_params = nda_capture(i_hv.vac_params);
+  out.vac_effect = nda_capture(i_hv.vac_effect);
   out.art_coverage_rg = nda_capture(i_hv.art_coverage_rg); */
 
   //out.epi_start_year = static_cast<int>(p_hv.epi_start_year);
@@ -657,7 +644,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   //out.rn_vac_targetting = static_cast<int>(p_hv.rn_vac_targetting);
   out.epi_infectiousness =nda_capture(p_hv.epi_infectiousness);
   out.epi_inf_mult_art = nda_capture(p_hv.epi_inf_mult_art);
-  
+
   out.prep_method_mix = nda_capture(p_hv.prep_method_mix);
   out.prep_effectiveness = nda_capture(p_hv.prep_effectiveness);
   out.b_foi_idu = nda_capture(p_hv.b_foi_idu);

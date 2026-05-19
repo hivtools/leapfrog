@@ -40,6 +40,8 @@ struct ConfigMixer<L, real_type, ModelVariant> {
     void reset() {};
   };
 
+  struct InternalState {};
+
   struct State {
     void reset() {};
   };
@@ -108,6 +110,10 @@ struct ConfigMixer<L, real_type1, ModelVariant1, Pair<true, {{ config.name }}Con
     };
   };
 
+  struct InternalState: public NextConfigMixer::InternalState {
+    typename CurrConfig::InternalState {{ config.namespace }};
+  };
+
   struct State: public NextConfigMixer::State {
     typename CurrConfig::State {{ config.namespace }};
 
@@ -161,6 +167,7 @@ struct ConfigMixer<L, real_type1, ModelVariant1, Pair<true, {{ config.name }}Con
     const State& state_curr;
     State& state_next;
     Intermediate& intermediate;
+    InternalState& internal_state;
     const Options<real_type>& opts;
   };
 };

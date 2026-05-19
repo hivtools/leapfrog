@@ -10,12 +10,11 @@
       "nCD4p": 11,
       "nCD4a": 7,
       "nRG": 17,
-      "nRG1": 9,  
+      "nRG1": 9,
       "nVAC": 4,
       "nHIV": 6,
       "nART": 3,
       "pIDX_24to35": 2,
-      "pIDX_15to49": 15,
       "pAges5Yrs": 17,
       "rRG_TOTAL": 11,
       "rRG_MSM_F3": 18,
@@ -25,8 +24,6 @@
       "vVAC_NUM_EFFECTS": 5,
       "vVAC_NUM_ACTTYPE": 2,
       "vVAC_NUM_COVTYPE": 2,
-      "hDS": 7,
-      "hTS": 3,
       "hCD4_ALL_HIV": 17,
       "hCD4_LT50": 7,
       "hHIV_Cats": 5,
@@ -41,7 +38,7 @@
 
 
   "pars": {
-    
+
      "epi_start_year": {
       "num_type": "int"
     },
@@ -49,16 +46,15 @@
      "epi_months_in_primary": {
       "num_type": "real_type"
     },
-      
 
     "b_balance_sex_acts": {
       "num_type": "int"
     },
-    
+
     "epi_initial_pulse": {
       "num_type": "real_type"
     },
-      
+
     "b_condom_prop": {
       "num_type": "real_type",
       "dims": ["SS::nRG+1", "opts.proj_steps"]
@@ -186,9 +182,9 @@
 
      "prep_effectiveness": {
       "num_type": "real_type",
-      "dims": ["SS::nPREP+1",  "SS::RN_DurationMonths+1"]
+      "dims": ["SS::nPREP+1",  "SS::RN_DurationMonths"]
     },
-   
+
      "rn_coverage": {
       "num_type": "real_type",
       "dims": ["SS::nIntervn", "opts.proj_steps"]
@@ -198,13 +194,7 @@
 
   },
 
-  "intermediate": { 
-    
-  
-    "riskgroup_proportions": {
-      "num_type": "real_type",
-      "dims": ["SS::nRG","SS::nNS"]
-    },
+  "intermediate": {
 
     "behave_change_rate": {
       "num_type": "real_type",
@@ -247,7 +237,7 @@
       "dims": ["SS::nHIV", "SS::nCD4a","SS::nNS"]
     },
 
-    
+
     "dp_entrants_age_15": {
       "num_type": "real_type",
       "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
@@ -297,7 +287,7 @@
       "num_type": "real_type",
       "dims": ["SS::nRG","SS::nCD4","SS::nNS"]
     },
-    
+
     "hiv_mu": {
       "num_type": "real_type",
       "dims": ["SS::nCD4p","SS::nNS" ]
@@ -312,7 +302,7 @@
       "num_type": "real_type",
       "dims": ["SS::nCD4","SS::nNS"]
     },
-    
+
     "dp_hiv_cd4_mort_no_art": {
       "num_type": "real_type",
       "dims": ["SS::nCD4p","SS::nNS"]
@@ -392,7 +382,7 @@
 
 
 
-    
+
 
   },
 
@@ -456,6 +446,20 @@
      "new_inf_s": {
       "num_type": "real_type",
       "dims": ["SS::nNS+1"]
+    }
+
+  },
+
+  "internal_state": {
+
+    "riskgroup_proportions": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG","SS::nNS"]
+    },
+
+    "behave_change_rate": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG","SS::nNS"]
     }
 
   }
