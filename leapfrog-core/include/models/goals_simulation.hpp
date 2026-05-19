@@ -239,9 +239,12 @@ struct GoalsSimulation<Config> {
   
     //initilize adult population
     if(t==1){
-      set_riskgroup_proportions();
       set_initial_pop();
     }
+
+    //set risk group sizes from inputs
+    //CDP move to t==1 when new variable type than intermediate is available
+    set_riskgroup_proportions();
 
     //at hiv first year, apply initial pulse, t starts at 0
     int proj_start_year = opts.proj_start_year;
@@ -393,12 +396,13 @@ struct GoalsSimulation<Config> {
    auto& n_hv = state_next.hv; 
   
     //init time dependent vars
-    for (int s = S_MALE; s <= S_FEMALE; ++s)
-        for (int rg = RG_NONE; rg <= RG_ALL; ++rg)
-            for (int v = VAC_UNV; v <= VAC_ALL; ++v)
-                for (int hd = CD4_NEG; hd <= CD4_LT50_ART; ++hd){
-                  n_hv.adults_ts(v,rg,hd,s)=n_hv.adults(v,rg,hd,s);
-                }
+          for (int v = VAC_UNV; v <= VAC_ALL; ++v)
+            for (int rg = RG_NONE; rg <= RG_ALL; ++rg)
+                for (int hd = CD4_NEG; hd <= CD4_ALL; ++hd)
+                  for (int s = S_MALE; s <= S_FEMALE; ++s){
+                    n_hv.adults_ts(v,rg,hd,s)=n_hv.adults(v,rg,hd,s);
+                  }
+
   }
 
  void print_goals_inputs() {
@@ -949,15 +953,15 @@ void progress_norisk_hiv_neg(int t)
     for (int s = S_MALE; s <= S_FEMALE; ++s)
     {
      
-        temp1=n_hv.adults_ts(VAC_UNV,CD4_NEG,RG_NONE,s);
-        temp2=n_hv.adults_ts(VAC_UNV,CD4_ALL,RG_NONE,s);
+        temp1=n_hv.adults_ts(VAC_UNV,RG_NONE,CD4_NEG,s);
+        temp2=n_hv.adults_ts(VAC_UNV,RG_NONE,CD4_ALL,s);
 
         value = 
-        n_hv.adults_ts(VAC_UNV,CD4_NEG,RG_NONE,s) + dt*(
+        n_hv.adults_ts(VAC_UNV,RG_NONE,CD4_NEG,s) + dt*(
         //new entrants 15 yrs , note that they are not vaccinated by assumption
         i_hv.dp_entrants_age_15(POP_H_HIVNeg,CD4_NEG,s) -
         //exits and migration
-        n_hv.adults_ts(VAC_UNV,CD4_NEG,RG_NONE,s) * (
+        n_hv.adults_ts(VAC_UNV,RG_NONE,CD4_NEG,s) * (
         (std::max(p_hv.b_age_first_sex(S_OFFSET+s,t) - 15.0, 1.0)!=0)? 1/std::max(p_hv.b_age_first_sex(S_OFFSET+s,t) - 15.0, 1.0) : 0 +
         i_hv.background_death_rate(s) + 
         i_hv.rate_aging_50(POP_H_HIVNeg,CD4_NEG,s) - 
@@ -969,26 +973,26 @@ void progress_norisk_hiv_neg(int t)
         //(c_hv.adults(VAC_UNV,CD4_ALL,RG_NONE,s)!=0)? 1/ c_hv.adults(VAC_UNV,CD4_ALL,RG_NONE,s) : 0 +
       
         //vaccine waning, entrants
-        (n_hv.adults_ts(VAC_TAKE,CD4_NEG,RG_NONE,s) +
-          n_hv.adults_ts(VAC_PARTIAL,CD4_NEG,RG_NONE,s) +
-          n_hv.adults_ts(VAC_NO_PROT,CD4_NEG,RG_NONE,s)) *
+        (n_hv.adults_ts(VAC_TAKE,RG_NONE,CD4_NEG,s) +
+          n_hv.adults_ts(VAC_PARTIAL,RG_NONE,CD4_NEG,s) +
+          n_hv.adults_ts(VAC_NO_PROT,RG_NONE,CD4_NEG,s)) *
         (i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0  );
 
         if(value<0) value=0;
-        n_hv.adults(VAC_UNV,CD4_NEG,RG_NONE,s) = value;
+        n_hv.adults(VAC_UNV,RG_NONE,CD4_NEG,s) = value;
 
         //keep track of deaths
-        n_hv.deaths(VAC_UNV,CD4_NEG,RG_NONE,s) += dt*n_hv.adults_ts(VAC_UNV,CD4_NEG,RG_NONE,s)*
-                                                    i_hv.background_death_rate(s);
+        n_hv.deaths(VAC_UNV,RG_NONE,CD4_NEG,s) += dt*n_hv.adults_ts(VAC_UNV,RG_NONE,CD4_NEG,s)*
+                                                     i_hv.background_death_rate(s);
 
 
         //vaccinated
         for (int v = VAC_TAKE; v <= VAC_NO_PROT; ++v)
         {
               value = 
-              n_hv.adults_ts(v,CD4_NEG,RG_NONE,s) + dt*( -
+              n_hv.adults_ts(v,RG_NONE,CD4_NEG,s) + dt*( -
               //exits and migration
-              n_hv.adults_ts(v,CD4_NEG,RG_NONE,s) * (
+              n_hv.adults_ts(v,RG_NONE,CD4_NEG,s) * (
               (std::max(p_hv.b_age_first_sex(S_OFFSET+s,t) - 15.0, 1.0)!=0)? 1/std::max(p_hv.b_age_first_sex(S_OFFSET+s,t) - 15.0, 1.0) : 0 +
               i_hv.background_death_rate(s) + 
               i_hv.rate_aging_50(POP_H_HIVNeg,CD4_NEG,s) - 
@@ -1004,10 +1008,10 @@ void progress_norisk_hiv_neg(int t)
               (i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0  );
 
               if(value<0) value=0;
-              n_hv.adults(v,CD4_NEG,RG_NONE,s)=value;
+              n_hv.adults(v,RG_NONE,CD4_NEG,s)=value;
 
               //keep track of deaths
-              n_hv.deaths(v,CD4_NEG,RG_NONE,s) += dt*n_hv.adults_ts(v,CD4_NEG,RG_NONE,s)*
+              n_hv.deaths(v,RG_NONE,CD4_NEG,s) += dt*n_hv.adults_ts(v,RG_NONE,CD4_NEG,s)*
                                                      i_hv.background_death_rate(s);
            
         }//v
@@ -2100,64 +2104,102 @@ void sum_adult_pop_dims(int t)
 
   auto& n_hv = state_next.hv;
 
-    for (int s = S_MALE; s <= S_FEMALE; ++s)
-        for (int hd = CD4_NEG; hd <= CD4_LT50_ART; ++hd)
-            for (int rg = RG_NONE; rg <= RG_MSMIDU; ++rg)
+    for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
+    {
+        for (int rg = RG_NONE; rg <= RG_MSMIDU; ++rg)
+        {
+            for (int hd = CD4_NEG; hd <= CD4_LT50_ART; ++hd)
             {
-                real_type sum = 0.0;
-                for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
-                {
+               real_type sum = 0.0;
+               for (int s = S_MALE; s <= S_FEMALE; ++s)
+               {
                     // Exclude female MSM and higher risk groups
-                    if (!((s == S_FEMALE) && (rg >= RG_MSM)))
+                    //if (!((s == S_FEMALE) && (rg >= RG_MSM) && (rg <= RG_MSMIDU)))
                         sum += n_hv.adults(VAC_ALL,rg,hd,s);
-                }
-                n_hv.adults(VAC_ALL,rg,hd,s) = sum;
-            }
+                } //s
+                
+                //if(sum>0){
+                  n_hv.adults(v,rg,hd,S_ALL) = sum;
+                // }
 
-     for (int s = S_MALE; s <= S_FEMALE; ++s)
-        for (int hd = CD4_NEG; hd <= CD4_LT50_ART; ++hd)
-            for (int v = VAC_UNV; v <= VAC_ALL; ++v)
-            {
-                real_type sum = 0.0;
-                for (int rg = RG_NONE; rg <= RG_MSMIDU; ++rg)
-                {
-                    // Exclude female MSM and higher risk groups
-                    if (!((s == S_FEMALE) && (rg >= RG_MSM)))
-                        sum += n_hv.adults(v,rg,hd,s);
-                }
-                n_hv.adults(v,RG_ALL,hd,s) = sum;
-            } 
-            
-            
-       for (int s = S_MALE; s <= S_FEMALE; ++s)
-        for (int rg = RG_NONE; rg <= RG_ALL; ++rg)
-            for (int v = VAC_UNV; v <= VAC_ALL; ++v)
-            {
-                real_type sum = 0.0;
-                for (int hd = CD4_NEG; hd <= CD4_LT50_ART; ++hd)
-                {
-                    // Exclude female MSM and higher risk groups
-                    if (!((s == S_FEMALE) && (rg >= RG_MSM)))
-                        sum += n_hv.adults(VAC_ALL,hd,rg,s);
-                }
-                n_hv.adults(v,rg,CD4_ALL,s) = sum;
-            }    
+            } //hd
+         } //rg
+      }//v
+
+    for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
+     {
+          for (int rg = RG_NONE; rg <= RG_MSMIDU; ++rg)
+          {
+              for (int s = S_MALE; s <= S_ALL; ++s)
+              {
+                  real_type sum = 0.0;
+                  for (int hd = CD4_NEG; hd <= CD4_LT50_ART; ++hd)
+                  {
+                      // Exclude female MSM and higher risk groups
+                      //if (!((s == S_FEMALE) && (rg >= RG_MSM) && (rg <= RG_MSMIDU)))
+                          sum += n_hv.adults(v,rg,hd,s);
+                  }//hd
+                  if(sum>0){
+                    n_hv.adults(v,rg,CD4_ALL,s) = sum;
+                  }
+
+              } //s
+            } //rg
+        }//v
+    
+             
+       for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
+       {
+          for (int hd = CD4_NEG; hd <= CD4_ALL; ++hd)
+          {
+              for (int s = S_MALE; s <= S_ALL; ++s)
+              {
+                  real_type sum = 0.0;
+                  for (int rg = RG_NONE; rg <= RG_MSMIDU; ++rg)
+                  {
+                      // Exclude female MSM and higher risk groups
+                      //if (!((s == S_FEMALE) && (rg >= RG_MSM) && (rg < RG_ALL)))
+                          sum += n_hv.adults(v,rg,hd,s);
+                  }//hd
+
+                  //if(sum>0){
+                    n_hv.adults(v,RG_ALL,hd,s) = sum;
+                  // } 
+                    
+              }//v
+            }//rg
+        }//s
             
         
-        for (int hd = CD4_NEG; hd <= CD4_ALL; ++hd)
         for (int rg = RG_NONE; rg <= RG_ALL; ++rg)
-            for (int v = VAC_UNV; v <= VAC_ALL; ++v)
-            {
-                real_type sum = 0.0;
-                for (int s = S_MALE; s <= S_FEMALE; ++s)
-                {
-                    // Exclude female MSM and higher risk groups
-                    if (!((s == S_FEMALE) && (rg >= RG_MSM)))
-                        sum += n_hv.adults(VAC_ALL,hd,rg,s);
-                }
-                n_hv.adults(v,rg,hd,S_ALL) = sum;
-            }          
-     
+        {
+          for (int hd = CD4_NEG; hd <= CD4_ALL; ++hd)
+          {
+              for (int s = S_MALE; s <= S_ALL; ++s)
+              {
+                  real_type sum = 0.0;
+                  for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
+                  {
+                      // Exclude female MSM and higher risk groups
+                      //if (!((s == S_FEMALE) && (rg >= RG_MSM) && (rg < RG_ALL)))
+                          sum += n_hv.adults(v,rg,hd,s);
+                  }//v
+                  
+                  n_hv.adults(VAC_ALL,rg,hd,s) = sum;
+
+              }//s
+            }//hd
+        }//rg              
+/*  
+    real_type temp1 = 0;
+    real_type temp2 = 0;
+    real_type temp3 = 0;
+
+    temp1=n_hv.adults(VAC_UNV,RG_NONE,CD4_NEG,S_MALE);
+    temp1=n_hv.adults(VAC_UNV,RG_NONE,CD4_NEG,S_FEMALE);
+    temp2=n_hv.adults(VAC_UNV,RG_NONE,CD4_ALL,S_MALE);
+    temp3=n_hv.adults(VAC_UNV,RG_ALL,CD4_ALL,S_MALE); */
+
 
 }
 
