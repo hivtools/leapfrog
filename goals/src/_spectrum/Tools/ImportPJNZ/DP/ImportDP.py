@@ -3686,6 +3686,14 @@ def import_PrevNeedKeyPop(sheet, tags, params, projection):
     modvar = projection[AM_PreventionNeedsKeyPopsTag]
 
     row = modvarTagRow + 3
+    if 'data' not in modvar:
+        modvar['data'] = [{
+                'population': 0.0,
+                'coverage': 0.0,
+                'ratio': 0.0,
+                'source': '',
+                'userCoverage': 0.0
+        } for _ in range(len(DP_TKeyPopType))]  
     
     # populations
     for kp in range(len(DP_TKeyPopType)):
@@ -3773,6 +3781,15 @@ def import_PrevNeedCondoms(sheet, tags, params, projection):
     if modvarTagRow is None: return
     modvar = projection[AM_PreventionNeedsCondomsTag]
 
+    if 'data' not in modvar:
+        modvar['data'] = [{
+                'popFirstYear': 0.0,
+                'popFinalYear': 0.0,
+                'baselineCov': 0.0,
+                'targetCov': 0.0,
+                'sexActs': 0.0,
+                'wastage': 0.0
+        } for _ in range(len(DP_TCondomType))]  
     row = modvarTagRow + 3
     # Population first year
     for condom in range(len(DP_TCondomType)):
@@ -3811,6 +3828,17 @@ def import_PrevNeedPrEP_V2(sheet, tags, params, projection):
     if modvarTagRow is None: return
     modvar = projection[AM_PreventionNeedsPrEPTag]
 
+    if 'data' not in modvar:
+        modvar['data'] = [{
+                'popFirstYear': 0.0,
+                'popFinalYear': 0.0,
+                'PrEPCov': 0.0,
+                'TargetCov': 0.0,
+                'Oral': [0.0] * DP_PreventionNeeds_PrEPYearLen,
+                'Ring': [0.0] * DP_PreventionNeeds_PrEPYearLen,
+                'TwoMonth': [0.0] * DP_PreventionNeeds_PrEPYearLen,
+                'SixMonth': [0.0] * DP_PreventionNeeds_PrEPYearLen
+        } for _ in range(len(DP_TPrEPType))]  
     row = modvarTagRow + 3
     
     # Population first year
@@ -3863,6 +3891,18 @@ def import_PrevNeedPrEP_V3(sheet, tags, params, projection):
     if modvarTagRow is None: return
     modvar = projection[AM_PreventionNeedsPrEPTag]
 
+    if 'data' not in modvar:
+        modvar['data'] = [{
+                'popFirstYear': 0.0,
+                'popFinalYear': 0.0,
+                'Prev': 0.0,
+                'PrEPCov': 0.0,
+                'TargetCov': 0.0,
+                'Oral': [0.0] * DP_PreventionNeeds_PrEPYearLen,
+                'Ring': [0.0] * DP_PreventionNeeds_PrEPYearLen,
+                'TwoMonth': [0.0] * DP_PreventionNeeds_PrEPYearLen,
+                'SixMonth': [0.0] * DP_PreventionNeeds_PrEPYearLen
+        } for _ in range(len(DP_TPrEPType))]
     row = modvarTagRow + 3
     
     # Population first year
@@ -3922,6 +3962,15 @@ def import_PrEPParameters(sheet, tags, params, projection):
 
     row = modvarTagRow + 3 
     modvar = projection[AM_PMTCTPrEPParametersTag]
+    if modvar == None:
+        modvar = {}
+        projection[AM_PMTCTPrEPParametersTag] = modvar
+        
+    if ( modvar == {}):
+        modvar['adherence'] = {'oral': 0.0, 'injectable': 0.0}
+        modvar['selection'] = {'incidenceRatio': 0.0}
+        modvar['personYearsPrEP'] = {'oral': 0.0, 'injectable': 0.0}
+
     modvar['adherence']['oral'] = float(sheet[row, GB_RW_DataStartCol])
     modvar['adherence']['injectable'] = float(sheet[row+1, GB_RW_DataStartCol])
     modvar['selection']['incidenceRatio'] = float(sheet[row+2, GB_RW_DataStartCol])
