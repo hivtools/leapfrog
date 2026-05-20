@@ -154,7 +154,7 @@ struct Leapfrog {
         }
 
         if constexpr (ModelVariant::run_goals) {
-          //goals_sim.run_goals_post_hiv_loop();
+          goals_sim.run_goals_post_hiv_loop();
         }
 
       }
