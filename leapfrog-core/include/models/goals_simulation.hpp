@@ -485,7 +485,7 @@ static void init_internal_state(const Pars& pars, InternalState& internal_state)
     nda::fill(i_hv.b_riskgroup_proportions, 0.0);//risk group proportions
     nda::fill(i_hv.b_behave_change_rate, 0.0);//risk group proportions
 
-    //risk group proportions, and behaviur change rates
+    //risk group proportions, and behaviour change rates
     for (int rg = RG_NONE; rg <= RG_MSM; ++rg) { //CDP reset range
 
       //CDP note +1 on inputs

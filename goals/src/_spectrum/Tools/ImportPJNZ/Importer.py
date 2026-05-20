@@ -5,11 +5,11 @@ from zipfile import ZipFile
 from SpectrumCommon.Modvars.GB.GBCreateProjection import *
 from SpectrumCommon.Modvars.GB.GBDefs import createProjectionParams
 from Tools.ImportPJNZ.ImportPJN import *
-from Tools.ImportPJNZ.DP.ImportDP import *
-from Tools.ImportPJNZ.CS.ImportCS import *
-from Tools.ImportPJNZ.FP.ImportFP import *
-from Tools.ImportPJNZ.HV.ImportHV import openHV
-from Tools.ImportPJNZ.RN.ImportRN import openRN
+from src._spectrum.Tools.ImportPJNZ.DP.ImportDP import *
+from src._spectrum.Tools.ImportPJNZ.CS.ImportCS import *
+from src._spectrum.Tools.ImportPJNZ.FP.ImportFP import *
+from src._spectrum.Tools.ImportPJNZ.HV.ImportHV import openHV
+from src._spectrum.Tools.ImportPJNZ.RN.ImportRN import openRN
 
 from AvenirCommon.Database import *
 from SpectrumCommon.Const.GB import *

@@ -12,7 +12,7 @@ from src._spectrum.SpectrumCommon.Const.RN import RN_AllVacc, RN_IDUDrugSub, RN_
 def openHV(file, params: createProjectionParams, projection: dict):
     sheet = gb_read_csv_sheet(file)
     tags = getAllTags(sheet)
-    
+
     _import_tag_value(sheet, tags, projection, '<FirstYear MV>',           HV_FirstYearTag)
     _import_tag_value(sheet, tags, projection, '<FinalYear MV>',           HV_FinalYearTag)
     _import_tag_value(sheet, tags, projection, '<FinalIndex MV>',          HV_FinalIndexTag)
@@ -201,7 +201,7 @@ def import_AgeFirstSex(sheet, tags, params, projection):
 
     age_first_sex = np.zeros((HV_Female + 1, final_index + 1))
 
-    for row_offset, sex in ((2, HV_Male), (4, HV_Female)):
+    for row_offset, sex in ((4, HV_Male), (6, HV_Female)):
         row = modvarTagRow + row_offset
         col = GB_RW_DataStartCol
         last_value = 0.0
