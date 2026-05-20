@@ -47,6 +47,7 @@
       "num_type": "real_type"
     },
 
+
     "b_balance_sex_acts": {
       "num_type": "int"
     },
@@ -196,7 +197,12 @@
 
   "intermediate": {
 
-    "behave_change_rate": {
+   "b_riskgroup_proportions": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG","SS::nNS"]
+    },
+
+    "b_behave_change_rate": {
       "num_type": "real_type",
       "dims": ["SS::nRG","SS::nNS"]
     },

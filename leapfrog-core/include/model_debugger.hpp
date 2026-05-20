@@ -57,7 +57,8 @@ template <class HvState, class IntermediateHv, class ParsHv>
     i_hv.dp_migration_denom;
     i_hv.rate_aging_50;
 
-
+    i_hv.b_riskgroup_proportions;
+    i_hv.b_behave_change_rate;
 
 
 
@@ -293,6 +294,9 @@ struct HvDebugInfo {
   NdaInfo art_coverage_rg;
   NdaInfo prep_effect;
 
+   NdaInfo b_riskgroup_proportions;
+  NdaInfo b_behave_change_rate;
+
 
   // Pars
   //int epi_start_year;
@@ -505,6 +509,10 @@ template <class HvState, class IntermediateHv, class ParsHv>
     i_hv.dp_migration_denom;
     i_hv.rate_aging_50;
 
+    i_hv.b_riskgroup_proportions;
+    i_hv.b_behave_change_rate;
+
+
 
 
     //i_hv.totpop_1549;
@@ -579,6 +587,9 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.dp_migration_num = nda_capture(i_hv.dp_migration_num);
   out.dp_migration_denom = nda_capture(i_hv.dp_migration_denom);
   out.rate_aging_50 = nda_capture(i_hv.rate_aging_50);
+
+  out.b_riskgroup_proportions = nda_capture(i_hv.b_riskgroup_proportions);
+  out.b_behave_change_rate = nda_capture(i_hv.b_behave_change_rate);
 
 
   //out.riskgroup_proportions = nda_capture(i_hv.entrants_age_15);
