@@ -1561,26 +1561,27 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
      
       totalSexActsF = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_FEMALE) * p_hv.b_num_partners(RG_OFFSET+RG_LRH,t) * p_hv.b_sex_acts(RG_OFFSET+RG_LRH,t);
       PrevFL = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_FEMALE) * n_hv.prevalence(RG_LRH,S_FEMALE);
-      denom = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_FEMALE) * p_hv.b_married_prop(RG_OFFSET+RG_LRH+RG_NONE_F3,t);
+      denom = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_FEMALE) * p_hv.b_married_prop(RG_OFFSET+RG_LRH+RG_NONE_F3);
+      
       for (int rg2 = RG_MRH; rg2 <= RG_IDU; ++rg2)
       {
-        totalSexActsF +=  n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_FEMALE) * p_hv.b_num_partners(RG_OFFSET+rg2+RG_NONE_F3,t) * p_hv.b_sex_acts(RG_OFFSET+rg2+RG_NONE_F3,t) * p_hv.b_married_prop(RG_OFFSET+rg2+RG_NONE_F3,t);
-        PrevFL += n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_FEMALE) * n_hv.prevalence(rg2,S_FEMALE) * p_hv.b_married_prop(RG_OFFSET+rg2+RG_NONE_F3,t);
-        denom += n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_FEMALE) * p_hv.b_married_prop(RG_OFFSET+rg2+RG_NONE_F3,t);
+        totalSexActsF +=  n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_FEMALE) * p_hv.b_num_partners(RG_OFFSET+rg2+RG_NONE_F3,t) * p_hv.b_sex_acts(RG_OFFSET+rg2+RG_NONE_F3,t) * p_hv.b_married_prop(RG_OFFSET+rg2+RG_NONE_F3);
+        PrevFL += n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_FEMALE) * n_hv.prevalence(rg2,S_FEMALE) * p_hv.b_married_prop(RG_OFFSET+rg2+RG_NONE_F3);
+        denom += n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_FEMALE) * p_hv.b_married_prop(RG_OFFSET+rg2+RG_NONE_F3);
       }
 
-      PrevFL = PrevFL/denom;
-      PrevF  = PrevFL;
+       PrevFL = PrevFL/denom;
+       PrevF  = PrevFL;
 
-      totalSexActsM = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_MALE) * p_hv.b_num_partners(RG_OFFSET+rg,t) * p_hv.b_sex_acts(RG_OFFSET+rg,t);
-      PrevFL = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_MALE) * n_hv.prevalence(RG_LRH,S_MALE);
-      denom = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_MALE) * p_hv.b_married_prop(RG_OFFSET+RG_LRH,t);
-      for (int rg2 = RG_MRH; rg2 <= RG_MSMIDU; ++rg2)
-      {
-        totalSexActsF +=  n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_FEMALE) * p_hv.b_num_partners(rg2+RG_NONE_F3,t) * p_hv.b_sex_acts(rg2+RG_NONE_F3,t) * p_hv.b_married_prop(rg2+RG_NONE_F3,t);
-        PrevFL += n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_MALE) * n_hv.prevalence(rg2,S_MALE) * p_hv.b_married_prop(RG_OFFSET+rg2,t);
-        denom += n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_MALE) * p_hv.b_married_prop(RG_OFFSET+rg2,t);
-      } 
+       totalSexActsM = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_MALE) * p_hv.b_num_partners(RG_OFFSET+rg,t) * p_hv.b_sex_acts(RG_OFFSET+rg,t);
+       PrevFL = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_MALE) * n_hv.prevalence(RG_LRH,S_MALE);
+       denom = n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_MALE) * p_hv.b_married_prop(RG_OFFSET+RG_LRH);
+       for (int rg2 = RG_MRH; rg2 <= RG_MSMIDU; ++rg2)
+       {
+         totalSexActsF +=  n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_FEMALE) * p_hv.b_num_partners(rg2+RG_NONE_F3,t) * p_hv.b_sex_acts(rg2+RG_NONE_F3,t) * p_hv.b_married_prop(rg2+RG_NONE_F3);
+         PrevFL += n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_MALE) * n_hv.prevalence(rg2,S_MALE) * p_hv.b_married_prop(RG_OFFSET+rg2);
+         denom += n_hv.adults(VAC_ALL,rg2,CD4_ALL,S_MALE) * p_hv.b_married_prop(RG_OFFSET+rg2);
+       } 
 
        PrevML = PrevML/denom;
        PrevM  = PrevML;
@@ -1597,8 +1598,8 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
     
 
     // Global multiplier
-    rMultM  = n_hv.r_mult(RG_ALL, S_ALL);
-    rMultF =  n_hv.r_mult(RG_ALL, S_ALL);
+    rMultM  = i_hv.r_mult(RG_ALL, S_ALL);
+    rMultF =  i_hv.r_mult(RG_ALL, S_ALL);
 
     // Assume equal adjustment for men and women
     double totalSexActs = (totalSexActsM + totalSexActsF) / 2.0;
@@ -1606,7 +1607,7 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
     SexActsRatioF = (totalSexActsF > 0) ? totalSexActs / totalSexActsF : 1;
 
     // Toggle balancing
-    if (p_hv.b_balance_sex_acts = 0)
+    if (p_hv.b_balance_sex_acts == 0)
     {
       SexActsRatioM = 1.0;   
       SexActsRatioF = 1.0;  
@@ -1626,39 +1627,39 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
     }
 
     
-    //men
-    int s = S_MALE;
+     //men
+     int s = S_MALE;
 
-    for (int v = VAC_UNV; v <= VAC_ALL; ++v)
-    {
+     for (int v = VAC_UNV; v <= VAC_ALL; ++v)
+     {
     
-       double vacc_effect = 0;
+        double vacc_effect = 0;
 
-      //no new infections in take category 
-      if(v==VAC_TAKE) continue;
+       //no new infections in take category 
+       if(v==VAC_TAKE) continue;
 
-      //no_protection category same as un vaccinated
-      if(v==VAC_PARTIAL) vacc_effect = 1;
+       //no_protection category same as unvaccinated
+       if(v==VAC_PARTIAL) vacc_effect = 1;
 
-      foi  =    1     - std::pow(
-                    PrevF * std::pow(
-                          (1 - p_hv.transm_hiv_F * (1-vacc_effect) * rMultF *
-                              ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum) *
-                              (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.sti_prev(RG_OFFSET+rg,t)) *
-                              (1 - p_hv.b_condom_prop(RG_OFFSET+rg,t) * p_hv.condom_effect) *
-                              (1 - p_hv.prep_cov(S_OFFSET+S_MALE,RG_OFFSET+rg,t) * i_hv.prep_effect(rg,t)) *
-                              (1 - i_hv.cured_prop(rg,S_MALE))
-                          ),
-                          p_hv.b_sex_acts(RG_OFFSET+rg,t) * SexActsRatioM) + (1 - PrevF),
-                          p_hv.b_num_partners(RG_OFFSET+rg,t));
+       foi  =    1     - std::pow(
+                     PrevF * std::pow(
+                           (1 - p_hv.epi_transm_hiv_F * (1-vacc_effect) * rMultF *
+                               ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum) *
+                               (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(RG_OFFSET+rg,t)) *
+                               (1 - p_hv.b_condom_prop(RG_OFFSET+rg,t) * p_hv.epi_condom_effect) *
+                               (1 - p_hv.prep_cov(S_OFFSET+S_MALE,RG_OFFSET+rg,t) * i_hv.prep_effect(rg,t)) *
+                               (1 - i_hv.cured_prop(rg,S_MALE))
+                           ),
+                           p_hv.b_sex_acts(RG_OFFSET+rg,t) * SexActsRatioM) + (1 - PrevF),
+                           p_hv.b_num_partners(RG_OFFSET+rg,t));
         
-      n_hv.new_inf_vrs(v,rg,S_MALE)=foi*n_hv.adults(v,rg,CD4_NEG,S_MALE); 
+       n_hv.new_inf_vrs(v,rg,S_MALE)=foi*n_hv.adults(v,rg,CD4_NEG,S_MALE); 
       
 
-    } //v, S_MALE   
+     } //v, S_MALE   
 
     //women
-    int s = S_FEMALE;
+    s = S_FEMALE;
     for (int v = VAC_UNV; v <= VAC_ALL; ++v)
     {
     
@@ -1674,8 +1675,8 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
                     PrevM * std::pow(
                           (1 - p_hv.epi_transm_hiv_F * p_hv.epi_transm_mult_M * rMultM * //CDP check per act prob
                               ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_INF)) * circum) *
-                              (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.sti_prev(RG_OFFSET+rg,t)) * //check index
-                              (1 - p_hv.b_condom_prop(RG_OFFSET+rg,t) * p_hv.condom_effect)   *   //
+                              (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(RG_OFFSET+rg,t)) * //check index
+                              (1 - p_hv.b_condom_prop(RG_OFFSET+rg,t) * p_hv.epi_condom_effect)   *   //
                               (1 - p_hv.prep_cov(S_OFFSET+S_FEMALE,RG_OFFSET,t) * i_hv.prep_effect(rg,t))  *
                               (1 - i_hv.cured_prop(rg,S_FEMALE))
                           ),
@@ -1686,7 +1687,7 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
       
       
     }//v, S_FEMALE  
-    
+     
   
 }//rg
 
@@ -1695,7 +1696,7 @@ for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg)
 {
 
     //MSM multiplier calculated among MSM groups only
-    rMultM =n_hv.r_mult(rg, S_MALE);
+    rMultM =i_hv.r_mult(rg, S_MALE);
 
     //men
     int s = S_MALE;
@@ -1717,8 +1718,8 @@ for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg)
                           (1 - p_hv.epi_transm_hiv_F * (1-vacc_effect) * rMultM *
                               ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum) *
                                p_hv.epi_transm_mult_MSM *
-                              (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.sti_prev(RG_OFFSET+rg,t)) *
-                              (1 - p_hv.b_condom_prop(RG_OFFSET+rg,t) * p_hv.condom_effect) *
+                              (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(RG_OFFSET+rg,t)) *
+                              (1 - p_hv.b_condom_prop(RG_OFFSET+rg,t) * p_hv.epi_condom_effect) *
                               (1 - p_hv.prep_cov(S_OFFSET+S_MALE,RG_OFFSET+rg,t) * i_hv.prep_effect(rg,t)) *
                               (1 - i_hv.cured_prop(rg,S_MALE))
                           ),
@@ -1732,107 +1733,107 @@ for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg)
 
 
 
-} //rg MSM
+} //rg MSM 
 
 
- int rg = RG_IDU;
+  int rg = RG_IDU;
 
-  //Assuming IDU have medium risk sexual behavior, see r=HV_MRH above
-  PrevM=PrevM_IDU;
-  PrevF=PrevF_IDU;
-  SexActsRatioM=SexActsRatioM_IDU;
-  SexActsRatioF=SexActsRatioF_IDU;
+   //Assuming IDU have medium risk sexual behavior, see r=HV_MRH above
+   PrevM=PrevM_IDU;
+   PrevF=PrevF_IDU;
+   SexActsRatioM=SexActsRatioM_IDU;
+   SexActsRatioF=SexActsRatioF_IDU;
 
-  rMultM = n_hv.r_mult(RG_ALL, S_MALE);
-  rMultF = n_hv.r_mult(RG_ALL, S_MALE);
+   rMultM = i_hv.r_mult(RG_ALL, S_MALE);
+   rMultF = i_hv.r_mult(RG_ALL, S_MALE);
 
-  //IDU risk, partner prevalence calc
-  double PrevB = 0;
-  if(adults(VAC_ALL,RG_IDU,CD4_ALL,S_MALE) +
-            adults(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)+
-            adults(VAC_ALL,RG_MSMIDU,CD4_ALL,S_MALE)>0)
+   //IDU risk, partner prevalence calc
+   double PrevB = 0;
+   if(n_hv.adults(VAC_ALL,RG_IDU,CD4_ALL,S_MALE) +
+             n_hv.adults(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)+
+             n_hv.adults(VAC_ALL,RG_MSMIDU,CD4_ALL,S_MALE)>0)
 
-    PrevB = (n_hv.prevalence(RG_IDU,S_MALE)    * adults(VAC_ALL,RG_IDU,CD4_ALL,S_MALE) +
-              n_hv.prevalence(RG_IDU,S_FEMALE)  * adults(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)+
-              n_hv.prevalence(RG_MSMIDU,S_MALE) * adults(VAC_ALL,RG_MSMIDU,CD4_ALL,S_MALE)) /
-            (adults(VAC_ALL,RG_IDU,CD4_ALL,S_MALE) +
-            adults(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)+
-            adults(VAC_ALL,RG_MSMIDU,CD4_ALL,S_MALE));
+     PrevB = (n_hv.prevalence(RG_IDU,S_MALE)    * n_hv.adults(VAC_ALL,RG_IDU,CD4_ALL,S_MALE) +
+               n_hv.prevalence(RG_IDU,S_FEMALE)  * n_hv.adults(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)+
+               n_hv.prevalence(RG_MSMIDU,S_MALE) * n_hv.adults(VAC_ALL,RG_MSMIDU,CD4_ALL,S_MALE)) /
+             (n_hv.adults(VAC_ALL,RG_IDU,CD4_ALL,S_MALE) +
+             n_hv.adults(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)+
+             n_hv.adults(VAC_ALL,RG_MSMIDU,CD4_ALL,S_MALE));
 
-   PrevB = (p_hv.b_idu_share_prop(t)>0) ? PrevB / p_hv.b_idu_share_prop(t) : PrevB;  
+    PrevB = (p_hv.b_idu_share_prop(t)>0) ? PrevB / p_hv.b_idu_share_prop(t) : PrevB;  
    
-   PrevB = std::max(PrevB,  std::min(prevalence(RG_LRH,S_MALE),prevalence(RG_LRH),S_FEMALE)) ;
+    PrevB = std::max(PrevB,  std::min(n_hv.prevalence(RG_LRH,S_MALE),n_hv.prevalence(RG_LRH,S_FEMALE))) ;
 
-   double SusceptibleIDU =0;
-   double foi_idu_sex=0;
-   for (int s = S_MALE; s <= S_FEMALE; ++s)
-   {
-      for (int v = VAC_UNV; v <= VAC_ALL; ++v)
-      {
+    double SusceptibleIDU =0;
+    double foi_idu_sex=0;
+    for (int s = S_MALE; s <= S_FEMALE; ++s)
+    {
+       for (int v = VAC_UNV; v <= VAC_ALL; ++v)
+       {
       
-        SusceptibleIDU = adults(v,RG_IDU,CD4_NEG,s); 
-        if( SusceptibleIDU > adults(v,RG_IDU,CD4_ALL,s) * p_hv.b_idu_share_prop(t) -
-                            (adults(v,RG_IDU,CD4_ALL,s) - adults(v,RG_IDU,CD4_NEG,s)))
-        {                    
-            SusceptibleIDU = adults(v,RG_IDU,CD4_ALL,s) * p_hv.b_idu_share_prop(t) -
-                          (adults(v,RG_IDU,CD4_ALL,s) - adults(v,RG_IDU,CD4_NEG,s));
-        }
+         SusceptibleIDU = n_hv.adults(v,RG_IDU,CD4_NEG,s); 
+         if( SusceptibleIDU > n_hv.adults(v,RG_IDU,CD4_ALL,s) * p_hv.b_idu_share_prop(t) -
+                             (n_hv.adults(v,RG_IDU,CD4_ALL,s) - n_hv.adults(v,RG_IDU,CD4_NEG,s)))
+         {                    
+             SusceptibleIDU = n_hv.adults(v,RG_IDU,CD4_ALL,s) * p_hv.b_idu_share_prop(t) -
+                           (n_hv.adults(v,RG_IDU,CD4_ALL,s) - n_hv.adults(v,RG_IDU,CD4_NEG,s));
+         }
 
-        double vacc_effect = 0;
+         double vacc_effect = 0;
 
-        //no new infections in take category 
-        if(v==VAC_TAKE) continue;
+         //no new infections in take category 
+         if(v==VAC_TAKE) continue;
 
-        //no_protection category same as un vaccinated
-        if(v==VAC_PARTIAL) vacc_effect = 1;
+         //no_protection category same as un vaccinated
+         if(v==VAC_PARTIAL) vacc_effect = 1;
 
-        if(s=S_MALE)
-        {
+         if(s=S_MALE)
+         {
     
-          foi_idu_sex  =    1     - std::pow(
-                        PrevF * std::pow(
-                              (1 - p_hv.transm_hiv_F * (1-vacc_effect) * rMultF *
-                                  ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum) *
-                                  (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.sti_prev(RG_OFFSET+rg,t)) *
-                                  (1 - p_hv.b_condom_prop(RG_OFFSET+rg,t) * p_hv.condom_effect) *
-                                  (1 - p_hv.prep_cov(S_OFFSET+S_MALE,rg,t) * i_hv.prep_effect(rg,t)) *
-                                  (1 - i_hv.cured_prop(rg,S_MALE))
-                              ),
-                              p_hv.b_sex_acts(RG_OFFSET+rg,t) * SexActsRatioM) + (1 - PrevF),
-                              p_hv.b_num_partners(rg,t));
+           foi_idu_sex  =    1     - std::pow(
+                         PrevF * std::pow(
+                               (1 - p_hv.epi_transm_hiv_F * (1-vacc_effect) * rMultF *
+                                   ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum) *
+                                   (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(RG_OFFSET+rg,t)) *
+                                   (1 - p_hv.b_condom_prop(RG_OFFSET+rg,t) * p_hv.epi_condom_effect) *
+                                   (1 - p_hv.prep_cov(S_OFFSET+S_MALE,rg,t) * i_hv.prep_effect(rg,t)) *
+                                   (1 - i_hv.cured_prop(rg,S_MALE))
+                               ),
+                               p_hv.b_sex_acts(RG_OFFSET+rg,t) * SexActsRatioM) + (1 - PrevF),
+                               p_hv.b_num_partners(rg,t));
         
 
-        }
-        else
-        {
-          foi_idu_sex  =    1     - std::pow(
-                    PrevM * std::pow(
-                          (1 - p_hv.epi_transm_hiv_F * p_hv.epi_transm_mult_M * rMultM * //CDP check per act prob
-                              ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_INF)) * circum) *
-                              (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.sti_prev(RG_OFFSET+rg,t)) * //check index
-                              (1 - p_hv.b_condom_prop(RG_OFFSET+rg,t) * p_hv.condom_effect)   *   //
-                              (1 - p_hv.prep_cov(S_OFFSET+S_FEMALE,rg,t) * i_hv.prep_effect(rg,t))  *
-                              (1 - i_hv.cured_prop(rg,S_FEMALE))
-                          ),
-                          p_hv.b_sex_acts(RG_OFFSET+rg,t) * SexActsRatioF) + (1 - PrevM),
-                          p_hv.b_num_partners(rg,t));
+         }
+         else
+         {
+           foi_idu_sex  =    1     - std::pow(
+                     PrevM * std::pow(
+                           (1 - p_hv.epi_transm_hiv_F * p_hv.epi_transm_mult_M * rMultM * //CDP check per act prob
+                               ((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_INF)) * circum) *
+                               (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(RG_OFFSET+rg,t)) * //check index
+                               (1 - p_hv.b_condom_prop(RG_OFFSET+rg,t) * p_hv.epi_condom_effect)   *   //
+                               (1 - p_hv.prep_cov(S_OFFSET+S_FEMALE,rg,t) * i_hv.prep_effect(rg,t))  *
+                               (1 - i_hv.cured_prop(rg,S_FEMALE))
+                           ),
+                           p_hv.b_sex_acts(RG_OFFSET+rg,t) * SexActsRatioF) + (1 - PrevM),
+                           p_hv.b_num_partners(rg,t));
         
           
 
-        }
+         }
 
-        //needle sharing
-        n_hv.new_inf_vrs(v,rg,s)+= p_hv.b_foi_idu(s,t) * n_hv.r_mult(RG_ALL, S_MALE) * PrevB * SusceptibleIDU *
-                                                      (1-p_hv.prep_cov(S_OFFSET+s,RG_OFFSET+rg,t) * i_hv.prep_effect(rg,t));
-                                                      //+_ForceNeedleTransmIDU*SusceptibleIDU;//no explicit needle sharing mechanism 
+         //needle sharing
+         n_hv.new_inf_vrs(v,rg,s)+= p_hv.b_foi_idu(s,t) * i_hv.r_mult(RG_ALL, S_MALE) * PrevB * SusceptibleIDU *
+                                                       (1-p_hv.prep_cov(S_OFFSET+s,RG_OFFSET+rg,t) * i_hv.prep_effect(rg,t));
+                                                       //+_ForceNeedleTransmIDU*SusceptibleIDU;//no explicit needle sharing mechanism 
       
-        //sexual transmission 
-        n_hv.new_inf_vrs(v,RG_IDU,s) += foi_idu_sex * n_hv.adults(v,RG_IDU,CD4_NEG,s);                                             
+         //sexual transmission 
+         n_hv.new_inf_vrs(v,RG_IDU,s) += foi_idu_sex * n_hv.adults(v,RG_IDU,CD4_NEG,s);                                             
 
 
-   }//v                    
+    }//v                    
 
-  }//s
+   }//s
 
 
 }
