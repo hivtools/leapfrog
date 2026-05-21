@@ -140,12 +140,12 @@ type
     fertMultOnArtLength: Integer;
     localAdjFactor: Double;
     localAdjFactorLength: Integer;
-    iduMortalityRate: Double;
-    iduMortalityRateLength: Integer;
+    eppIduMortality: Double;
+    eppIduMortalityLength: Integer;
     propIduWb: PDouble;
     propIduWbLength: Integer;
-    eppSexRatio: PDouble;
-    eppSexRatioLength: Integer;
+    sexRatioFromEpp: PDouble;
+    sexRatioFromEppLength: Integer;
 end;
 
 type
@@ -180,9 +180,9 @@ type
     fertMultOffArt: TGBFixedArray<Double>;
     fertMultOnArt: TGBFixedArray<Double>;
     localAdjFactor: Double;
-    iduMortalityRate: Double;
+    eppIduMortality: Double;
     propIduWb: TGBFixedArray<Double>;
-    eppSexRatio: TGBFixedArray<Double>;
+    sexRatioFromEpp: TGBFixedArray<Double>;
     function getView(): LeapfrogHivAdultParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -630,7 +630,7 @@ begin;
   fertMultOffArt.Free;
   fertMultOnArt.Free;
   propIduWb.Free;
-  eppSexRatio.Free;
+  sexRatioFromEpp.Free;
   inherited;
 end;
 
@@ -717,12 +717,12 @@ begin;
   Result.fertMultOnArtLength := fertMultOnArt.GetLength();
   Result.localAdjFactor := localAdjFactor;
   Result.localAdjFactorLength := 1;
-  Result.iduMortalityRate := iduMortalityRate;
-  Result.iduMortalityRateLength := 1;
+  Result.eppIduMortality := eppIduMortality;
+  Result.eppIduMortalityLength := 1;
   Result.propIduWb := PDouble(propIduWb.data);
   Result.propIduWbLength := propIduWb.GetLength();
-  Result.eppSexRatio := PDouble(eppSexRatio.data);
-  Result.eppSexRatioLength := eppSexRatio.GetLength();
+  Result.sexRatioFromEpp := PDouble(sexRatioFromEpp.data);
+  Result.sexRatioFromEppLength := sexRatioFromEpp.GetLength();
 end;
 
 function LeapfrogHivAdultState.getView(): LeapfrogHivAdultStateView;
@@ -1042,7 +1042,7 @@ begin;
   fertMultOffArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOffArt');
   fertMultOnArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOnArt');
   propIduWb.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'propIduWb');
-  eppSexRatio.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'eppSexRatio');
+  sexRatioFromEpp.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'sexRatioFromEpp');
 end;
 
 procedure LeapfrogHivAdultState.writeToDisk(dir: string);
