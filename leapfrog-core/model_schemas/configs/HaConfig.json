@@ -199,14 +199,14 @@
         "r": "frr_scalar"
       }
     },
-    "idu_mortality_rate": {
+    "epp_idu_mortality": {
       "num_type": "real_type"
     },
     "prop_idu_wb": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
     },
-    "epp_sex_ratio": {
+    "sex_ratio_from_epp": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
     }

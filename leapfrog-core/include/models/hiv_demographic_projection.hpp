@@ -168,24 +168,17 @@ struct HivDemographicProjection<Config> {
   // Returns survival probability for HIV+ people at age a, adjusted down for IDU excess
   // mortality. Only applies to working ages 15-49; returns surv unchanged outside that range.
   //
-  // epp_sex_ratio < 0 is the sentinel meaning IDU is not modelled for this setting.
+  // This is not used when running with direct incidence input
+  // (incidence_model_choice == 0) or if epp_sex_ratio < 0. Spectrum uses
+  // epp_sex_ratio = -1 to indicate that IDU adjustment is not used.
   //
-  // idu_mortality_rate is expected as a rate (0-1), NOT a percentage — divide by 100 when
-  // reading from Spectrum/Delphi data (which stores it as a percentage via GetEPPIDUMortality).
-  //
-  // This function produces HIV+ deaths only. HIV-negative deaths at standard rate are handled
-  // separately by general_demographic_projection via p_deaths_background_totpop, matching the
-  // split in the Delphi formula: dths = hiv_neg*(1-sr) + hiv_pos*(1-sr1).
-  //
-  // NOTE: the Delphi source also gates this on incidence_model_choice == EPP or AEM, but the
-  // C++ mapping of those modes is ambiguous. epp_sex_ratio == -1 already acts as the
-  // "IDU not modelled" sentinel, so we rely solely on that guard. Flag for review if the
-  // incidence model check turns out to matter.
+  // epp_idu_mortality is expected as a rate (0-1)
   real_type idu_adjusted_surv(real_type surv, int a, int s) {
-    if (a < p_idx_hiv_first_adult || a >= 50) return surv;
+    const bool no_adjustment = pars.ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS ||
+      a < p_idx_hiv_first_adult || a >= 50 ||
+      pars.ha.epp_sex_ratio(t) < 0.0;
 
-    const real_type sex_ratio = pars.ha.epp_sex_ratio(t);
-    if (sex_ratio < 0.0) return surv;
+    if (no_adjustment) return surv;
 
     const real_type pop_s     = state_curr.dp.p_totpop(a - 1, s);
     const real_type total_pop = state_curr.dp.p_totpop(a - 1, SS::MALE) + state_curr.dp.p_totpop(a - 1, SS::FEMALE);
@@ -195,7 +188,7 @@ struct HivDemographicProjection<Config> {
       ? 1.0 / (1.0 + sex_ratio)
       : sex_ratio / (1.0 + sex_ratio);
     const real_type background_mort = 1.0 - surv;
-    const real_type raw_excess = pars.ha.idu_mortality_rate - background_mort;
+    const real_type raw_excess = pars.ha.epp_idu_mortality - background_mort;
     const real_type excess = (raw_excess > 0.0 ? raw_excess : 0.0)
       * pars.ha.prop_idu_wb(t) * ratio / (pop_s / total_pop);
     return 1.0 - (background_mort + excess);

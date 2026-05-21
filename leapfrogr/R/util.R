@@ -120,3 +120,7 @@ paste_lines <- function(...) {
 beers_open_ended <- function(x) {
   c(beers::beers_sub_ordinary(x[-length(x)]), x[length(x)])
 }
+
+system_file <- function(...) {
+  system.file(..., package = "leapfrog")
+}
