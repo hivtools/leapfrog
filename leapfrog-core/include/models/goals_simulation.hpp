@@ -310,7 +310,7 @@ static void init_internal_state(const Pars& pars, InternalState& internal_state)
     //progress, hiv-neg, at risk (RG_LRH..RG_MSM)
     progress_atrisk_hiv_neg(t);
 
-    //progress, hiv-neg, hiv-pos and hiv-art (RG_LRH..RG_MSM)
+    //progress, hiv-pos and hiv-art (RG_LRH..RG_MSM)
     progress_hivp_art(t);
 
     //calc prevalence used for new infections calc
@@ -319,7 +319,7 @@ static void init_internal_state(const Pars& pars, InternalState& internal_state)
     //calc multiplier and new infections 
     sum_adult_pop_dims(t);
     calc_r_multiplier(t);
-    //calc_new_infections(t);
+    calc_new_infections(t);
     
     //add new infections 
     add_new_infections();
@@ -618,12 +618,12 @@ void set_initial_pop() {
   }//s
 
 
-  auto dbg_model = capture_model(state_next, intermediate, pars);
+ // auto dbg_model = capture_model(state_next, intermediate, pars);
 
-  nda_print_info(dbg_model.ha.cd4_initial_distribution,-1,-1,25,25,0,0); 
-  nda_print_info(dbg_model.hv.adults,VAC_UNV,VAC_UNV,RG_NONE,RG_NONE,2,8); 
-  nda_print_info(dbg_model.hv.adults,VAC_UNV,VAC_UNV,RG_LRH,RG_LRH,2,8); 
-  nda_print_info(dbg_model.hv.adults,VAC_UNV,VAC_UNV,RG_MSM,RG_MSM,2,8); 
+  //nda_print_info(dbg_model.ha.cd4_initial_distribution,-1,-1,25,25,0,0); 
+  //nda_print_info(dbg_model.hv.adults,VAC_UNV,VAC_UNV,RG_NONE,RG_NONE,2,8); 
+  //nda_print_info(dbg_model.hv.adults,VAC_UNV,VAC_UNV,RG_LRH,RG_LRH,2,8); 
+  //nda_print_info(dbg_model.hv.adults,VAC_UNV,VAC_UNV,RG_MSM,RG_MSM,2,8); 
 
 
 }
@@ -761,9 +761,7 @@ void calc_new_vaccinations()
           i_hv.dp_pop_sex_age_hiv(POP_H_NoART, s) += c_ha.h_hivpop(hd_hds, a, s);
           i_hv.dp_aging_denom_1549(POP_H_NoART, hd, s) += c_ha.h_hivpop(hd_hds, a, s);
           i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) -= c_ha.h_hivpop(hd_hds, a, s);//remove hiv states
-          
-          //i_hv.hiv_mu(hd,s) +=  (p_ha.cd4_mortality(hd, a, s)+p_ha.cd4_nonaids_excess_mort(hd, a, s)) * c_ha.h_hivpop(hd, a, s);
-        
+             
           if(a==SS::pIDX_15to49){
             i_hv.dp_entrants_age_15(POP_H_NoART, hd, s) += c_ha.h_hivpop(hd_hds, a, s);
             i_hv.dp_entrants_age_15(POP_H_HIVNeg, CD4_NEG, s) -= c_ha.h_hivpop(hd_hds, a, s);
@@ -811,7 +809,7 @@ void calc_new_vaccinations()
   }//s
 
 
-  auto dbg_model = capture_model(state_next, intermediate, pars);
+  //auto dbg_model = capture_model(state_next, intermediate, pars);
   
    //nda_print_info(dbg_model.hv.dp_totpop_deaths_background);
    //nda_print_info(dbg_model.hv.dp_totpop_1549);
@@ -825,6 +823,8 @@ void calc_new_vaccinations()
 
 
 void calc_goals_rates(int t) {
+
+  const auto& p_ha = pars.ha;
 
   const auto& p_hv = pars.hv;
   auto& i_hv = intermediate.hv; 
@@ -866,16 +866,20 @@ void calc_goals_rates(int t) {
        
         for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
 
+          const int hd_hds = hd - CD4_GT500;
+
           //hiv dynamics: mortality and progression rates
-          i_hv.hiv_mu(hd,s) = (i_hv.dp_pop_1549_hiv(hd,s)!=0) ? i_hv.dp_hiv_cd4_mort_no_art(hd,s)/i_hv.dp_pop_1549_hiv(hd,s) : 0;
-          i_hv.hiv_lambda(hd,s) = (i_hv.dp_pop_1549_hiv(hd,s)!=0) ? i_hv.dp_hiv_cd4_progression(hd,s)/i_hv.dp_pop_1549_hiv(hd,s) : 0;
-          i_hv.art_alpha(hd,s) = (i_hv.dp_pop_1549_art(hd,s)!=0) ? i_hv.dp_hiv_cd4_mort_art(hd - CD4_GT500,s)/i_hv.dp_pop_1549_art(hd,s) : 0;
+          i_hv.hiv_mu(hd,s) = (i_hv.dp_pop_1549_hiv(hd,s)!=0) ? i_hv.dp_hiv_cd4_mort_no_art(hd,s)/i_hv.dp_pop_1549_hiv(hd,s) : p_ha.cd4_mortality(hd_hds, 25, s);//using age 25 for defaults
+          i_hv.hiv_lambda(hd,s) = (i_hv.dp_pop_1549_hiv(hd,s)!=0) ? i_hv.dp_hiv_cd4_progression(hd,s)/i_hv.dp_pop_1549_hiv(hd,s) : p_ha.cd4_progression(hd_hds, 25, s);//
+          i_hv.art_alpha(hd,s) = (i_hv.dp_pop_1549_art(hd,s)!=0) ? i_hv.dp_hiv_cd4_mort_art(hd,s)/i_hv.dp_pop_1549_art(hd,s) : p_ha.art_mortality(2, hd_hds, 25, s);//2 is gt12 m on ART
           
+
           if(hd==CD4_GT500){
             real_type stage_duration = 1.0 / i_hv.hiv_lambda(CD4_GT500,s)  - years_in_primary;
-            i_hv.hiv_lambda(CD4_GT500,s) = 1-exp(-1/stage_duration);//remove time in primary stage
+            i_hv.hiv_lambda(CD4_GT500,s) = (1-exp(-opts.dt/stage_duration))/opts.dt;//remove time in primary stage
             i_hv.hiv_mu(CD4_PRIM,s) = i_hv.hiv_mu(CD4_GT500,s);
           } 
+          
           if(hd==CD4_LT50) i_hv.hiv_lambda(hd,s) = 0;//no progession out of this stage
           
           i_hv.rate_aging_50(POP_H_NoART, CD4_NEG, s) = (i_hv.dp_aging_denom_1549(POP_H_NoART, CD4_NEG, s) !=0) ? i_hv.dp_aging_50(POP_H_NoART, CD4_NEG, s)/i_hv.dp_aging_denom_1549(POP_H_NoART, CD4_NEG, s) : 0; 
@@ -911,14 +915,27 @@ void calc_goals_rates(int t) {
 
       }
 
-   auto dbg_model = capture_model(state_next, intermediate, pars);
-  
-   nda_print_info(dbg_model.hv.background_death_rate);     
-   nda_print_info(dbg_model.hv.migration_rate);     
-   nda_print_info(dbg_model.hv.rate_aging_50);   
+      //CDP check no elements of hiv_mu
 
-   nda_print_info(dbg_model.hv.dp_migration_denom); 
-   nda_print_info(dbg_model.hv.dp_migration_num); 
+   auto dbg_model = capture_model(state_next, intermediate, pars);
+
+   
+
+//   nda_print_info(dbg_model.ha.cd4_mortality,-1,-1,25,25,-1,-1);
+//nda_print_info(dbg_model.hv.hiv_mu);
+
+//  nda_print_info(dbg_model.ha.cd4_progression,-1,-1,25,25,-1,-1);
+  //nda_print_info(dbg_model.hv.hiv_lambda);
+
+
+   //nda_print_info(dbg_model.hv.art_alpha);
+  
+   //nda_print_info(dbg_model.hv.background_death_rate);     
+   //nda_print_info(dbg_model.hv.migration_rate);     
+   //nda_print_info(dbg_model.hv.rate_aging_50);   
+
+   //nda_print_info(dbg_model.hv.dp_migration_denom); 
+   //nda_print_info(dbg_model.hv.dp_migration_num); 
    
 }
 
@@ -975,11 +992,11 @@ void calc_newrecruits_distribution(int t)
 
    }//s
 
- auto dbg_model = capture_model(state_next, intermediate, pars);
+ //auto dbg_model = capture_model(state_next, intermediate, pars);
 
- nda_print_info(dbg_model.hv.b_incr_recruit); 
+ //nda_print_info(dbg_model.hv.b_incr_recruit); 
   
- nda_print_info(dbg_model.hv.riskgroup_proportions);  
+ //nda_print_info(dbg_model.hv.riskgroup_proportions);  
 
    
 }
@@ -1250,6 +1267,12 @@ void progress_hivp_art(int t)
     real_type temp7 = 0;
     real_type temp8 = 0;
 
+    //auto dbg_model = capture_model(state_next, intermediate, pars);
+    
+    //nda_print_info(dbg_model.hv.hiv_lambda);
+    //nda_print_info(dbg_model.hv.hiv_mu);
+    //nda_print_info(dbg_model.hv.art_alpha);
+
     //unvaccinated
     for (int s = S_MALE; s <= S_FEMALE; ++s)
     {
@@ -1324,7 +1347,7 @@ void progress_hivp_art(int t)
           (n_hv.adults(VAC_TAKE,rg,hd,s) +
             n_hv.adults(VAC_PARTIAL,rg,hd,s) +
             n_hv.adults(VAC_NO_PROT,rg,hd,s)) *
-          (i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0 +  
+          ((i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0) +  
         
           //entrants following behavior change
           n_hv.adults(VAC_UNV,rg-1,hd,s) * i_hv.b_behave_change_rate(rg-1,s) +
@@ -1358,7 +1381,7 @@ void progress_hivp_art(int t)
               
                 //vaccine, exits
                 n_hv.adults(v,rg,hd,s)*
-                (i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0  +
+                ((i_hv.vac_params(VAC_DUR)!=0)? 1 / i_hv.vac_params(VAC_DUR) : 0)  +
 
                 //entrants following behavior change
                 n_hv.adults(v,rg-1,hd,s) * i_hv.b_behave_change_rate(rg-1,s) +
@@ -1388,6 +1411,7 @@ void calc_r_multiplier(int t)
     
   //from goals
   auto& n_hv = state_next.hv;
+  auto& i_hv = intermediate.hv;
   const auto& p_hv = pars.hv; 
 
   const double rMultEqlb = 1.7;// 2.44 in previous version of Goals
@@ -1402,16 +1426,17 @@ void calc_r_multiplier(int t)
                                  /n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_ALL);                  
 
 
-  nda::fill(n_hv.r_mult, 1.0); //default multiplier
+  nda::fill(i_hv.r_mult, 1.0); //default multiplier
 
   for (int s = S_MALE; s <= S_FEMALE; ++s)
   {
-      for (int rg = RG_LRH; rg <= RG_MSM; ++rg)
+      for (int rg = RG_LRH; rg <= RG_MSMIDU; ++rg) //note IDU, and Female MSM not contributing
       {
         
-        if (rg == RG_IDU) continue; //IDU force of infection is external input 
-        if (s == S_FEMALE && rg >= RG_MSM) continue; //no female MSM
-        
+          
+          if (rg == RG_IDU) continue; //IDU not contributing
+          if (s == S_FEMALE && rg >= RG_MSM) continue; //no female MSM
+
           rMultNumerator   = 0.0;
           rMultDenominator = 0.0;
 
@@ -1426,7 +1451,7 @@ void calc_r_multiplier(int t)
           }
     
           //on ART
-          for (int hd = CD4_GT500_ART ; hd <= CD4_LT50_ART ; ++hd)
+          for (int hd = CD4_GT500_ART; hd <= CD4_LT50_ART; ++hd)
           {
               rMultNumerator   += n_hv.mult_art(hd) * n_hv.adults(VAC_ALL,rg,hd,s);
               rMultDenominator += n_hv.adults(VAC_ALL,rg,hd,s);
@@ -1437,8 +1462,7 @@ void calc_r_multiplier(int t)
 
           if (rMultDenominator > 0.0)
           {
-            n_hv.r_mult(rg, s) = vaccine_factor * (rMultNumerator / rMultDenominator) / rMultEqlb;
-                                
+            i_hv.r_mult(rg, s) = vaccine_factor * (rMultNumerator / rMultDenominator) / rMultEqlb;                               
           }
 
       }//r
@@ -1447,8 +1471,11 @@ void calc_r_multiplier(int t)
 
     if (rMultDenominatorAll > 0.0)
     {
-      n_hv.r_mult(RG_ALL, S_ALL) = vaccine_factor * (rMultNumeratorAll / rMultDenominatorAll) / rMultEqlb;                                       
+      i_hv.r_mult(RG_ALL, S_ALL) = vaccine_factor * (rMultNumeratorAll / rMultDenominatorAll) / rMultEqlb;                                       
     }
+
+    //auto dbg_model = capture_model(state_next, intermediate, pars);
+    //nda_print_info(dbg_model.hv.r_mult);
 
 }
 

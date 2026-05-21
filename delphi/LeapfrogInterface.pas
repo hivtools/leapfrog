@@ -597,6 +597,8 @@ end;
 type
   LeapfrogGoalsStateView = record
   private
+    totalPopulation: PDouble;
+    totalPopulationLength: Integer;
     adults: PDouble;
     adultsLength: Integer;
     adultsTs: PDouble;
@@ -609,14 +611,10 @@ type
     prevalenceLength: Integer;
     newlyOnArt: PDouble;
     newlyOnArtLength: Integer;
-    totalPopulation: PDouble;
-    totalPopulationLength: Integer;
     multNoArt: PDouble;
     multNoArtLength: Integer;
     multArt: PDouble;
     multArtLength: Integer;
-    rMult: PDouble;
-    rMultLength: Integer;
     newInfVrs: PDouble;
     newInfVrsLength: Integer;
     newInfS: PDouble;
@@ -626,16 +624,15 @@ end;
 type
   LeapfrogGoalsState = class
   public
+    totalPopulation: TGBFixedArray<Double>;
     adults: TGBFixedArray<Double>;
     adultsTs: TGBFixedArray<Double>;
     deaths: TGBFixedArray<Double>;
     newInfections: TGBFixedArray<Double>;
     prevalence: TGBFixedArray<Double>;
     newlyOnArt: TGBFixedArray<Double>;
-    totalPopulation: TGBFixedArray<Double>;
     multNoArt: TGBFixedArray<Double>;
     multArt: TGBFixedArray<Double>;
-    rMult: TGBFixedArray<Double>;
     newInfVrs: TGBFixedArray<Double>;
     newInfS: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsStateView;
@@ -1123,16 +1120,15 @@ end;
 
 destructor LeapfrogGoalsState.Destroy;
 begin;
+  totalPopulation.Free;
   adults.Free;
   adultsTs.Free;
   deaths.Free;
   newInfections.Free;
   prevalence.Free;
   newlyOnArt.Free;
-  totalPopulation.Free;
   multNoArt.Free;
   multArt.Free;
-  rMult.Free;
   newInfVrs.Free;
   newInfS.Free;
   inherited;
@@ -1208,6 +1204,8 @@ end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
 begin;
+  Result.totalPopulation := PDouble(totalPopulation.data);
+  Result.totalPopulationLength := totalPopulation.GetLength();
   Result.adults := PDouble(adults.data);
   Result.adultsLength := adults.GetLength();
   Result.adultsTs := PDouble(adultsTs.data);
@@ -1220,14 +1218,10 @@ begin;
   Result.prevalenceLength := prevalence.GetLength();
   Result.newlyOnArt := PDouble(newlyOnArt.data);
   Result.newlyOnArtLength := newlyOnArt.GetLength();
-  Result.totalPopulation := PDouble(totalPopulation.data);
-  Result.totalPopulationLength := totalPopulation.GetLength();
   Result.multNoArt := PDouble(multNoArt.data);
   Result.multNoArtLength := multNoArt.GetLength();
   Result.multArt := PDouble(multArt.data);
   Result.multArtLength := multArt.GetLength();
-  Result.rMult := PDouble(rMult.data);
-  Result.rMultLength := rMult.GetLength();
   Result.newInfVrs := PDouble(newInfVrs.data);
   Result.newInfVrsLength := newInfVrs.GetLength();
   Result.newInfS := PDouble(newInfS.data);
@@ -1423,7 +1417,6 @@ begin;
   newlyOnArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newlyOnArt');
   multNoArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'multNoArt');
   multArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'multArt');
-  rMult.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rMult');
   newInfVrs.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newInfVrs');
   newInfS.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newInfS');
 end;

@@ -36,6 +36,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
     hv.adults;
     hv.mult_no_art;
     hv.mult_art;
+    i_hv.r_mult;
 
 
     i_hv.totpop_deaths_background;
@@ -60,6 +61,9 @@ template <class HvState, class IntermediateHv, class ParsHv>
     i_hv.b_riskgroup_proportions;
     i_hv.b_behave_change_rate;
 
+    i_hv.hiv_lambda;
+    i_hv.hiv_mu;
+    i_hv.art_alpha;
 
 
     //i_hv.totpop_1549;
@@ -256,6 +260,7 @@ struct HvDebugInfo {
   NdaInfo adults;
   NdaInfo mult_no_art;
   NdaInfo mult_art;
+  NdaInfo r_mult;
 
   // Intermediate
   NdaInfo dp_totpop_1549;
@@ -492,6 +497,8 @@ template <class HvState, class IntermediateHv, class ParsHv>
     hv.mult_no_art;
     hv.mult_art;
 
+    i_hv.r_mult;
+
     i_hv.prep_effect;
 
     i_hv.pop_1549;
@@ -511,6 +518,10 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
     i_hv.b_riskgroup_proportions;
     i_hv.b_behave_change_rate;
+
+    i_hv.hiv_lambda;
+    i_hv.hiv_mu;
+    i_hv.art_alpha;
 
 
 
@@ -571,6 +582,9 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.mult_no_art = nda_capture(hv.mult_no_art);
   out.mult_art = nda_capture(hv.mult_art);
 
+  out.r_mult = nda_capture(i_hv.r_mult);
+
+
   out.prep_effect = nda_capture(i_hv.prep_effect);
 
   out.pop_1549 = nda_capture(i_hv.pop_1549);
@@ -590,6 +604,10 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
 
   out.b_riskgroup_proportions = nda_capture(i_hv.b_riskgroup_proportions);
   out.b_behave_change_rate = nda_capture(i_hv.b_behave_change_rate);
+
+  out.hiv_mu = nda_capture(i_hv.hiv_mu);
+  out.hiv_lambda = nda_capture(i_hv.hiv_lambda);
+  out.art_alpha = nda_capture(i_hv.art_alpha);
 
 
   //out.riskgroup_proportions = nda_capture(i_hv.entrants_age_15);

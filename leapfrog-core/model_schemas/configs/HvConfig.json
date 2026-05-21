@@ -7,7 +7,7 @@
     "default": {
       "nNS": 2,
       "nCD4": 16,
-      "nCD4p": 11,
+      "nCD4p": 9, 
       "nCD4a": 7,
       "nRG": 17,
       "nRG1": 9,
@@ -384,6 +384,11 @@
    "art_coverage_rg": {
       "num_type": "real_type",
       "dims": ["SS::nNS+1", "SS::rRG_TOTAL+1","opts.proj_steps"]
+    },
+
+    "r_mult": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG+1","SS::nNS+1"]
     }
 
 
@@ -441,11 +446,7 @@
       "dims": ["SS::nCD4p"]
     },
 
-      "r_mult": {
-      "num_type": "real_type",
-      "dims": ["SS::nRG+1","SS::nNS+1"]
-    },
-
+  
      "new_inf_vrs": {
       "num_type": "real_type",
       "dims": ["SS::nVAC+1","SS::nRG+1","SS::nNS+1"]
