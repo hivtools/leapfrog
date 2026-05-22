@@ -4,6 +4,8 @@
     "run_hiv_simulation": "false",
     "use_coarse_stratification": "false",
     "run_child_model": "false",
+    "age10_adult": "false",
+    "age105_open": "false",
     "run_spectrum_model": "false",
     "run_goals": "false"
   },
@@ -12,6 +14,8 @@
     "run_hiv_simulation": "true",
     "use_coarse_stratification": "false",
     "run_child_model": "false",
+    "age10_adult": "false",
+    "age105_open": "false",    
     "run_spectrum_model": "false",
     "run_goals": "false"
   },
@@ -20,6 +24,8 @@
     "run_hiv_simulation": "true",
     "use_coarse_stratification": "true",
     "run_child_model": "false",
+    "age10_adult": "false",
+    "age105_open": "false",
     "run_spectrum_model": "false",
     "run_goals": "false"
   },
@@ -28,6 +34,8 @@
     "run_hiv_simulation": "true",
     "use_coarse_stratification": "false",
     "run_child_model": "true",
+    "age10_adult": "false",
+    "age105_open": "false",
     "run_spectrum_model": "false",
     "run_goals": "false"
   },
@@ -36,6 +44,8 @@
     "run_hiv_simulation": "true",
     "use_coarse_stratification": "true",
     "run_child_model": "true",
+    "age10_adult": "false",
+    "age105_open": "false",
     "run_spectrum_model": "false",
     "run_goals": "false"
   },
@@ -44,6 +54,8 @@
     "run_hiv_simulation": "true",
     "use_coarse_stratification": "false",
     "run_child_model": "true",
+    "age10_adult": "false",
+    "age105_open": "false",
     "run_spectrum_model": "true",
     "run_goals": "false"
   },
@@ -52,7 +64,19 @@
     "run_hiv_simulation": "true",
     "use_coarse_stratification": "false",
     "run_child_model": "true",
+    "age10_adult": "false",
+    "age105_open": "false",
     "run_spectrum_model": "true",
     "run_goals": "true"
-  }
+  },
+  "GBD": {
+    "run_demographic_projection": "true",
+    "run_hiv_simulation": "true",
+    "use_coarse_stratification": "false",
+    "run_child_model": "true",
+    "age10_adult": "true",
+    "age105_open": "true",
+    "run_spectrum_model": "false",
+    "run_goals": "false"
+  }      
 }

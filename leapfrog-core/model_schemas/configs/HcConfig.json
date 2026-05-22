@@ -44,7 +44,19 @@
         [0,   0,   0,   0,   0,         0.21],
         [0,   0,   0,   0,   0,         0.44]
       ]
-    }
+    },
+    "overrides": [
+      {
+        "applies_if": "age10_adult",
+        "vars": {	      
+          "hcAG_end": 10,
+          "hc2AG": 5,
+          "hcAG_coarse": 3,
+          "hc_age_coarse": [1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
+          "hc_age_coarse_cd4": [0, 0, 0, 1, 1, 2, 2, 2, 2, 2]
+        }
+      }
+    ]    
   },
   "pars": {
       "hc_nosocomial": {
