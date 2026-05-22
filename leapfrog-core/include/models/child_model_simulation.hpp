@@ -799,10 +799,11 @@ struct ChildModelSimulation<Config> {
   void art_eligibility_by_age() {
     const auto& p_hc = pars.hc;
     auto& n_hc = state_next.hc;
+    const int hc_art_elig_age = std::min(p_hc.hc_art_elig_age(t), hcAG_end);
 
     // all children under a certain age eligible for ART
     for (int s = 0; s < NS; ++s) {
-      for (int a = 0; a < p_hc.hc_art_elig_age(t); ++a) {
+      for (int a = 0; a < hc_art_elig_age; ++a) {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc1DS; ++hd) {
             if (a < hc2_agestart) {
@@ -819,11 +820,12 @@ struct ChildModelSimulation<Config> {
   void art_eligibility_by_cd4() {
     const auto& p_hc = pars.hc;
     auto& n_hc = state_next.hc;
+    const int hc_art_elig_age = std::min(p_hc.hc_art_elig_age(t), hcAG_end);
 
     // all children under a certain CD4 eligible for ART
     for (int s = 0; s < NS; ++s) {
       for (int cat = 0; cat < hcTT; ++cat) {
-        for (int a = p_hc.hc_art_elig_age(t); a < hcAG_end; ++a) {
+        for (int a = hc_art_elig_age; a < hcAG_end; ++a) {
           for (int hd = 0; hd < hc1DS; ++hd) {
             if (hd >= p_hc.hc_art_elig_cd4(a, t)) {
               if (a < hc2_agestart) {
@@ -1161,7 +1163,11 @@ struct ChildModelSimulation<Config> {
         } // end hc1DS
       } // end NS
     } // end dur
-    i_hc.hc_art_deaths(0) = i_hc.hc_art_deaths(1) + i_hc.hc_art_deaths(2) + i_hc.hc_art_deaths(3);
+
+    i_hc.hc_art_deaths(0) = 0.0;
+    for (int hca = 1; hca < hcAG_coarse; ++hca) {
+     i_hc.hc_art_deaths(0) += i_hc.hc_art_deaths(hca);
+    }
   };
 
   void progress_time_on_art(int curr_t_idx, int end_t_idx) {
@@ -1246,9 +1252,11 @@ struct ChildModelSimulation<Config> {
           }
         }
       }
-      i_hc.total_art_last_year(0) = i_hc.total_art_last_year(1) +
-                                    i_hc.total_art_last_year(2) +
-                                    i_hc.total_art_last_year(3);
+
+      i_hc.total_art_last_year(0) = 0.0;
+      for (int hca = 1; hca < hcAG_coarse; ++hca) {
+	i_hc.total_art_last_year(0) += i_hc.total_art_last_year(hca);
+      }
 
       for (int ag = 1; ag < hcAG_coarse; ++ag) {
         if (i_hc.total_art_last_year(0) > 0.0) {
@@ -1282,9 +1290,11 @@ struct ChildModelSimulation<Config> {
       } else if (p_hc.hc_art_is_age_spec(t - 1)) {
         // ART entered as number last year but this year isn't then aggregate
         // ages
-        i_hc.total_art_last_year(0) = p_hc.hc_art_val(1, t - 1) +
-                                      p_hc.hc_art_val(2, t - 1) +
-                                      p_hc.hc_art_val(3, t - 1);
+
+	i_hc.total_art_last_year(0) = 0.0;
+	for (int hca = 1; hca < hcAG_coarse; ++hca) {
+	  i_hc.total_art_last_year(0) += p_hc.hc_art_val(hca, t - 1);
+	}
       } else {
         // Last year was age aggregated and a number so use previous value
         i_hc.total_art_last_year(0) = p_hc.hc_art_val(0, t - 1);
@@ -1455,10 +1465,13 @@ struct ChildModelSimulation<Config> {
             for (int hd = 0; hd < hc1DS; ++hd) {
               auto& coarse_hc_adj = i_hc.hc_adj(hc_age_coarse[a]);
               auto& coarse_hc_art_scalar = i_hc.hc_art_scalar(hc_age_coarse[a]);
-              auto hc_art_val_sum = p_hc.hc_art_val(0, t) + p_hc.hc_art_val(1, t) +
-                                    p_hc.hc_art_val(2, t) + p_hc.hc_art_val(3, t);
-              auto hc_art_val_sum_last = p_hc.hc_art_val(0, t - 1) + p_hc.hc_art_val(1, t - 1) +
-                                         p_hc.hc_art_val(2, t - 1) + p_hc.hc_art_val(3, t - 1);
+
+              auto hc_art_val_sum = 0.0;
+              auto hc_art_val_sum_last = 0.0;
+              for (int hca = 0; hca < hcAG_coarse; ++hca) {
+                hc_art_val_sum += p_hc.hc_art_val(hca, t);
+                hc_art_val_sum_last += p_hc.hc_art_val(hca, t - 1);
+              }
               if (hc_art_val_sum + hc_art_val_sum_last <= 0.0) {
                 coarse_hc_art_scalar = 0.0;
               } else {
