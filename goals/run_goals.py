@@ -4,8 +4,8 @@ import os
 import numpy as np
 
 from leapfrog_goals import get_goals_ss, run_goals
-from src.leapfrog_mapping.leapfrog_data_mapping import modvars_to_leapfrog
-from src._spectrum.Tools.ImportPJNZ.Importer import GB_ImportProjectionFromFile
+from SpectrumCommon.Util.LeapfrogDataMapping import modvars_to_leapfrog
+from Tools.ImportPJNZ.Importer import GB_ImportProjectionFromFile
 from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 
 
@@ -18,6 +18,8 @@ into a proper pytest test at some point.
 modvars, param, epp, shiny90 = GB_ImportProjectionFromFile(
     os.path.join("tests", "resources", "SouthAfrica.PJNZ")
 )
+
+print("Finished reading import")
 
 
 for tag, value in modvars.items():
@@ -37,17 +39,23 @@ for tag, value in modvars.items():
     modvars[tag] = np.array(value)
 
 ss = get_goals_ss()
+
+print("converting to leapfrog")
 lf_data = modvars_to_leapfrog(modvars, ss)
+
+print("finished converting to leapfrog")
 
 # lf_data["b_condom_prop_sum"] = np.full((81), 0)
 
 #output = run_goals(lf_data)
 #print(output)
 
-output = run_goals(
-   lf_data,
-   output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
-)
+print(f"Running from {modvars[PJN_FirstYearTag]} to {modvars[PJN_FinalYearTag] + 1}")
 
-print(output['total_population'])
+# output = run_goals(
+#    lf_data,
+#    output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
+# )
+
+# print(output['total_population'])
 
