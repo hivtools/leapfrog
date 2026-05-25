@@ -2863,12 +2863,22 @@ void calc_behav_matrix_impacts()
 
   nda::fill(i_hv.adj_coverage_prod, 1.0);
 
+  std::list<int> RN_UsedInterventions = {RN_COMP_SEX_EDUC,RN_FSW_OUTREACH,RN_ECON_STRENGTH,
+                                        RN_IDU_HARM_RED,RN_IDU_NSEP,RN_IDU_DRUG_SUB,
+                                        RN_MSM_OUTREACH,RN_CONDOMS,RN_CONDOM_SUPPLY,RN_ANC_TESTING};
+
   double impact=0;
 
   
    for (int j = 1; j <= HV_MAX_BEHAV_IMPACTS; ++j) {
        
       for (int  i = 1; i <= RN_MAX_BEHAV_INTVN; ++i) {
+         
+            // a few interventions are now excluded from the editors and RN calcs
+            if (std::ranges::find(RN_UsedInterventions, i) == RN_UsedInterventions.end()) {
+              continue;
+            }  
+              
             i_hv.adj_coverage_prod(j) *= (1+i_hv.adj_coverage(i) * p_hv.hv_impact_matrix(i,j)); 
        }//i
 

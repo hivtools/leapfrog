@@ -1,9 +1,4 @@
 import math
-from SpectrumCommon.Const.HV.HVTags import HVARTInputCoverageByRGTag, HVGoalsBaseYearIdxTag, HVImpactMatrixTag
-from SpectrumCommon.Const.RN.RNConst import RN_IDUDrugSub
-from SpectrumCommon.Const.RN.RNTags import RNADHTreatCovTag, RNADHTreatReducMortTag, RNCureCovTypeTag, RNCureCoverageTag, RNCureEffectivenessTag, RNUnitCostsTag
-from _spectrum.SpectrumCommon.Const.HV.HVConst import HV_MaxRiskGroups
-from _spectrum.SpectrumCommon.Const.RN.RNTags import RN_POCEffectTag
 import numpy as np
 
 from SpectrumCommon.Const.AM.AMTags import (
