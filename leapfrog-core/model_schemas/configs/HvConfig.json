@@ -31,15 +31,24 @@
       "nPOC":2,
       "nHVINF":2,
       "nIntervn":43,
+      "nIntervnRN":53,
       "nPREP":9,
-      "RN_DurationMonths": 4
+      "RN_DurationMonths": 4,
+      "nCure" : 4,
+      "nMAX_BEHAV_INTVN" :18,
+      "nMAX_BEHAV_IMPACTS" : 23
+      
     }
   },
 
 
   "pars": {
 
-     "epi_start_year": {
+    "goals_base_year_idx": {
+      "num_type": "int"
+    }, 
+    
+    "epi_start_year": {
       "num_type": "int"
     },
 
@@ -58,38 +67,38 @@
 
     "b_condom_prop": {
       "num_type": "real_type",
-      "dims": ["SS::nRG+1", "opts.proj_steps"]
+      "dims": ["SS::nRG", "opts.proj_steps"]
     },
 
-    "b_behav_dur": {
+    "b_behav_properties": {
       "num_type": "real_type",
       "dims": ["SS::nRG", "SS::rRG_DUR"]
     },
 
    "b_sex_acts": {
       "num_type": "real_type",
-      "dims": ["SS::nRG+1", "opts.proj_steps"]
+      "dims": ["SS::nRG", "opts.proj_steps"]
     },
 
     "b_num_partners": {
       "num_type": "real_type",
-      "dims": ["SS::nRG+1", "opts.proj_steps"]
+      "dims": ["SS::nRG", "opts.proj_steps"]
     },
 
     "b_incr_recruit": {
       "num_type": "real_type",
-      "dims": ["SS::nNS+1", "SS::rRG_TOTAL"]
+      "dims": ["SS::nNS", "SS::rRG_TOTAL"]
     },
 
 
     "b_married_prop": {
       "num_type": "real_type",
-      "dims": ["SS::nRG+1"]
+      "dims": ["SS::nRG"]
     },
 
     "b_age_first_sex": {
       "num_type": "real_type",
-      "dims": ["SS::nNS+1", "opts.proj_steps"]
+      "dims": ["SS::nNS", "opts.proj_steps"]
     },
 
     "b_idu_share_prop": {
@@ -97,30 +106,7 @@
       "dims": ["opts.proj_steps"]
     },
 
-    "rn_poc_cov": {
-      "num_type": "real_type",
-      "dims": ["SS::nPOC+1", "opts.proj_steps"]
-    },
-
-
-    "rn_vac_params": {
-      "num_type": "real_type",
-      "dims": ["SS::vVAC_NUM_PARS"]
-    },
-
-     "rn_vac_coverage": {
-      "num_type": "real_type",
-      "dims": ["SS::nRG+1","opts.proj_steps"]
-    },
-
-    "rn_vac_cov_type": {
-      "num_type": "int"
-    },
-
-     "rn_vac_targetting": {
-      "num_type": "int"
-    },
-
+    
     "epi_infectiousness": {
       "num_type": "real_type",
        "dims": ["SS::nINF"]
@@ -163,17 +149,17 @@
 
     "epi_sti_prev": {
       "num_type": "real_type",
-      "dims": ["SS::nRG+1","opts.proj_steps"]
+      "dims": ["SS::nRG","opts.proj_steps"]
     },
 
      "b_foi_idu": {
       "num_type": "real_type",
-      "dims": ["SS::nNS+1", "opts.proj_steps"]
+      "dims": ["SS::nNS", "opts.proj_steps"]
     },
 
      "prep_cov": {
       "num_type": "real_type",
-      "dims": ["SS::nNS+1","SS::nRG1+1","opts.proj_steps"]
+      "dims": ["SS::nNS","SS::nRG1","opts.proj_steps"]
     },
 
      "prep_method_mix": {
@@ -186,12 +172,83 @@
       "dims": ["SS::nPREP+1",  "SS::RN_DurationMonths"]
     },
 
-     "rn_coverage": {
+
+     "rn_cure_effect": {
+      "num_type": "real_type",
+      "dims": ["SS::nCure"]
+    },
+
+     "rn_cure_coverage": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG+1","opts.proj_steps"]
+    },
+
+    "rn_cure_coverage_type": {
+      "num_type": "int"
+    },
+
+    "rn_coverage": {
       "num_type": "real_type",
       "dims": ["SS::nIntervn", "opts.proj_steps"]
+    },
+
+    "rn_poc_cov": {
+      "num_type": "real_type",
+      "dims": ["SS::nPOC+1", "opts.proj_steps"]
+    },
+
+    "rn_poc_effect": {
+      "num_type": "real_type",
+      "dims": ["SS::nPOC+1"]
+    },
+
+     "rn_adh_treat_cov": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+
+     "rn_adh_treat_reduc_mort": {
+      "num_type": "real_type"
+    },
+
+    "rn_vac_params": {
+      "num_type": "real_type",
+      "dims": ["SS::vVAC_NUM_PARS"]
+    },
+
+    "rn_vac_coverage": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG","opts.proj_steps"]
+    },
+
+    "rn_vac_cov_type": {
+      "num_type": "int"
+    },
+
+    "rn_vac_targetting": {
+      "num_type": "int"
+    },
+
+  
+    "rn_unit_costs": {
+      "num_type": "real_type",
+      "dims": ["SS::nIntervn", "opts.proj_steps"]
+    },
+
+    "rn_pop_sizes": {
+      "num_type": "real_type",
+      "dims": ["SS::nIntervn", "opts.proj_steps"]
+    },
+
+    "hv_impact_matrix": {
+      "num_type": "real_type",
+      "dims": ["SS::nMAX_BEHAV_INTVN", "SS::nMAX_BEHAV_IMPACTS"]
+    },
+
+     "art_coverage_rg": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS+1", "SS::rRG_TOTAL+1","opts.proj_steps"]
     }
-
-
 
   },
 
@@ -294,6 +351,11 @@
       "dims": ["SS::nRG","SS::nCD4","SS::nNS"]
     },
 
+    
+    "new_vaccinations_total": {
+      "num_type": "real_type"
+    },
+
     "hiv_mu": {
       "num_type": "real_type",
       "dims": ["SS::nCD4p","SS::nNS" ]
@@ -376,20 +438,60 @@
       "dims": ["SS::nRG","SS::nNS"]
     },
 
-    "cured_prop": {
-      "num_type": "real_type",
-      "dims": ["SS::nRG","SS::nNS"]
-    },
-
-   "art_coverage_rg": {
-      "num_type": "real_type",
-      "dims": ["SS::nNS+1", "SS::rRG_TOTAL+1","opts.proj_steps"]
-    },
-
     "r_mult": {
       "num_type": "real_type",
       "dims": ["SS::nRG+1","SS::nNS+1"]
+    },
+
+
+    "total_art_adults": {
+      "num_type": "real_type"
+    },
+
+    "total_art_children": {
+      "num_type": "real_type"
+    },
+
+    "total_pop_hivpos": {
+      "num_type": "real_type"
+    },
+
+     "adj_coverage_base_yr": {
+      "num_type": "real_type",
+      "dims": ["SS::nMAX_BEHAV_INTVN"]
+    },
+
+     "adj_coverage": {
+      "num_type": "real_type",
+      "dims": ["SS::nMAX_BEHAV_INTVN"]
+    },
+
+     "adj_coverage_prod": {
+      "num_type": "real_type",
+      "dims": ["SS::nMAX_BEHAV_IMPACTS"]
+    },
+
+     "b_condom_prop": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG"]
+    },
+
+  
+    "b_num_partners": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG"]
+    },
+
+    "b_age_first_sex": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
+    },
+
+    "b_idu_share_prop": {
+      "num_type": "real_type"
     }
+
+
 
 
 
@@ -414,6 +516,23 @@
       "dims": ["SS::nVAC+1","SS::nRG+1","SS::nCD4+1","SS::nNS+1"]
     },
 
+    
+    "pop_hiv_neg": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG+1","SS::nNS+1"]
+    },
+
+    "cured_pop": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG+1","SS::nNS+1"]
+    },
+
+    "cured_prop": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG+1","SS::nNS+1"]
+    },
+
+
     "deaths": {
       "num_type": "real_type",
       "dims": ["SS::nVAC+1","SS::nRG+1","SS::nCD4+1","SS::nNS+1"]
@@ -434,8 +553,7 @@
       "dims": ["SS::nCD4+1","SS::nNS+1"]
     },
 
-    
-
+  
      "mult_no_art": {
       "num_type": "real_type",
       "dims": ["SS::nCD4p"]
@@ -455,6 +573,16 @@
      "new_inf_s": {
       "num_type": "real_type",
       "dims": ["SS::nNS+1"]
+    },
+
+    "num_people_reached": {
+      "num_type": "real_type",
+      "dims": ["SS::nIntervnRN"]
+    },
+
+    "resources_required": {
+      "num_type": "real_type",
+      "dims": ["SS::nIntervnRN"]
     }
 
   },

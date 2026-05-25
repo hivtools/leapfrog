@@ -1,4 +1,9 @@
 import math
+from SpectrumCommon.Const.HV.HVTags import HVARTInputCoverageByRGTag, HVGoalsBaseYearIdxTag, HVImpactMatrixTag
+from SpectrumCommon.Const.RN.RNConst import RN_IDUDrugSub
+from SpectrumCommon.Const.RN.RNTags import RNADHTreatCovTag, RNADHTreatReducMortTag, RNCureCovTypeTag, RNCureCoverageTag, RNCureEffectivenessTag, RNUnitCostsTag
+from _spectrum.SpectrumCommon.Const.HV.HVConst import HV_MaxRiskGroups
+from _spectrum.SpectrumCommon.Const.RN.RNTags import RN_POCEffectTag
 import numpy as np
 
 from SpectrumCommon.Const.AM.AMTags import (
@@ -1087,6 +1092,9 @@ def _hiv_child_modvars_leapfrog(modvars: Modvars, final_year_idx: int, ss: dict)
 
 def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
 
+    
+    goals_base_year_idx = int(modvars[HVGoalsBaseYearIdxTag])
+
     epi_start_year = int(modvars[HV_EpidemicStYrTag])
 
     epi_months_in_primary = float(modvars[HV_MonthsInPrimaryStageTag])
@@ -1104,7 +1112,8 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
     # Source is shape (nRG, 3): cols are [unused, HV_PercPop(%), HV_AvgDur(duration)].
     # C++ expects (nRG+1, rRG_DUR=2): col 0 = PERC_POP, col 1 = DUR_AVG.
     # Select the two meaningful columns, then pad one zero row for RG_ALL (index nRG).
-    b_behav_dur = modvars[HV_BehaviorTag][:, HV_PercPop : HV_AvgDur + 1].copy(order="F")
+    b_behav_properties = modvars[HV_BehaviorTag][:, HV_PercPop : HV_AvgDur + 1].copy(order="F")
+    b_behav_properties = b_behav_properties[:, 0] / 100 #rescale RG proportion to [0,1]
     # b_behav_dur = np.vstack(
     #     [_behav_raw, np.zeros((1, HV_AvgDur - HV_PercPop + 1), dtype=_behav_raw.dtype)]
     # ).copy(order="F")
@@ -1221,40 +1230,88 @@ def _hv_modvars_leapfrog(modvars: Modvars, final_year_idx: int):
     prep_method_mix = modvars[RN_MethodMixTag][
         : (GB_Female+1), : (HV_MSMIDU+1), : (RN_MaxInterventions), : (final_year_idx + 1) 
     ].copy(order="F")
+
+
+    rn_adh_treat_cov = modvars[RNADHTreatCovTag ][
+        : (final_year_idx + 1)
+    ].copy(order="F")
+
+    rn_adh_treat_reduc_mort = float(modvars[RNADHTreatReducMortTag])
     
+    rn_poc_effect = np.array([[0.5],[0.5],[0.5]])
+
+    rn_cure_effect = np.array([[0.5],[0.5],[0.5],[0.5]])
+
+
+    rn_cure_coverage = modvars[RNCureCoverageTag ][
+        : (HV_MSM_F3+1), : (final_year_idx + 1)
+    ].copy(order="F")
+
+    rn_cure_coverage_type = int(modvars[RNCureCovTypeTag])
+
+    #rn_unit_costs = modvars[RNUnitCostsTag ][  
+    #    : (RN_MaxInterventions+1), : (final_year_idx + 1) 
+    #].copy(order="F")
+
+    rn_unit_costs = np.zeros((RN_MaxInterventions+1), (final_year_idx + 1))
+
+    #rn_pop_sizes = modvars[RNUnitCostsTag ][  
+    #    : (RN_MaxInterventions+1), : (final_year_idx + 1) 
+    #].copy(order="F")
+
+    rn_pop_sizes = np.zeros((RN_MaxInterventions+1), (final_year_idx + 1))
+
+    hv_impact_matrix = modvars[HVImpactMatrixTag ][  
+        : (RN_IDUDrugSub+1), : (HV_MaxRiskGroups+1) 
+    ].copy(order="F")
+
+    art_coverage_rg = modvars[HVARTInputCoverageByRGTag][
+        : (GB_Female+1), :(HV_MSM_F3 + 1), : (final_year_idx + 1)
+    ].copy(order="F")
+
+
     return {
+        "goals_base_year_idx":goals_base_year_idx,
         "epi_start_year": epi_start_year,
         "epi_months_in_primary":epi_months_in_primary,
         "b_balance_sex_acts": b_balance_sex_acts,
         "epi_initial_pulse": epi_initial_pulse,
-        "b_condom_prop": b_condom_prop,
-        "b_behav_dur": b_behav_dur/100,
-        "b_sex_acts": b_sex_acts,
-        "b_num_partners": b_num_partners,
-        "b_incr_recruit": b_incr_recruit/100,
-        "b_married_prop": b_married_prop/100,
-        "b_age_first_sex":b_age_first_sex,
+        "b_condom_prop": np.delete(b_condom_prop, 0, axis=0)/100,
+        "b_behav_properties": np.delete(b_behav_properties, 0, axis=0),
+        "b_sex_acts": np.delete(b_sex_acts, 0, axis=0),
+        "b_num_partners": np.delete(b_num_partners, 0, axis=0),
+        "b_incr_recruit": np.delete(b_incr_recruit, 0, axis=0)/100, 
+        "b_married_prop": np.delete(b_married_prop, 0, axis=0)/100,
+        "b_age_first_sex": np.delete(b_age_first_sex, 0, axis=0),
         "b_idu_share_prop":b_idu_share_prop/100,
-        "rn_poc_cov":rn_poc_cov/100,
-        "rn_vac_params":rn_vac_params,
-        "rn_vac_coverage":rn_vac_coverage/100,
-        "rn_vac_cov_type":rn_vac_cov_type,
-        "rn_vac_targetting":rn_vac_targetting,
         "epi_infectiousness":epi_infectiousness,
         "epi_inf_mult_art":epi_inf_mult_art,
-        "out_new_inf":out_new_inf,
         "epi_transm_mult_M":epi_transm_mult_M,
         "epi_transm_hiv_F":epi_transm_hiv_F,
         "epi_transm_sti_mult": epi_transm_sti_mult,
         "epi_transm_mult_MSM":epi_transm_mult_MSM,
         "epi_condom_effect":epi_condom_effect/100,
         "epi_redwhen_circum":epi_redwhen_circum/100,
-        "epi_sti_prev":epi_sti_prev,
-        "prep_cov":prep_cov/100,
+        "epi_sti_prev":np.delete(epi_sti_prev, 0, axis=0),
+        "prep_cov":np.delete(prep_cov, 0, axis=0)/100,
         "prep_method_mix":prep_method_mix/100,
         "prep_effectiveness":prep_effectiveness/100,
+        "b_foi_idu":np.delete(b_foi_idu, 0, axis=0),
+        "out_new_inf":out_new_inf,
         "rn_coverage":rn_coverage/100,
-        "b_foi_idu":b_foi_idu,
+        "rn_poc_effect":rn_poc_effect,
+        "rn_poc_cov":rn_poc_cov/100,
+        "rn_vac_params":rn_vac_params,
+        "rn_vac_coverage":np.delete(rn_vac_coverage, 0, axis=0)/100,
+        "rn_vac_cov_type":rn_vac_cov_type,
+        "rn_vac_targetting":rn_vac_targetting,
+        "rn_adh_treat_cov":rn_adh_treat_cov,
+        "rn_adh_treat_reduc_mort":rn_adh_treat_reduc_mort,
+        "rn_cure_effect":rn_cure_effect,
+        "rn_cure_coverage":rn_cure_coverage,
+        "rn_cure_coverage_type":rn_cure_coverage_type,
+        "hv_impact_matrix":hv_impact_matrix,
+        "art_coverage_rg":art_coverage_rg/100,
 
     }
 

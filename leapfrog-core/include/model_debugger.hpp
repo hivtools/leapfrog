@@ -34,6 +34,7 @@ inline DpDebugInfo capture_dp(const DpState& dp, const IntermediateDp& i_dp,
 template <class HvState, class IntermediateHv, class ParsHv>
   requires requires (const HvState& hv, const IntermediateHv& i_hv, const ParsHv& p_hv) {
     hv.adults;
+    hv.prevalence;
     hv.mult_no_art;
     hv.mult_art;
     i_hv.r_mult;
@@ -77,7 +78,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
     //p_hv.epi_months_in_primary;
    // p_hv.epi_initial_pulse;
     p_hv.b_condom_prop;
-    p_hv.b_behav_dur;
+    p_hv.b_behav_properties;
     p_hv.b_sex_acts;
     p_hv.b_num_partners;
     p_hv.b_incr_recruit;
@@ -97,6 +98,8 @@ template <class HvState, class IntermediateHv, class ParsHv>
     p_hv.prep_method_mix;
     p_hv.prep_effectiveness;
     p_hv.b_foi_idu;
+
+    p_hv.rn_coverage;
 
 
 
@@ -261,6 +264,8 @@ struct HvDebugInfo {
   NdaInfo mult_no_art;
   NdaInfo mult_art;
   NdaInfo r_mult;
+  NdaInfo prevalence;
+
 
   // Intermediate
   NdaInfo dp_totpop_1549;
@@ -299,7 +304,7 @@ struct HvDebugInfo {
   NdaInfo art_coverage_rg;
   NdaInfo prep_effect;
 
-   NdaInfo b_riskgroup_proportions;
+  NdaInfo b_riskgroup_proportions;
   NdaInfo b_behave_change_rate;
 
 
@@ -310,7 +315,7 @@ struct HvDebugInfo {
   //double epi_months_in_primary;
   //double epi_initial_pulse;
   NdaInfo b_condom_prop;
-  NdaInfo b_behav_dur;
+  NdaInfo b_behav_properties;
   NdaInfo b_sex_acts;
   NdaInfo b_num_partners;
   NdaInfo b_incr_recruit;
@@ -327,6 +332,8 @@ struct HvDebugInfo {
   NdaInfo prep_method_mix;
   NdaInfo prep_effectiveness;
   NdaInfo b_foi_idu;
+  NdaInfo rn_coverage; 
+
 
 
 };
@@ -494,6 +501,8 @@ template <class HvState, class IntermediateHv, class ParsHv>
   requires requires (const HvState& hv, const IntermediateHv& i_hv, const ParsHv& p_hv) {
 
     hv.adults;
+    hv.prevalence;
+
     hv.mult_no_art;
     hv.mult_art;
 
@@ -555,7 +564,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
     //p_hv.b_balance_sex_acts;
     //p_hv.epi_initial_pulse;
     p_hv.b_condom_prop;
-    p_hv.b_behav_dur;
+    p_hv.b_behav_properties;
     p_hv.b_sex_acts;
     p_hv.b_num_partners;
     p_hv.b_incr_recruit;
@@ -572,6 +581,8 @@ template <class HvState, class IntermediateHv, class ParsHv>
     p_hv.prep_method_mix;
     p_hv.prep_effectiveness;
     p_hv.b_foi_idu;
+    p_hv.rn_coverage;
+  
 
   }
 inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
@@ -579,6 +590,8 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   HvDebugInfo out{};
 
   out.adults = nda_capture(hv.adults);
+  out.prevalence = nda_capture(hv.prevalence);
+
   out.mult_no_art = nda_capture(hv.mult_no_art);
   out.mult_art = nda_capture(hv.mult_art);
 
@@ -659,7 +672,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   //out.b_balance_sex_acts = static_cast<int>(p_hv.b_balance_sex_acts);
   //out.epi_initial_pulse = static_cast<double>(p_hv.epi_initial_pulse);
   out.b_condom_prop = nda_capture(p_hv.b_condom_prop);
-  out.b_behav_dur = nda_capture(p_hv.b_behav_dur);
+  out.b_behav_properties = nda_capture(p_hv.b_behav_properties);
   out.b_sex_acts = nda_capture(p_hv.b_sex_acts);
   out.b_num_partners = nda_capture(p_hv.b_num_partners);
   out.b_incr_recruit = nda_capture(p_hv.b_incr_recruit);
@@ -677,6 +690,8 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.prep_method_mix = nda_capture(p_hv.prep_method_mix);
   out.prep_effectiveness = nda_capture(p_hv.prep_effectiveness);
   out.b_foi_idu = nda_capture(p_hv.b_foi_idu);
+
+  out.rn_coverage = nda_capture(p_hv.rn_coverage);
 
   return out;
 }
