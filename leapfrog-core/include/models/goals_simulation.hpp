@@ -295,7 +295,16 @@ struct GoalsSimulation<Config> {
       HV_IM_NEEDLE_SHARING_MSIDU= 22,
       HV_IM_NUM_SHARING_PARTNERS= 23,
 
-      HV_MAX_BEHAV_IMPACTS                = 23
+      HV_MAX_BEHAV_IMPACTS       = 23,
+
+      DP_EligTreatPregnantWomen       = 1,
+      DP_EligTreatTB_HIV              = 2,
+      DP_EligTreatDiscordantCouples   = 3,
+      DP_EligTreatSexWorkers          = 4,
+      DP_EligTreatMSM                 = 5,
+      DP_EligTreatIDU                 = 6,
+      DP_EligTreatOtherPop            = 7,
+      DP_EligTreatPopsMax             = 7
 
   };
 
@@ -2255,8 +2264,15 @@ real_type entrants;
 
 real_type ltfu;
 real_type new_art_cap;
-real_type sum1;  
+real_type sum1;
 
+int rg_eligible_treat_year[DP_EligTreatPopsMax];
+bool rg_eligible_treat[DP_EligTreatPopsMax];
+
+for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
+  rg_eligible_treat_year[rg]= 2010;
+  rg_eligible_treat[rg]= false;
+}
 
 for (int s = S_MALE; s <= S_FEMALE; ++s) {
     
@@ -2344,50 +2360,28 @@ for (int s = S_MALE; s <= S_FEMALE; ++s) {
     }
 }
 
-/*
-for (int s = S_MALE; s <= S_FEMALE; ++s) {
-    for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
-      if (s == S_FEMALE) {
-           //if ((rg == TG_HRH) && DP.GetPopsEligTreat(DP_EligTreatSexWorkers).Eligible &&
-           //     DP.GetPopsEligTreat(DP_EligTreatSexWorkers).Year <= (DP.GetFirstYear + t - 1)) {
-           //     kp_cd4_elig[RG_HRH][S_FEMALE] = false;
-           // }
-           // if ((rg == RG_IDU) && DP.GetPopsEligTreat(DP_EligTreatIDU).Eligible &&
-            //    DP.GetPopsEligTreat(DP_EligTreatIDU).Year <= (DP.GetFirstYear + t - 1)) {
-            //    kp_cd4_elig[RG_IDU][S_FEMALE] = false;
-            //}
-
-            kp_cd4_elig[RG_HRH][S_FEMALE] = false;
-            kp_cd4_elig[RG_IDU][S_FEMALE] = false;
-        }
-
-        if (s == S_MALE) {
-            //if ((rg == RG_MSM) && DP.GetPopsEligTreat(DP_EligTreatMSM).Eligible &&
-            //    DP.GetPopsEligTreat(DP_EligTreatMSM).Year <= (DP.GetFirstYear + t - 1)) {
-            //    kp_cd4_elig[RG_MSM][S_MALE] = false;
-                //not doing these groups, currently 
-                //kp_cd4_elig[HV_Male][RG_MSMLR] = false;
-                //kp_cd4_elig[HV_Male][RG_MSMMR] = false;
-                //kp_cd4_elig[HV_Male][RG_MSMHR] = false;
-                //kp_cd4_elig[HV_Male][RG_MSMIDU] = false;
-           // }
-           // if ((rg == RG_IDU) && DP.GetPopsEligTreat(DP_EligTreatIDU).Eligible &&
-           //     DP.GetPopsEligTreat(DP_EligTreatIDU).Year <= (DP.GetFirstYear + t - 1)) {
-           //     kp_cd4_elig[RG_IDU][S_MALE] = false;
-            //}
-        }
+ //set rg eligibility and year
+ if(rg_eligible_treat[DP_EligTreatSexWorkers]=true)
+ {
+    if(rg_eligible_treat_year[DP_EligTreatSexWorkers]<=t)
+      kp_cd4_elig[RG_HRH][S_FEMALE] = false;
+ }
 
 
-    }//rg
-}//s 
+if(rg_eligible_treat_year[DP_EligTreatMSM]=true)
+{
+  if(rg_eligible_treat_year[DP_EligTreatMSM]<=t)  
+    kp_cd4_elig[RG_MSM][S_MALE] = false;
+}
 
-*/
-
-// kp_cd4_elig[RG_HRH][S_FEMALE] = false;
- //kp_cd4_elig[RG_IDU][S_FEMALE] = false;
-
-//kp_cd4_elig[RG_MSM][S_MALE] = false;
- //kp_cd4_elig[RG_IDU][S_MALE] = false;
+ if(rg_eligible_treat_year[DP_EligTreatIDU]=true)
+ {
+    if(rg_eligible_treat_year[DP_EligTreatMSM]<=t)
+    {
+      kp_cd4_elig[RG_IDU][S_MALE] = false;
+      kp_cd4_elig[RG_IDU][S_FEMALE] = false;
+    } 
+ }
 
 
 // Set ART coverage for all risk groups to AIM 15 to 49 coverage
@@ -2609,7 +2603,7 @@ void sum_adult_pop_dims(int t)
                {
                     // Exclude female MSM and higher risk groups
                     //if (!((s == S_FEMALE) && (rg >= RG_MSM) && (rg <= RG_MSMIDU)))
-                        sum += n_hv.adults(VAC_ALL,rg,hd,s);
+                        sum += n_hv.adults(v,rg,hd,s);
                 } //s
                 
                 //if(sum>0){
@@ -2878,7 +2872,7 @@ void calc_behav_matrix_impacts()
             if (std::ranges::find(RN_UsedInterventions, i) == RN_UsedInterventions.end()) {
               continue;
             }  
-              
+
             i_hv.adj_coverage_prod(j) *= (1+i_hv.adj_coverage(i) * p_hv.hv_impact_matrix(i,j)); 
        }//i
 
