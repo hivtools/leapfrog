@@ -140,12 +140,12 @@ type
     fertMultOnArtLength: Integer;
     localAdjFactor: Double;
     localAdjFactorLength: Integer;
-    eppIduMortality: Double;
-    eppIduMortalityLength: Integer;
-    propIduWb: PDouble;
-    propIduWbLength: Integer;
-    sexRatioFromEpp: PDouble;
-    sexRatioFromEppLength: Integer;
+    pwidHivposNonaidsMortality: Double;
+    pwidHivposNonaidsMortalityLength: Integer;
+    propHivpopPwid: PDouble;
+    propHivpopPwidLength: Integer;
+    pwidSexRatio: PDouble;
+    pwidSexRatioLength: Integer;
 end;
 
 type
@@ -180,9 +180,9 @@ type
     fertMultOffArt: TGBFixedArray<Double>;
     fertMultOnArt: TGBFixedArray<Double>;
     localAdjFactor: Double;
-    eppIduMortality: Double;
-    propIduWb: TGBFixedArray<Double>;
-    sexRatioFromEpp: TGBFixedArray<Double>;
+    pwidHivposNonaidsMortality: Double;
+    propHivpopPwid: TGBFixedArray<Double>;
+    pwidSexRatio: TGBFixedArray<Double>;
     function getView(): LeapfrogHivAdultParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -629,8 +629,8 @@ begin;
   fertMultByAge.Free;
   fertMultOffArt.Free;
   fertMultOnArt.Free;
-  propIduWb.Free;
-  sexRatioFromEpp.Free;
+  propHivpopPwid.Free;
+  pwidSexRatio.Free;
   inherited;
 end;
 
@@ -717,12 +717,12 @@ begin;
   Result.fertMultOnArtLength := fertMultOnArt.GetLength();
   Result.localAdjFactor := localAdjFactor;
   Result.localAdjFactorLength := 1;
-  Result.eppIduMortality := eppIduMortality;
-  Result.eppIduMortalityLength := 1;
-  Result.propIduWb := PDouble(propIduWb.data);
-  Result.propIduWbLength := propIduWb.GetLength();
-  Result.sexRatioFromEpp := PDouble(sexRatioFromEpp.data);
-  Result.sexRatioFromEppLength := sexRatioFromEpp.GetLength();
+  Result.pwidHivposNonaidsMortality := pwidHivposNonaidsMortality;
+  Result.pwidHivposNonaidsMortalityLength := 1;
+  Result.propHivpopPwid := PDouble(propHivpopPwid.data);
+  Result.propHivpopPwidLength := propHivpopPwid.GetLength();
+  Result.pwidSexRatio := PDouble(pwidSexRatio.data);
+  Result.pwidSexRatioLength := pwidSexRatio.GetLength();
 end;
 
 function LeapfrogHivAdultState.getView(): LeapfrogHivAdultStateView;
@@ -1041,8 +1041,8 @@ begin;
   fertMultByAge.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultByAge');
   fertMultOffArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOffArt');
   fertMultOnArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOnArt');
-  propIduWb.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'propIduWb');
-  sexRatioFromEpp.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'sexRatioFromEpp');
+  propHivpopPwid.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'propHivpopPwid');
+  pwidSexRatio.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pwidSexRatio');
 end;
 
 procedure LeapfrogHivAdultState.writeToDisk(dir: string);

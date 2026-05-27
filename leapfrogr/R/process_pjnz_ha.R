@@ -232,7 +232,7 @@ process_pjnz_ha <- function(dat, pars, dim_vars, use_coarse_age_groups = FALSE) 
     # will be PWID.
     pars$pwid_hivpos_nonaids_mortality <- pars$pwid_hivpos_nonaids_mortality[1]
   } else {
-    pars$pwid_sex_ratio <- rep(-1, len(pars$pwid_sex_ratio))
+    pars$pwid_sex_ratio <- rep(-1, proj_years)
     pars$pwid_hivpos_nonaids_mortality <- -1
   }
 
