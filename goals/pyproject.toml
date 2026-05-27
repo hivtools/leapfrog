@@ -38,9 +38,9 @@ dev = [
 ]
 
 # Uncomment and set file path to use local development versions
-#[tool.uv.sources]
-#avenir-spectrum-common = { path = "../../../avenir/SpectrumEngine/SpectrumCommon", editable = true }
-#avenir-spectrum-import-pjnz = { path = "../../../avenir/SpectrumEngine/Tools/ImportPJNZ", editable = true }
+[tool.uv.sources]
+avenir-spectrum-common = { path = "C:\\work\\LeapFrog\\V3\\SpectrumEngine\\SpectrumCommon", editable = true }
+avenir-spectrum-import-pjnz = { path = "C:\\work\\LeapFrog\\V3\\SpectrumEngine\\Tools\\ImportPJNZ", editable = true }
 
 # Needed for full C++17 support on macOS
 [tool.cibuildwheel.macos.environment]

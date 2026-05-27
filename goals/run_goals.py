@@ -16,7 +16,7 @@ into a proper pytest test at some point.
 
 
 modvars, param, epp, shiny90 = GB_ImportProjectionFromFile(
-    os.path.join("tests", "resources", "SouthAfrica.PJNZ")
+    os.path.join("tests", "resources", "SouthAfrica_RG_ART.PJNZ")
 )
 
 print("Finished reading import")
