@@ -357,13 +357,14 @@ struct GoalsSimulation<Config> {
     const auto& p_hv = pars.hv;
 
     //check goals inputs
-    print_goals_inputs();
+   //print_goals_inputs();
 
     //initialize annual variables
     init_vars_pre_hiv_loop();
 
-    //set coverage chnage for impact matrix
-    if(t>p_hv.goals_base_year_idx){
+    //set coverage chnage for impact adj
+    //if(t>p_hv.goals_base_year_idx){
+    if(t>=1){
       calc_adj_matrix(t);
       calc_behav_matrix_impacts();
     }
