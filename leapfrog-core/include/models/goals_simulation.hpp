@@ -348,7 +348,6 @@ struct GoalsSimulation<Config> {
 
     n_hv.total_population += t; //c_dp.p_totpop(20,S_MALE);
 
-
   };
 
 
@@ -385,7 +384,12 @@ struct GoalsSimulation<Config> {
       set_initial_pulse();
     }
 
-    allocate_art(t);
+    //set these rates to vars in goals
+    if(t>p_hv.goals_base_year_idx){
+      calc_HIV_cure(t);
+    }
+
+    allocate_art(t);//CDP remove here
 
     //calc new vaccinations
     calc_new_vaccinations();
@@ -411,12 +415,9 @@ struct GoalsSimulation<Config> {
     //collect info from dp/aim to set demographical and HIV rates
     set_goals_vars_from_dp(t);
 
-    //set these rates to vars in goals
+    //set the rates to vars in goals, including progression, aging and mortality
+    calc_HIV_mort_adjustments(t);
     calc_goals_rates(t);
-    if(t>p_hv.goals_base_year_idx){
-      //apply_hiv_mort_adjustments(t);
-      //calc_HIVcure(t);
-    }
 
     //adjust distribution of new entrants into different risk groups
     //if( t>=2 && hiv_step=1)
@@ -502,8 +503,6 @@ struct GoalsSimulation<Config> {
   for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd){
       n_hv.mult_art(hd) = p_hv.epi_inf_mult_art(t) * p_hv.epi_infectiousness(INF_SYMPT_NO_ART);
   }
-
-
 
   for (int s = S_MALE; s <= S_FEMALE; ++s)
       for (int rg = RG_LRH; rg <= RG_TOTAL1; ++rg)
@@ -993,7 +992,6 @@ void calc_new_vaccinations()
 }
 
 
-
 void calc_goals_rates(int t) {
 
   const auto& p_ha = pars.ha;
@@ -1012,6 +1010,8 @@ void calc_goals_rates(int t) {
 
   //rates for HIV dynamics
   nda::fill(i_hv.hiv_mu, 0.0);//mort rate, hiv not on ART
+  nda::fill(i_hv.hiv_mu_excess, 0.0);//non aids excess mortality
+
   nda::fill(i_hv.hiv_lambda, 0.0);//progression rate, hiv not on ART
   nda::fill(i_hv.art_alpha, 0.0);//mort rate, hiv on ART
 
@@ -1057,9 +1057,18 @@ void calc_goals_rates(int t) {
           //i_hv.art_alpha(hd,s) = (i_hv.dp_pop_1549_art(hd,s)!=0) ? i_hv.dp_hiv_cd4_mort_art(hd,s)/i_hv.dp_pop_1549_art(hd,s) : p_ha.art_mortality(2, hd_hds, 25, s);//2 is gt12 m on ART
 
           //direct from age categories, no averaging
-          i_hv.hiv_mu(hd,s)     = p_ha.cd4_mortality(hd_hds, 25, s);//using age 25 for defaults
+          i_hv.hiv_mu(hd,s)        = i_hv.ADH_Tx_Impact * p_ha.cd4_mortality(hd_hds, 25, s); //using age 25 for defaults
+          i_hv.hiv_mu_excess(hd,s) = p_ha.cd4_nonaids_excess_mort(hd_hds, 25, s);
+          i_hv.hiv_mu(hd,s)        = i_hv.hiv_mu(hd,s) + i_hv.hiv_mu_excess(hd,s); 
+          i_hv.hiv_mu(hd,s)        = std::max(i_hv.hiv_mu(hd,s), i_hv.background_death_rate(s));
+
           i_hv.hiv_lambda(hd,s) = p_ha.cd4_progression(hd_hds, 25, s);//
-          i_hv.art_alpha(hd,s)  = p_ha.art_mortality(ART_GT12m, hd_hds, 25, s);
+
+          i_hv.art_alpha(hd,s)  = i_hv.alpha_mult * p_ha.art_mortality_time_rate_ratio(ART_GT12m, t) * 
+                                                    p_ha.art_mortality(ART_GT12m, hd_hds, 25, s);
+          i_hv.art_alpha_excess(hd,s)  = p_ha.art_nonaids_excess_mort(ART_GT12m, hd_hds, 25, s);
+          i_hv.art_alpha(hd,s)  =  i_hv.art_alpha(hd,s) + i_hv.art_alpha_excess(hd,s); 
+   
 
           if(hd==CD4_GT500){
             real_type stage_duration = 1.0 / i_hv.hiv_lambda(CD4_GT500,s)  - years_in_primary;
@@ -1126,44 +1135,48 @@ void calc_goals_rates(int t) {
 
 }
 
- void apply_hiv_mort_adjustments(int t)
-{
+ void calc_HIV_mort_adjustments(int t)
+{ //Reduce mortality following treatment for advanced HIV disease
 
-  //Reduce mortality following treatment for advanced HIV disease
+  const auto& p_ha = pars.ha;
+
+  auto& i_hv = intermediate.hv;
   const auto& p_hv = pars.hv;
-
-  double ADH_Tx_Impact = 1.0;
+  
+  
   double AHD_cov = 0;
-
   int GoalsBaseYearIdx=p_hv.goals_base_year_idx;
 
+  i_hv.ADH_Tx_Impact = 1.0;
   if(t>GoalsBaseYearIdx){
     AHD_cov = p_hv.rn_adh_treat_cov(t) * (1 + p_hv.rn_poc_cov(POC_CD4,t) * p_hv.rn_poc_effect(POC_CD4));
     if (AHD_cov > 1.0) AHD_cov = 1.0;
 
-    ADH_Tx_Impact = 1 - (AHD_cov- p_hv.rn_adh_treat_cov(GoalsBaseYearIdx))* p_hv.rn_adh_treat_reduc_mort;
+    i_hv.ADH_Tx_Impact = 1 - (AHD_cov- p_hv.rn_adh_treat_cov(GoalsBaseYearIdx))* p_hv.rn_adh_treat_reduc_mort;
   }
+
+  if( i_hv.ADH_Tx_Impact > 1)  i_hv.ADH_Tx_Impact = 1;
+
 
   //Reduce mortality by ART by 50% as viral suppression increases to 95%
   //Input is percent not virally suppressed, initial default is 0.25
   //Fast-Track target is 0.05
-  const auto& p_ha = pars.ha;
-  double alpha_mult = 1 - std::min(0.5,0.5
-                      * (p_ha.art_mortality_time_rate_ratio(ART_GT12m, 1) -
-                         p_ha.art_mortality_time_rate_ratio(ART_GT12m, t) * (1 - p_hv.rn_poc_cov(POC_VL,t) * p_hv.rn_poc_effect(POC_VL)))
-                      / (p_ha.art_mortality_time_rate_ratio(ART_GT12m, 1) - 0.05));
-  if(alpha_mult > 1) alpha_mult = 1;
-
+  i_hv.alpha_mult    = 1 - std::min(0.5,0.5
+                      * (p_hv.epi_inf_mult_art(1) -
+                         p_hv.epi_inf_mult_art(t) * (1 - p_hv.rn_poc_cov(POC_VL,t) * p_hv.rn_poc_effect(POC_VL)))
+                      / (p_hv.epi_inf_mult_art(1) - 0.05));
+  
+                      if( i_hv.alpha_mult > 1)  i_hv.alpha_mult = 1;
 }
 
-void calc_HIVcure(int t)
+void calc_HIV_cure(int t)
 {
 
   auto& n_hv = state_next.hv;
   auto& i_hv = intermediate.hv;
   const auto& p_hv = pars.hv;
-  double curePercent=0;
-  double cured=0;
+  double curePercent=0.0;
+  double cured=0.0;
 
   nda::fill(n_hv.pop_hiv_neg, 0.0);
   nda::fill(n_hv.cured_pop, 0.0);
@@ -1204,16 +1217,16 @@ void calc_HIVcure(int t)
       for (int hd = CD4_GT500 ; hd <= CD4_LT50_ART; ++hd)
       for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
       {
-        cured = n_hv.adults(v,rg,hd,s) * curePercent * opts.dt;
+         cured = n_hv.adults(v,rg,hd,s) * curePercent * opts.dt;
 
         // do not remove more than 99 % of the current compartment >> CDP check
-        cured = std::min(cured, 0.99 * n_hv.adults(v, rg, hd, s, t));
+        cured = std::min(cured, 0.99 * n_hv.adults(v, rg, hd, s));
 
         n_hv.cured_pop(rg, s) += cured;
 
-        // move cured individuals to the HIV‑negative compartment
-        n_hv.adults(v,rg,hd,s)-=cured;
-        n_hv.adults(v,rg,CD4_NEG,s)+=cured;
+       //move cured individuals to the HIV‑negative compartment
+       n_hv.adults(v,rg,hd,s)-=cured;
+       n_hv.adults(v,rg,CD4_NEG,s)+=cured;
 
       }//hd,v
 
@@ -1231,11 +1244,7 @@ void calc_HIVcure(int t)
 
   }//rg,s
 
-
-
 }
-
-
 
 
 void calc_newrecruits_distribution(int t)

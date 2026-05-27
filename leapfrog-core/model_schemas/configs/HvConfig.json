@@ -377,14 +377,32 @@
       "dims": ["SS::nCD4p","SS::nNS" ]
     },
 
+    "hiv_mu_excess": {
+      "num_type": "real_type",
+      "dims": ["SS::nCD4p","SS::nNS" ]
+    },
+
      "hiv_lambda": {
       "num_type": "real_type",
       "dims": ["SS::nCD4p","SS::nNS" ]
     },
 
-     "art_alpha": {
+    "art_alpha": {
       "num_type": "real_type",
       "dims": ["SS::nCD4","SS::nNS"]
+    },
+
+    "art_alpha_excess": {
+      "num_type": "real_type",
+      "dims": ["SS::nCD4","SS::nNS"]
+    },
+
+    "ADH_Tx_Impact": {
+      "num_type": "real_type"
+    },
+
+    "alpha_mult": {
+      "num_type": "real_type"
     },
 
     "dp_hiv_cd4_mort_no_art": {
