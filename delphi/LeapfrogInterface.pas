@@ -140,10 +140,6 @@ type
     fertMultOnArtLength: Integer;
     localAdjFactor: Double;
     localAdjFactorLength: Integer;
-    kpEligibleTreat: PDouble;
-    kpEligibleTreatLength: Integer;
-    artCovNumPercent: PInteger;
-    artCovNumPercentLength: Integer;
 end;
 
 type
@@ -178,8 +174,6 @@ type
     fertMultOffArt: TGBFixedArray<Double>;
     fertMultOnArt: TGBFixedArray<Double>;
     localAdjFactor: Double;
-    kpEligibleTreat: TGBFixedArray<Double>;
-    artCovNumPercent: TGBFixedArray<Integer>;
     function getView(): LeapfrogHivAdultParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -573,6 +567,8 @@ type
     hvImpactMatrixLength: Integer;
     artCoverageRg: PDouble;
     artCoverageRgLength: Integer;
+    artCovNumPercent: PInteger;
+    artCovNumPercentLength: Integer;
 end;
 
 type
@@ -621,6 +617,7 @@ type
     rnPopSizes: TGBFixedArray<Double>;
     hvImpactMatrix: TGBFixedArray<Double>;
     artCoverageRg: TGBFixedArray<Double>;
+    artCovNumPercent: TGBFixedArray<Integer>;
     function getView(): LeapfrogGoalsParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -797,8 +794,6 @@ begin;
   fertMultByAge.Free;
   fertMultOffArt.Free;
   fertMultOnArt.Free;
-  kpEligibleTreat.Free;
-  artCovNumPercent.Free;
   inherited;
 end;
 
@@ -885,10 +880,6 @@ begin;
   Result.fertMultOnArtLength := fertMultOnArt.GetLength();
   Result.localAdjFactor := localAdjFactor;
   Result.localAdjFactorLength := 1;
-  Result.kpEligibleTreat := PDouble(kpEligibleTreat.data);
-  Result.kpEligibleTreatLength := kpEligibleTreat.GetLength();
-  Result.artCovNumPercent := PInteger(artCovNumPercent.data);
-  Result.artCovNumPercentLength := artCovNumPercent.GetLength();
 end;
 
 function LeapfrogHivAdultState.getView(): LeapfrogHivAdultStateView;
@@ -1171,6 +1162,7 @@ begin;
   rnPopSizes.Free;
   hvImpactMatrix.Free;
   artCoverageRg.Free;
+  artCovNumPercent.Free;
   inherited;
 end;
 
@@ -1283,6 +1275,8 @@ begin;
   Result.hvImpactMatrixLength := hvImpactMatrix.GetLength();
   Result.artCoverageRg := PDouble(artCoverageRg.data);
   Result.artCoverageRgLength := artCoverageRg.GetLength();
+  Result.artCovNumPercent := PInteger(artCovNumPercent.data);
+  Result.artCovNumPercentLength := artCovNumPercent.GetLength();
 end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
@@ -1364,8 +1358,6 @@ begin;
   fertMultByAge.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultByAge');
   fertMultOffArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOffArt');
   fertMultOnArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOnArt');
-  kpEligibleTreat.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'kpEligibleTreat');
-  artCovNumPercent.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCovNumPercent');
 end;
 
 procedure LeapfrogHivAdultState.writeToDisk(dir: string);
@@ -1504,6 +1496,7 @@ begin;
   rnPopSizes.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnPopSizes');
   hvImpactMatrix.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hvImpactMatrix');
   artCoverageRg.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCoverageRg');
+  artCovNumPercent.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCovNumPercent');
 end;
 
 procedure LeapfrogGoalsState.writeToDisk(dir: string);

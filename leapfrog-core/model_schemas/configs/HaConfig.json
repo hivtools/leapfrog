@@ -15,10 +15,7 @@
       "pAG_15to49": 35,
       "hIDX_15to49": 0,
       "hAG_15to49": 35,
-      "HIV_STEPS_PER_YEAR": 10,
-      "nKP_ART" : 7,
-      "nART_NUM_PERC" : 4
-
+      "HIV_STEPS_PER_YEAR": 10
     },
 
 
@@ -203,16 +200,6 @@
       "alias": {
         "r": "frr_scalar"
       }
-    },
-
-    "kp_eligible_treat": {
-      "num_type": "real_type",
-      "dims": ["SS::hAG", "SS::NS"]
-      },
-
-    "art_cov_num_percent": {
-      "num_type": "int",
-      "dims": ["SS::nART_NUM_PERC+1"]
     }
   },
 
@@ -350,8 +337,6 @@
     "prev": {
       "num_type": "real_type"
     }
-
-
   },
   "state": {
     "p_hivpop": {
@@ -368,7 +353,7 @@
     },
     "h_artpop": {
       "num_type": "real_type",
-      "dims": ["SS::hTS+1", "SS::hDS", "SS::hAG", "SS::NS"]
+      "dims": ["SS::hTS", "SS::hDS", "SS::hAG", "SS::NS"]
     },
     "h_hiv_deaths_no_art": {
       "num_type": "real_type",

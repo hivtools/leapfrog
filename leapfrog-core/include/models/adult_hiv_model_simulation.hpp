@@ -2,7 +2,6 @@
 
 #include "../options.hpp"
 #include "../generated/config_mixer.hpp"
-#include "goals_simulation.hpp"
 
 namespace leapfrog {
 namespace internal {
@@ -42,7 +41,6 @@ struct AdultHivModelSimulation<Config> {
   static constexpr int hIDX_15PLUS = SS::hIDX_15PLUS;
   static constexpr int hAG_fertility = SS::hAG_fertility;
   static constexpr int p_idx_fertility_first = SS::p_idx_fertility_first;
-  static constexpr int rRG_TOTAL = SS::rRG_TOTAL;
 
   // function args
   int t;
@@ -51,22 +49,6 @@ struct AdultHivModelSimulation<Config> {
   State& state_next;
   Intermediate& intermediate;
   const Options<real_type>& opts;
-
-  //please remove the following function with real model calculations
-  // void run_goals_innerloop(int hiv_step) {
-  //   auto& i_hv = intermediate.hv;
-  //   auto& p_hv = pars.hv;
-
-  //   for (int sex = 0; sex < SS::NS; ++sex) {
-  //     for (int rg = 0; rg < SS::pRG_TOTAL; ++rg) {
-  //       for (int hiv = 0; hiv < SS::pHIV; ++hiv) {
-  //         for (int vacc = 0; vacc < SS::pVacc; ++vacc) {
-  //           i_hv.a_adults(sex, rg, hiv, vacc, t) = p_hv.epi_initial_pulse*i_hv.c_mu(0, sex);
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
 
   // only exposing the constructor and some methods
   public:
@@ -82,7 +64,6 @@ struct AdultHivModelSimulation<Config> {
   void run_hiv_adult_pre_hiv_loop() {
     const auto& p_ha = pars.ha;
     auto& i_ha = intermediate.ha;
-    auto& i_hv = intermediate.hv;
 
     i_ha.everARTelig_idx = p_ha.idx_hm_elig(t) < hDS ? p_ha.idx_hm_elig(t) : hDS;
     i_ha.anyelig_idx = p_ha.idx_hm_elig(t);
@@ -101,7 +82,6 @@ struct AdultHivModelSimulation<Config> {
   void run_hiv_adult_hiv_loop(int hiv_step) {
     const auto& p_ha = pars.ha;
     auto& i_ha = intermediate.ha;
-    auto& i_hv = intermediate.hv;
 
     nda::fill(i_ha.grad, 0.0);
     nda::fill(i_ha.gradART, 0.0);
@@ -688,8 +668,6 @@ struct AdultHivModelSimulation<Config> {
 
 
 };
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
+
 }
 }

@@ -36,7 +36,8 @@
       "RN_DurationMonths": 4,
       "nCure" : 4,
       "nMAX_BEHAV_INTVN" :18,
-      "nMAX_BEHAV_IMPACTS" : 23
+      "nMAX_BEHAV_IMPACTS" : 23,
+      "nART_NUM_PERC" : 4
 
     }
   },
@@ -248,6 +249,11 @@
      "art_coverage_rg": {
       "num_type": "real_type",
       "dims": ["SS::nNS+1", "SS::rRG_TOTAL+1","opts.proj_steps"]
+    },
+
+    "art_cov_num_percent": {
+      "num_type": "int",
+      "dims": ["SS::nART_NUM_PERC+1"]
     }
 
   },

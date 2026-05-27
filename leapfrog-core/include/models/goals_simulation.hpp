@@ -2385,8 +2385,8 @@ if (sex_age_hiv[POP_H_OnART][S_MALE] > 0.0){
 
 
 //KP coverage from AIM input editor
-//if (p_ha.art_cov_num_percent == ART_RG_PERCENT)
-if (p_ha.art_cov_num_percent == 0)
+//if (p_hv.art_cov_num_percent == ART_RG_PERCENT)
+if (p_hv.art_cov_num_percent == 0)
 {
     // Coverage for males, risk groups HV_IDU … HV_MSM
     for (int rg = RG_IDU; rg <= RG_MSM; ++rg)
