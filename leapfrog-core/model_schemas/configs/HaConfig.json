@@ -199,14 +199,14 @@
         "r": "frr_scalar"
       }
     },
-    "epp_idu_mortality": {
+    "pwid_hivpos_nonaids_mortality": {
       "num_type": "real_type"
     },
-    "prop_idu_wb": {
+    "prop_hivpop_pwid": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
     },
-    "sex_ratio_from_epp": {
+    "pwid_sex_ratio": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
     }
