@@ -41,21 +41,18 @@ for tag, value in modvars.items():
 ss = get_goals_ss()
 
 print("converting to leapfrog")
-lf_data = modvars_to_leapfrog(modvars, ss)
+lf_data = modvars_to_leapfrog(modvars, ss, "Goals")
 
 print("finished converting to leapfrog")
 
 # lf_data["b_condom_prop_sum"] = np.full((81), 0)
 
-#output = run_goals(lf_data)
-#print(output)
-
 print(f"Running from {modvars[PJN_FirstYearTag]} to {modvars[PJN_FinalYearTag] + 1}")
 
-# output = run_goals(
-#    lf_data,
-#    output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
-# )
+output = run_goals(
+    lf_data,
+    output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
+)
 
 # print(output['total_population'])
 
