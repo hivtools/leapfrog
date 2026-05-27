@@ -87,7 +87,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
     p_hv.b_idu_share_prop;
     p_hv.rn_poc_cov;
     p_hv.rn_vac_params;
-    p_hv.rn_vac_coverage;
+    p_hv.rn_vac_coverage_all;
 
     //p_hv.rn_vac_cov_type;
     //p_hv.rn_vac_targetting;
@@ -324,7 +324,7 @@ struct HvDebugInfo {
   NdaInfo b_idu_share_prop;
   NdaInfo rn_poc_cov;
   NdaInfo rn_vac_params;
-  NdaInfo rn_vac_coverage;
+  NdaInfo rn_vac_coverage_all;
   //int rn_vac_cov_type;
   //int rn_vac_targetting;
   NdaInfo epi_infectiousness;
@@ -573,7 +573,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
     p_hv.b_idu_share_prop;
     p_hv.rn_poc_cov;
     p_hv.rn_vac_params;
-    p_hv.rn_vac_coverage;
+    p_hv.rn_vac_coverage_all;
    // p_hv.rn_vac_cov_type;
     //p_hv.rn_vac_targetting;
     p_hv.epi_infectiousness;
@@ -681,7 +681,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.b_idu_share_prop = nda_capture(p_hv.b_idu_share_prop);
   out.rn_poc_cov = nda_capture(p_hv.rn_poc_cov);
   out.rn_vac_params = nda_capture(p_hv.rn_vac_params);
-  out.rn_vac_coverage = nda_capture(p_hv.rn_vac_coverage);
+  out.rn_vac_coverage_all = nda_capture(p_hv.rn_vac_coverage_all);
   //out.rn_vac_cov_type = static_cast<int>(p_hv.rn_vac_cov_type);
   //out.rn_vac_targetting = static_cast<int>(p_hv.rn_vac_targetting);
   out.epi_infectiousness =nda_capture(p_hv.epi_infectiousness);

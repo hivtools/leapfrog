@@ -179,9 +179,14 @@
       "dims": ["SS::nCure"]
     },
 
-     "rn_cure_coverage": {
+    "rn_cure_coverage_rg": {
       "num_type": "real_type",
       "dims": ["SS::nRG+1","opts.proj_steps"]
+    },
+
+    "rn_cure_coverage_all": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
     },
 
     "rn_cure_coverage_type": {
@@ -217,9 +222,14 @@
       "dims": ["SS::vVAC_NUM_PARS"]
     },
 
-    "rn_vac_coverage": {
+    "rn_vac_coverage_rg": {
       "num_type": "real_type",
       "dims": ["SS::nRG","opts.proj_steps"]
+    },
+
+    "rn_vac_coverage_all": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
     },
 
     "rn_vac_cov_type": {
@@ -496,11 +506,6 @@
     "b_idu_share_prop": {
       "num_type": "real_type"
     }
-
-
-
-
-
 
 
   },

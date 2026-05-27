@@ -159,8 +159,11 @@ struct GoalsSimulation<Config> {
       VAC_TAKEACTION        = 0,
       VAC_DEGREEACTION      = 1,
 
-      VAC_COV_SINGLE        = 0,
-      VAC_COV_ALLRISK       = 1,
+      VAC_COV_ALLRISK       = 0,
+      VAC_COV_SINGLE        = 1,
+
+      CURE_COV_ALLRISK       = 0,
+      CURE_COV_SINGLE        = 1,
 
       ART_NUM_PERCENT       =0,
       ART_CD4_PERCENT       =1,
@@ -266,9 +269,6 @@ struct GoalsSimulation<Config> {
 
       RN_MAX_BEHAV_INTVN   = RN_IDU_DRUG_SUB,
 
-      RN_POP_SEC_SCHOOL_MALE     = 12,
-      RN_POP_SEC_SCHOOL_FEMALE   = 13,
-
       //behaviour intervention impacts
       HV_IM_CONDOMS_HIGH        = 1,
       HV_IM_CONDOMS_MED         = 2,
@@ -296,6 +296,14 @@ struct GoalsSimulation<Config> {
 
       HV_MAX_BEHAV_IMPACTS       = 23,
 
+      RN_POP_CONDOM_WASTAGE        = 8,
+      RN_POP_SEC_SCHOOL_MALE       = 12,
+      RN_POP_SEC_SCHOOL_FEMALE     = 13,
+      RN_POP_Rapes                 = 17,
+      RN_POP_IDU_OPIOD_DEP         = 22,
+      RN_POP_NUM_INJECT_YEAR       = 23,
+      RN_POP_PEPKitsRequired       = 30,
+
       DP_EligTreatPregnantWomen       = 1,
       DP_EligTreatTB_HIV              = 2,
       DP_EligTreatDiscordantCouples   = 3,
@@ -303,8 +311,9 @@ struct GoalsSimulation<Config> {
       DP_EligTreatMSM                 = 5,
       DP_EligTreatIDU                 = 6,
       DP_EligTreatOtherPop            = 7,
-      DP_EligTreatPopsMax             = 7
+      DP_EligTreatPopsMax             = 7,
 
+    
   };
 
   //stsatic constexpr int MALE = SS::MALE;
@@ -388,6 +397,7 @@ struct GoalsSimulation<Config> {
 
    void run_goals_hiv_loop(int hiv_step) {
 
+    const auto& p_hv = pars.hv;
 
     //initialize inner loop varaibles
     init_vars_hiv_loop();
@@ -403,7 +413,7 @@ struct GoalsSimulation<Config> {
 
     //set these rates to vars in goals
     calc_goals_rates(t);
-    if(t>1000){ //set to goals base year
+    if(t>p_hv.goals_base_year_idx){
       //apply_hiv_mort_adjustments(t);
       //calc_HIVcure(t);
     }
@@ -589,7 +599,7 @@ struct GoalsSimulation<Config> {
   nda_print_info(dbg_model.hv.b_idu_share_prop);
   nda_print_info(dbg_model.hv.rn_poc_cov);
   nda_print_info(dbg_model.hv.rn_vac_params);
-  nda_print_info(dbg_model.hv.rn_vac_coverage);
+  nda_print_info(dbg_model.hv.rn_vac_coverage_all);
   nda_print_info(dbg_model.hv.epi_infectiousness);
   nda_print_info(dbg_model.hv.epi_inf_mult_art);
 
@@ -782,6 +792,10 @@ void calc_new_vaccinations()
   i_hv.vac_effect(VAC_DEGREEACTION,VAC_PARTIAL)  = 1;
 
    real_type value = 0;
+   double vac_coverage =0;
+
+   int nr=0;
+
    for (int s = S_MALE; s <= S_FEMALE; ++s)
     {
         for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg)
@@ -789,22 +803,25 @@ void calc_new_vaccinations()
 
           if (s == S_FEMALE && rg > RG_IDU) continue; //no female MSM
 
-          int h1 = CD4_LT50_ART;
+          
+          int h1 = CD4_LT50_ART;                     
           if (p_hv.rn_vac_targetting == 1) h1 = CD4_NEG;
 
           for (int hd = CD4_NEG; hd <= h1; ++hd) {
-
-              int nr = RG_TOTAL1;
-
+          
               // Determine the risk index (nr) used for coverage lookup
-              if (p_hv.rn_vac_cov_type != VAC_COV_SINGLE){
-                nr = RG_TOTAL1;
-              }
-                else {
-                nr = rg;
+              nr = rg;
+              if(s=S_FEMALE) nr = rg + RG_NONE_F3;
+  
+              vac_coverage = p_hv.rn_vac_coverage_all(t);
+              if (p_hv.rn_vac_cov_type != VAC_COV_ALLRISK)
+              {
+                vac_coverage = p_hv.rn_vac_coverage_rg(nr, t); 
               }
 
-              value =  p_hv.rn_vac_coverage(nr,t) * //dt *
+              vac_coverage = std::clamp(vac_coverage, 0.0, 1.0);
+
+              value =  vac_coverage * //dt *
                           (n_hv.adults(VAC_ALL,rg,hd,s)  +
                           //note it assume no one is vaccined below age 15
                           i_hv.dp_entrants_age_15(POP_H_HIVNeg,CD4_NEG,s) *
@@ -1155,11 +1172,13 @@ void calc_HIVcure(int t)
   double cureDuration = p_hv.rn_cure_effect(VAC_EFF);
   double immuneWane   = (cureDuration > 0.0) ? (1.0 / cureDuration) : (1.0 / 9.0);
 
+  int nr=0;
 
   for (int rg = RG_NONE; rg <= RG_MSMIDU; ++rg)
   for (int s = S_MALE; s <= S_FEMALE; ++s)
   {
 
+    
     for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
     {
       if (!((s == S_FEMALE) && (rg >= RG_MSM) && (rg <= RG_MSMIDU)))// Exclude female MSM and higher risk groups
@@ -1167,10 +1186,14 @@ void calc_HIVcure(int t)
     } //v
 
 
-    curePercent = p_hv.rn_cure_coverage(RG_ALL, t) * p_hv.rn_cure_effect(VAC_EFF);
-    if (p_hv.rn_cure_coverage_type != RG_ALL)
+    // Determine the risk index (nr) used for coverage lookup
+    nr = rg;
+    if(s=S_FEMALE) nr = rg + RG_TOTAL;//CDP check
+
+    curePercent = p_hv.rn_cure_coverage_all(t) * p_hv.rn_cure_effect(VAC_EFF);
+    if (p_hv.rn_cure_coverage_type != CURE_COV_ALLRISK)
     {
-      curePercent = p_hv.rn_cure_coverage(rg, t) * p_hv.rn_cure_effect(VAC_EFF);
+      curePercent = p_hv.rn_cure_coverage_rg(nr, t) * p_hv.rn_cure_effect(VAC_EFF);
     }
 
     curePercent = std::clamp(curePercent, 0.0, 1.0);
@@ -3053,45 +3076,33 @@ void calc_resource_needs()
             }
 
             case RN_CONDOMS://condoms
-            {
-              pop_reached *= i_hv.dp_totpop_1549(S_MALE)*
-                             (p_hv.b_behav_properties(RG_LRH, PERC_POP) *
-                              p_hv.b_num_partners(RG_LRH,t) *
-                              p_hv.b_sex_acts(RG_LRH,t)+
-
-                              p_hv.b_behav_properties(RG_MRH, PERC_POP) *
-                              p_hv.b_num_partners(RG_MRH,t) *
-                              p_hv.b_sex_acts(RG_MRH,t)+
-
-                              p_hv.b_behav_properties(RG_HRH, PERC_POP) *
-                              p_hv.b_num_partners(RG_HRH,t) *
-                              p_hv.b_sex_acts(RG_HRH,t));
-            }
-
             case RN_CONDOM_SUPPLY://condom supply
             {
-              double condom_wastage =1;
-              pop_reached *= i_hv.dp_totpop_1549(S_MALE)*
-                             (p_hv.b_behav_properties(RG_LRH, PERC_POP) *
+              pop_reached *= //i_hv.dp_totpop_1549(S_MALE)*
+                             (//p_hv.b_behav_properties(RG_LRH, PERC_POP) *
+                              n_hv.adults_ts(VAC_ALL,RG_LRH ,CD4_ALL,S_MALE) *
                               p_hv.b_num_partners(RG_LRH,t) *
-                              p_hv.b_sex_acts(RG_LRH,t)+
-
-                              p_hv.b_behav_properties(RG_MRH, PERC_POP) *
+                              p_hv.b_sex_acts(RG_LRH,t)+ 
+                              
+                              //p_hv.b_behav_properties(RG_MRH, PERC_POP) *
+                              n_hv.adults_ts(VAC_ALL,RG_MRH ,CD4_ALL,S_MALE) *
                               p_hv.b_num_partners(RG_MRH,t) *
                               p_hv.b_sex_acts(RG_MRH,t)+
-
-                              p_hv.b_behav_properties(RG_HRH, PERC_POP) *
-                              p_hv.b_num_partners(RG_HRH,t) *
+                              
+                              //p_hv.b_behav_properties(RG_HRH, PERC_POP) *
+                              n_hv.adults_ts(VAC_ALL,RG_HRH,CD4_ALL,S_MALE) *
+                              p_hv.b_num_partners(RG_HRH,t) * 
                               p_hv.b_sex_acts(RG_HRH,t))*
-                              condom_wastage;
+                              (1+p_hv.rn_pop_sizes(RN_POP_CONDOM_WASTAGE,t)/100);
             }
 
+            
             case RN_COMP_SEX_EDUC://Comprehensive sexuality education
             {
               pop_reached=0;
               for(int a = 10; a < 19; ++a)
-                 pop_reached +=(c_dp.p_totpop(a, S_MALE)*p_hv.rn_pop_sizes(RN_POP_SEC_SCHOOL_MALE,t)+
-                                c_dp.p_totpop(a, S_FEMALE)*p_hv.rn_pop_sizes(RN_POP_SEC_SCHOOL_FEMALE,t));
+                 pop_reached +=  (c_dp.p_totpop(a, S_MALE)*p_hv.rn_pop_sizes(RN_POP_SEC_SCHOOL_MALE,t)+
+                                c_dp.p_totpop(a, S_FEMALE)*p_hv.rn_pop_sizes(RN_POP_SEC_SCHOOL_FEMALE,t));  
 
               pop_reached *= 0.6 * p_hv.rn_coverage(i,t);
             }
@@ -3141,14 +3152,16 @@ void calc_resource_needs()
             case RN_IDU_NSEP:
             {
               pop_reached = (n_hv.adults_ts(VAC_ALL,RG_IDU,CD4_ALL,S_MALE)+
-                             n_hv.adults_ts(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)) * p_hv.rn_coverage(i,t);
+                             n_hv.adults_ts(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)) * 
+                             p_hv.rn_pop_sizes(RN_POP_NUM_INJECT_YEAR,t)/100 * //CDP check /100
+                             p_hv.rn_coverage(i,t);
             }
 
             case RN_IDU_DRUG_SUB:
             {
               pop_reached = (n_hv.adults_ts(VAC_ALL,RG_IDU,CD4_ALL,S_MALE)+
                              n_hv.adults_ts(VAC_ALL,RG_IDU,CD4_ALL,S_FEMALE)) *
-                             p_hv.rn_pop_sizes(i,t) *
+                             p_hv.rn_pop_sizes(RN_POP_IDU_OPIOD_DEP,t)/100 * //CDP check /100
                              p_hv.rn_coverage(i,t);
             }
 
@@ -3165,7 +3178,7 @@ void calc_resource_needs()
 
             case RN_HIV_TEST_ANC://HIV testing for all women attending ANC
             {
-              pop_reached = (i_hc.need_PMTCT>0) ? p_hc.total_births(t)*(i_hc.on_PMTCT/i_hc.need_PMTCT):0;
+              pop_reached = (i_hc.need_PMTCT>0) ? p_hc.total_births(t) * (i_hc.on_PMTCT/i_hc.need_PMTCT) : 0;
             }
 
             case RN_HIV_WOMAN_COUNS://Counseling costs for HIV+ women
@@ -3240,21 +3253,21 @@ void calc_resource_needs()
 
             case RN_CURE://HIV cure
             {
-              if(p_hv.rn_cure_coverage_type==RG_ALL){
-                pop_reached = (i_hv.total_pop_hivpos+i_hv.total_art_adults+i_hv.total_art_children) *
-                               p_hv.rn_cure_coverage(RG_ALL, t);
+              if(p_hv.rn_cure_coverage_type==CURE_COV_ALLRISK){
+                pop_reached = (i_hv.total_pop_hivpos+i_hv.total_art_adults+i_hv.total_art_children) * 
+                               p_hv.rn_cure_coverage_all(t);
               }
               else{
                 for (int rg = RG_LRH; rg <= RG_MSMIDU; ++rg)
                 {
                     pop_reached += (n_hv.adults(VAC_ALL,rg,CD4_ALL,S_MALE)-n_hv.adults(VAC_ALL,rg,CD4_NEG,S_MALE)) *
-                                   p_hv.rn_cure_coverage(rg,t);
-                }
+                                   p_hv.rn_cure_coverage_rg(rg,t);
+                }                  
 
                 for (int rg = RG_LRH; rg <= RG_IDU; ++rg)
                 {
                     pop_reached += (n_hv.adults(VAC_ALL,rg,CD4_ALL,S_FEMALE)-n_hv.adults(VAC_ALL,rg,CD4_NEG,S_FEMALE))*
-                                  p_hv.rn_cure_coverage(rg,t);
+                                  p_hv.rn_cure_coverage_rg(rg,t);
                 }
 
               }
