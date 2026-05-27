@@ -21,7 +21,7 @@
 
     },
 
-    
+
     "overrides": [
       {
         "applies_if": "use_coarse_stratification",
@@ -37,7 +37,7 @@
   "pars": {
     "incidence_model_choice": {
       "num_type": "int"
-     },	  
+     },
     "input_adult_incidence_rate": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"],
@@ -57,7 +57,7 @@
     },
     "relative_infectiousness_art": {
       "num_type": "real_type"
-    },      
+    },
     "incidence_rate_ratio_age": {
       "num_type": "real_type",
       "dims": ["SS::pAG - SS::p_idx_hiv_first_adult", "SS::NS", "opts.proj_steps"],
@@ -204,7 +204,7 @@
         "r": "frr_scalar"
       }
     },
-    
+
     "kp_eligible_treat": {
       "num_type": "real_type",
       "dims": ["SS::hAG", "SS::NS"]
@@ -248,7 +248,7 @@
     "h_deaths_excess_nonaids_agesex": {
       "num_type": "real_type",
       "dims": ["SS::hAG", "SS::NS"]
-    },      
+    },
     "grad": {
       "num_type": "real_type",
       "dims": ["SS::hDS", "SS::hAG", "SS::NS"]
@@ -377,7 +377,7 @@
     "h_deaths_excess_nonaids_no_art": {
       "num_type": "real_type",
       "dims": ["SS::hDS", "SS::hAG", "SS::NS"]
-    },      
+    },
     "p_infections": {
       "num_type": "real_type",
       "dims": ["SS::pAG", "SS::NS"]
@@ -389,7 +389,7 @@
     "h_deaths_excess_nonaids_on_art": {
       "num_type": "real_type",
       "dims": ["SS::hTS", "SS::hDS", "SS::hAG", "SS::NS"]
-    },      
+    },
     "h_art_initiation": {
       "num_type": "real_type",
       "dims": ["SS::hDS", "SS::hAG", "SS::NS"]
@@ -401,7 +401,7 @@
     "p_deaths_excess_nonaids": {
       "num_type": "real_type",
       "dims": ["SS::pAG", "SS::NS"]
-    },      
+    },
     "p_net_migration_hivpop": {
       "num_type": "real_type",
       "dims": ["SS::pAG", "SS::NS"]
@@ -425,7 +425,5 @@
        "num_type": "real_type",
        "dims": ["SS::HIV_STEPS_PER_YEAR"]
     }
-  },
-
-  "internal_state": {}
+  }
 }

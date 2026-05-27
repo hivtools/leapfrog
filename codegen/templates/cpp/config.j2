@@ -59,18 +59,6 @@ struct {{ config.name }}Config {
     };
   };
 
-  struct InternalState {
-    {% for name, cfg in config.internal_state.items() %}
-    {{ get_struct_member_def(name, cfg, True)|indent(4) }}
-    {%- endfor %}
-
-    InternalState() {
-      {% for name, cfg in config.internal_state.items() %}
-      {{ get_reset_function(name, cfg)|indent(4) }}
-      {%- endfor %}
-    };
-  };
-
   struct State {
     {% for name, cfg in config.state.items() %}
     {{ get_struct_member_def(name, cfg, True)|indent(4) }}

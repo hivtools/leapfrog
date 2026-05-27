@@ -22,7 +22,6 @@ struct Leapfrog {
   using Pars = Cfg::Pars;
   using State = Cfg::State;
   using Intermediate = Cfg::Intermediate;
-  using InternalState = Cfg::InternalState;
   using OutputState = Cfg::OutputState;
   using Args = Cfg::Args;
 
@@ -66,17 +65,12 @@ struct Leapfrog {
     Intermediate intermediate;
     intermediate.reset();
 
-    InternalState internal_state;
-    if constexpr (ModelVariant::run_goals) {
-      internal::GoalsSimulation<Cfg>::init_internal_state(pars, internal_state);
-    }
-
     OutputState output_state(output_years.size());
     save_state(opts.proj_start_year, state, output_state, output_years);
 
     // Each time step is mid-point of the year
     for (int step = simulation_start_year - opts.proj_start_year + 1; step < opts.proj_steps; ++step) {
-      Args args = { step, pars, state, state_next, intermediate, internal_state, opts };
+      Args args = { step, pars, state, state_next, intermediate, opts };
       project_year(args);
       save_state(opts.proj_start_year + step, state_next,
                  output_state, output_years);
@@ -100,12 +94,7 @@ struct Leapfrog {
     Intermediate intermediate;
     intermediate.reset();
 
-    InternalState internal_state;
-    if constexpr (ModelVariant::run_goals) {
-      internal::GoalsSimulation<Cfg>::init_internal_state(pars, internal_state);
-    }
-
-    Args args = { simulation_start_year - opts.proj_start_year + 1, pars, state, state_next, intermediate, internal_state, opts };
+    Args args = { simulation_start_year - opts.proj_start_year + 1, pars, state, state_next, intermediate, opts };
     project_year(args);
 
     return args.state_next;

@@ -126,9 +126,6 @@ for config in dat["configs"]:
   for name, cfg in config["intermediate"].items():
     process_var_config(name, cfg)
 
-  for name, cfg in config["internal_state"].items():
-    process_var_config(name, cfg)
-
   for name, cfg in config["state"].items():
     process_var_config(name, cfg)
 

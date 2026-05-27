@@ -471,7 +471,5 @@
       "num_type": "real_type",
       "dims": ["SS::hPS"]
     }
-  },
-
-  "internal_state": {}
+  }
 }
