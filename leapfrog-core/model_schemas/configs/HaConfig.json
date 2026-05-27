@@ -17,8 +17,6 @@
       "hAG_15to49": 35,
       "HIV_STEPS_PER_YEAR": 10
     },
-
-
     "overrides": [
       {
         "applies_if": "use_coarse_stratification",
@@ -202,7 +200,6 @@
       }
     }
   },
-
   "intermediate": {
     "hiv_negative_pop": {
       "num_type": "real_type",
