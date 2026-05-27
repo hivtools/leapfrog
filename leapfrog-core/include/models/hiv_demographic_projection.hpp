@@ -165,15 +165,15 @@ struct HivDemographicProjection<Config> {
 
   // private methods that we don't want people to call
   private:
-  // Returns survival probability for HIV+ people at age a, adjusted down for IDU excess
+  // Returns survival probability for HIV+ people at age a, adjusted down for PWID excess
   // mortality. Only applies to working ages 15-49; returns surv unchanged outside that range.
   //
   // This is not used when running with direct incidence input
   // (incidence_model_choice == 0) or if epp_sex_ratio < 0. Spectrum uses
-  // epp_sex_ratio = -1 to indicate that IDU adjustment is not used.
+  // epp_sex_ratio = -1 to indicate that PWID adjustment is not used.
   //
-  // epp_idu_mortality is expected as a rate (0-1)
-  real_type idu_adjusted_surv(real_type surv, int a, int s) {
+  // pwid_hivpos_nonaids_mortality is expected as a rate (0-1)
+  real_type pwid_adjusted_surv(real_type surv, int a, int s) {
     const bool no_adjustment = pars.ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS ||
       a < p_idx_hiv_first_adult || a >= 50 ||
       pars.ha.epp_sex_ratio(t) < 0.0;
@@ -188,9 +188,9 @@ struct HivDemographicProjection<Config> {
       ? 1.0 / (1.0 + sex_ratio)
       : sex_ratio / (1.0 + sex_ratio);
     const real_type background_mort = 1.0 - surv;
-    const real_type raw_excess = pars.ha.epp_idu_mortality - background_mort;
+    const real_type raw_excess = pars.ha.pwid_hivpos_nonaids_mortality - background_mort;
     const real_type excess = (raw_excess > 0.0 ? raw_excess : 0.0)
-      * pars.ha.prop_idu_wb(t) * ratio / (pop_s / total_pop);
+      * pars.ha.prop_hivpop_pwid(t) * ratio / (pop_s / total_pop);
     return 1.0 - (background_mort + excess);
   };
 
@@ -202,7 +202,7 @@ struct HivDemographicProjection<Config> {
     for (int s = 0; s < NS; ++s) {
       for (int a = 1; a < pAG; ++a) {
         const real_type surv = p_dp.survival_probability(a, s, t);
-        n_ha.p_deaths_background_hivpop(a, s) = c_ha.p_hivpop(a - 1, s) * (1.0 - idu_adjusted_surv(surv, a, s));
+        n_ha.p_deaths_background_hivpop(a, s) = c_ha.p_hivpop(a - 1, s) * (1.0 - pwid_adjusted_surv(surv, a, s));
         n_ha.p_hivpop(a, s) = c_ha.p_hivpop(a - 1, s);
       }
 
