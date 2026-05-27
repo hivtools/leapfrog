@@ -169,17 +169,18 @@ struct HivDemographicProjection<Config> {
   // mortality. Only applies to working ages 15-49; returns surv unchanged outside that range.
   //
   // This is not used when running with direct incidence input
-  // (incidence_model_choice == 0) or if epp_sex_ratio < 0. Spectrum uses
-  // epp_sex_ratio = -1 to indicate that PWID adjustment is not used.
+  // (incidence_model_choice == 0) or if pwid_sex_ratio < 0. Spectrum uses
+  // pwid_sex_ratio = -1 to indicate that PWID adjustment is not used.
   //
   // pwid_hivpos_nonaids_mortality is expected as a rate (0-1)
   real_type pwid_adjusted_surv(real_type surv, int a, int s) {
     const bool no_adjustment = pars.ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS ||
       a < p_idx_hiv_first_adult || a >= 50 ||
-      pars.ha.epp_sex_ratio(t) < 0.0;
+      pars.ha.pwid_sex_ratio(t) < 0.0;
 
     if (no_adjustment) return surv;
 
+    const real_type sex_ratio = pars.ha.pwid_sex_ratio(t);
     const real_type pop_s     = state_curr.dp.p_totpop(a - 1, s);
     const real_type total_pop = state_curr.dp.p_totpop(a - 1, SS::MALE) + state_curr.dp.p_totpop(a - 1, SS::FEMALE);
     if (total_pop <= 0.0 || pop_s <= 0.0) return surv;
