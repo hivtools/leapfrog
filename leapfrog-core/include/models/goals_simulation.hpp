@@ -2499,7 +2499,7 @@ for (int s = S_MALE; s <= S_FEMALE; s++)
                   for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
                       if (hd == CD4_GT500) {
                           prop1[hd] = (eligible_art_vrhs[v][rg][hd][s] +
-                                      eligible_art_vrhs[s][CD4_PRIM ][rg][v]) / //CDP check no prim stage allocation
+                                      eligible_art_vrhs[v][CD4_PRIM ][rg][s]) / //CDP check no prim stage allocation
                                       sum_elig_art[v][rg][s];
                       } else {
                           prop2[hd] = eligible_art_vrhs[v][rg][hd][s] /
