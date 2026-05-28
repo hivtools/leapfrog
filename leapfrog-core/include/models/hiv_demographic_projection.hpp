@@ -162,6 +162,103 @@ struct HivDemographicProjection<Config> {
     }
 
   };
+  
+  void run_virginpop_demographic_projection() {
+    const auto& p_dp = pars.dp;
+    const auto& c_dp = state_curr.dp;
+    const auto& i_dp = intermediate.dp;
+    const auto& c_ha = state_curr.ha;
+    const auto& c_vg = state_curr.vg;
+    const auto& i_hc = intermediate.hc;
+    const auto& p_hc = pars.hc;    
+    auto& n_vg = state_next.vg;
+
+    // Non-hiv deaths and ageing
+
+    for (int s = 0; s < NS; ++s) {
+            
+      // Ageing and survival of virgin population
+      for (int va = 1; va < SS::vAG; ++va) {
+
+        int a = va + SS::p_idx_virginpop_first; // age index in total population array
+        n_vg.p_totpop_virgin(va, s) = c_vg.p_totpop_virgin(va - 1, s) * p_dp.survival_probability(a, s, t); // virgin total population
+        n_vg.p_hivpop_virgin(va, s) = c_vg.p_hivpop_virgin(va - 1, s) * p_dp.survival_probability(a, s, t); // virgin HIV positive population
+
+	// Ageing virgin HIV stratified population
+	// Note: code relies on virgin HIV population being single-age stratified
+	for (int hm = 0; hm < hDS; ++hm) {
+	  n_vg.h_hivpop_virgin(hm, va, s) += c_vg.h_hivpop_virgin(hm, va - 1, s) * p_dp.survival_probability(a, s, t);
+	  
+	  if (t > opts.ts_art_start) {
+	    for (int hu = 0; hu < hTS; ++hu) {
+	      n_vg.h_artpop_virgin(hu, hm, va, s) += c_vg.h_artpop_virgin(hu, hm, va - 1, s) * p_dp.survival_probability(a, s, t);
+	    }
+	  }
+	}
+	
+        if (opts.proj_period_int == PROJPERIOD_MIDYEAR) {
+          n_vg.p_totpop_virgin(va, s) *= 1.0 + i_dp.migration_rate(a, s);
+          n_vg.p_hivpop_virgin(va, s) *= 1.0 + i_dp.migration_rate(a, s);
+
+	  // Migration virgin HIV stratified population
+	  // Note: code relies on virgin HIV population being single-age stratified
+	  for (int hm = 0; hm < hDS; ++hm) {
+	    n_vg.h_hivpop_virgin(hm, va, s) *= 1.0 + i_dp.migration_rate(a, s);
+	    
+	    if (t > opts.ts_art_start) {
+	      for (int hu = 0; hu < hTS; ++hu) {
+		n_vg.h_artpop_virgin(hu, hm, va, s) *= 1.0 + i_dp.migration_rate(a, s);
+	      }
+	    }
+	  }
+        }
+
+        // TO DO: becoming sexually active
+      }
+
+      // Entrants into virgin population from total population age (p_idx_virginpop_first - 1)
+      int va = 0;
+      int a = SS::p_idx_virginpop_first;
+      n_vg.p_totpop_virgin(va, s) = c_dp.p_totpop(a - 1, s) * p_dp.survival_probability(a, s, t);
+      n_vg.p_hivpop_virgin(va, s) = c_ha.p_hivpop(a - 1, s) * p_dp.survival_probability(a, s, t);
+
+      // Entrants into virgin HIV stratified population
+      // Note: code relies on virgin HIV population being single-age stratified; needs
+      // to be generalised if implementing coarse HIV population.
+      for (int hm = 0; hm < hDS; ++hm) {
+	n_vg.h_hivpop_virgin(hm, va, s) += i_hc.age15_hivpop(hm, s) * p_dp.survival_probability(a, s, t);
+	
+	if (t > p_hc.hc_art_start) {
+	  for (int hu = 0; hu < hTS; ++hu) {
+	    if (t > opts.ts_art_start) {
+	      n_vg.h_artpop_virgin(hu, hm, 0, s) += i_hc.age15_artpop(hu, hm, s) * p_dp.survival_probability(a, s, t);;
+	    } else {
+	      // If child ART has started, but not yet adult ART has started, put
+	      // children on ART into the untreated adult HIV population
+	      n_vg.h_hivpop_virgin(hm, 0, s) += i_hc.age15_artpop(hu, hm, s) * p_dp.survival_probability(a, s, t);;
+	    }
+	  }
+	}
+      }
+
+      if (opts.proj_period_int == PROJPERIOD_MIDYEAR) {
+	n_vg.p_totpop_virgin(va, s) *= 1.0 + i_dp.migration_rate(a, s);
+	n_vg.p_hivpop_virgin(va, s) *= 1.0 + i_dp.migration_rate(a, s);
+
+	for (int hm = 0; hm < hDS; ++hm) {
+	  n_vg.h_hivpop_virgin(hm, va, s) *= 1.0 + i_dp.migration_rate(a, s);
+	  if (t > opts.ts_art_start) {	  
+	    for (int hu = 0; hu < hTS; ++hu) {
+	      n_vg.h_artpop_virgin(hu, hm, va, s) *= 1.0 + i_dp.migration_rate(a, s);	      
+	    }
+	  }
+	}
+      }
+
+      
+    } // s
+
+  };
 
   // private methods that we don't want people to call
   private:
@@ -307,7 +404,7 @@ struct HivDemographicProjection<Config> {
       }
     }
 
-    // remove non-HIV deaths and net migration from hiv stratified population
+    // remove non-HIV deaths and net migration from hiv positive single-age population
     for (int s = 0; s < NS; ++s) {
       for (int a = 1; a < pAG; ++a) {
         n_ha.p_hivpop(a, s) -= n_ha.p_deaths_background_hivpop(a, s);
@@ -318,7 +415,7 @@ struct HivDemographicProjection<Config> {
       }
     }
     
-    // remove non-HIV deaths and net migration from adult stratified population
+    // remove non-HIV deaths and net migration from adult HIV stage stratified population
     for (int s = 0; s < NS; ++s) {
       int a = p_idx_hiv_first_adult;
       for (int ha = 0; ha < hAG; ++ha) {

@@ -127,6 +127,13 @@ struct Leapfrog {
 
       if constexpr (ModelVariant::run_hiv_simulation) {
         hiv_dp.run_hivpop_demographic_projection();
+      }
+
+      if constexpr (ModelVariant::run_virgin) {
+        hiv_dp.run_virginpop_demographic_projection(); 
+      }
+
+      if constexpr (ModelVariant::run_hiv_simulation) {
         hiv_sim.run_hiv_model_simulation();
       }
 

@@ -32,6 +32,7 @@ struct AdultHivModelSimulation<Config> {
   static constexpr int hDS = SS::hDS;
   static constexpr int hTS = SS::hTS;
   static constexpr int hAG = SS::hAG;
+  static constexpr int vAG = SS::vAG;  
   static constexpr auto hAG_span = SS::hAG_span;
   static constexpr int PROJPERIOD_MIDYEAR = SS::PROJPERIOD_MIDYEAR;
   static constexpr int MALE = SS::MALE;
@@ -99,10 +100,26 @@ struct AdultHivModelSimulation<Config> {
       if (t >= opts.ts_art_start) {
         run_art_progression_and_mortality(hiv_step);
         run_h_art_initiation(hiv_step);
+
+	if constexpr (ModelVariant::run_virgin) {
+       // Note: must be run before run_update_art_adult() because it
+       // relies on the proportion of population virgin before updating       
+       run_update_art_virgin(hiv_step);
+	}
         run_update_art_adult(hiv_step);
       }
 
+      if constexpr (ModelVariant::run_virgin) {
+	// Note: must be run before run_update_hiv_adult() because it
+	// relies on the proportion of population virgin before updating
+	run_update_hiv_virgin(hiv_step);
+      }      
       run_update_hiv_adult(hiv_step);
+      
+      run_calc_p_hiv_deaths(hiv_step);
+      if constexpr (ModelVariant::run_virgin) {
+        run_remove_p_virgin_hiv_deaths(hiv_step);
+      }
       run_remove_p_hiv_deaths(hiv_step);
       run_wlhiv_births();
     }
@@ -548,8 +565,7 @@ struct AdultHivModelSimulation<Config> {
     }
   };
 
-  void run_remove_p_hiv_deaths(int hiv_step) {
-    auto& n_dp = state_next.dp;
+  void run_calc_p_hiv_deaths(int hiv_step) {
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
 
@@ -572,24 +588,96 @@ struct AdultHivModelSimulation<Config> {
           auto nonaids_excess_qx_ha = i_ha.h_deaths_excess_nonaids_agesex(ha, s) / i_ha.hivpop_ha(ha);
 
           for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
-            i_ha.hivdeaths_a = n_ha.p_hivpop(a, s) * i_ha.hivqx_ha;
+         auto deaths_aids_a = n_ha.p_hivpop(a, s) * i_ha.hivqx_ha;
             auto deaths_nonaids_excess_a = n_ha.p_hivpop(a, s) * nonaids_excess_qx_ha;
 
-            n_ha.p_hiv_deaths(a, s) += i_ha.hivdeaths_a;
+         i_ha.deaths_hivpop_hts(a, s) = deaths_aids_a + deaths_nonaids_excess_a;
+         
+            n_ha.p_hiv_deaths(a, s) += deaths_aids_a;
             n_ha.p_deaths_excess_nonaids(a, s) += deaths_nonaids_excess_a;
-
-            n_dp.p_totpop(a, s) -= i_ha.hivdeaths_a + deaths_nonaids_excess_a;
-            n_ha.p_hivpop(a, s) -= i_ha.hivdeaths_a + deaths_nonaids_excess_a;
           }
 
         } else {
-          a += hAG_span[ha];
+       for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
+         i_ha.deaths_hivpop_hts(a, s) = 0.0;
+       }
         }
       }
     }
 
   };
 
+  void run_remove_p_hiv_deaths(int hiv_step) {
+    auto& i_ha = intermediate.ha;
+    auto& n_dp = state_next.dp;    
+    auto& n_ha = state_next.ha;
+    for (int s = 0; s < NS; ++s) {
+      for (int a = p_idx_hiv_first_adult; a < pAG; ++a) {
+	n_dp.p_totpop(a, s) -= i_ha.deaths_hivpop_hts(a, s);
+	n_ha.p_hivpop(a, s) -= i_ha.deaths_hivpop_hts(a, s);
+      }
+    }
+  }
+
+  void run_update_hiv_virgin(int hiv_step) {
+
+    // Implements progression, HIV mortality, and ART initiation in the
+    // virgin population proportional to the proportion of the total population
+    // that is virgin.
+    // Imposes the assumtion that same rates apply in the virgin population as
+    // in the adult population.
+
+    // Current implementation assumes h_hivpop_virgin stratification aligns
+    // to single-year age groups ("full stratification" rather than "coarse").
+    // Code requires updating to handle coarse virgin pop age groups.
+
+    const auto& n_ha = state_next.ha;
+    const auto& i_ha = intermediate.ha;
+    auto& n_vg = state_next.vg;
+    
+    for (int s = 0; s < NS; ++s) {
+      for (int va = 0; va < vAG; ++va) {
+        for (int hm = 0; hm < hDS; ++hm) {
+       auto prop_virgin = n_vg.h_hivpop_virgin(hm, va, s) / n_ha.h_hivpop(hm, va, s);
+          n_vg.h_hivpop_virgin(hm, va, s) += opts.dt * i_ha.grad(hm, va, s) * prop_virgin;
+        }
+      }
+    }
+  };
+
+  void run_update_art_virgin(int hiv_step) {
+    const auto& n_ha = state_next.ha;
+    const auto& i_ha = intermediate.ha;
+    auto& n_vg = state_next.vg;
+    
+    for (int s = 0; s < NS; ++s) {
+      for (int va = 0; va < vAG; ++va) {
+        for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
+          for (int hu = 0; hu < hTS; ++hu) {
+         auto prop_virgin = n_vg.h_artpop_virgin(hu, hm, va, s) / n_ha.h_artpop(hu, hm, va, s);
+            n_vg.h_artpop_virgin(hu, hm, va, s) += opts.dt * i_ha.gradART(hu, hm, va, s) * prop_virgin;
+          }
+        }
+      }
+    }
+  };
+
+  void run_remove_p_virgin_hiv_deaths(int hiv_step) {
+    const auto& i_ha = intermediate.ha;
+    const auto& n_ha = state_next.ha;
+    auto& n_vg = state_next.vg;
+    for (int s = 0; s < NS; ++s) {
+      for (int va = 0; va < vAG; ++va) {
+        int a = va + SS::p_idx_virginpop_first; // age index in total population array
+	if (n_ha.p_hivpop(a, s) > 0.0) {
+       auto deaths_virginpop_a = i_ha.deaths_hivpop_hts(a, s) * n_vg.p_hivpop_virgin(va, s) / n_ha.p_hivpop(a, s);
+       n_vg.p_totpop_virgin(va, s) -= deaths_virginpop_a;
+       n_vg.p_hivpop_virgin(va, s) -= deaths_virginpop_a;
+	}
+      }
+    }
+  };
+  
   void run_wlhiv_births() {
     const auto& p_dp = pars.dp;
     const auto& p_ha = pars.ha;
