@@ -172,7 +172,7 @@
       "dims": ["SS::nNS","SS::nPREPRG","SS::nPREPIntervn","opts.proj_steps"]
     },
 
-     "prep_effectiveness": {
+   "prep_effectiveness": {
       "num_type": "real_type",
       "dims": ["SS::nPREP+1",  "SS::RN_DurationMonths"]
     },
