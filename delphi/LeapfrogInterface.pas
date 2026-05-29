@@ -635,6 +635,8 @@ type
   private
     totalPopulation: PDouble;
     totalPopulationLength: Integer;
+    totalPopulationDp: PDouble;
+    totalPopulationDpLength: Integer;
     adults: PDouble;
     adultsLength: Integer;
     adultsTs: PDouble;
@@ -671,6 +673,7 @@ type
   LeapfrogGoalsState = class
   public
     totalPopulation: TGBFixedArray<Double>;
+    totalPopulationDp: TGBFixedArray<Double>;
     adults: TGBFixedArray<Double>;
     adultsTs: TGBFixedArray<Double>;
     popHivNeg: TGBFixedArray<Double>;
@@ -1177,6 +1180,7 @@ end;
 destructor LeapfrogGoalsState.Destroy;
 begin;
   totalPopulation.Free;
+  totalPopulationDp.Free;
   adults.Free;
   adultsTs.Free;
   popHivNeg.Free;
@@ -1295,6 +1299,8 @@ function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
 begin;
   Result.totalPopulation := PDouble(totalPopulation.data);
   Result.totalPopulationLength := totalPopulation.GetLength();
+  Result.totalPopulationDp := PDouble(totalPopulationDp.data);
+  Result.totalPopulationDpLength := totalPopulationDp.GetLength();
   Result.adults := PDouble(adults.data);
   Result.adultsLength := adults.GetLength();
   Result.adultsTs := PDouble(adultsTs.data);
