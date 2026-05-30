@@ -11,6 +11,7 @@
       "nCD4a": 7,
       "nRG": 17,
       "nRG1": 9,
+      "nRG_inf": 10,
       "nVAC": 4,
       "nHIV": 6,
       "nART": 3,
@@ -124,7 +125,7 @@
 
     "out_new_inf": {
       "num_type": "real_type",
-       "dims": ["SS::nNS+1","SS::nRG1+1","SS::nVAC+1","opts.proj_steps"]
+       "dims": ["SS::nNS","SS::nRG_inf","SS::nVAC","opts.proj_steps"]
     },
 
      "epi_transm_mult_M": {
@@ -574,15 +575,46 @@
       "num_type": "real_type",
       "dims": ["SS::nVAC+1","SS::nRG+1","SS::nCD4+1","SS::nNS+1"]
     },
+    
+    "total_deaths": {
+      "num_type": "real_type"
+    },
+
+    "total_deaths_hiv": {
+      "num_type": "real_type"
+    },
+
+    "deaths_hiv": {
+      "num_type": "real_type",
+      "dims": ["SS::nVAC+1","SS::nRG+1","SS::nCD4+1","SS::nNS+1"]
+    },
 
     "new_infections": {
       "num_type": "real_type",
       "dims": ["SS::nVAC+1","SS::nRG+1","SS::nNS+1"]
     },
 
+    "total_new_infections": {
+      "num_type": "real_type"
+    },
+
+    "new_infections_dp": {
+      "num_type": "real_type"
+    },
+
+    "new_infections_goals": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
+    },
+
+
     "prevalence": {
       "num_type": "real_type",
       "dims": ["SS::nRG+1","SS::nNS+1"]
+    },
+
+    "total_prevalence": {
+      "num_type": "real_type"
     },
 
     "newly_on_art": {

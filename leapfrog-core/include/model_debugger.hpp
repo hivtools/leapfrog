@@ -110,9 +110,11 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
 template <class HaState, class AnyIntermediate, class HaPars>
   requires requires (const HaState& ha, const HaPars& p_ha) {
     ha.p_hivpop;
+    ha.h_hivpop;
     ha.hiv_births;
     p_ha.input_adult_incidence_rate;
     p_ha.local_adj_factor;
+
   }
 inline HaDebugInfo capture_ha(const HaState& ha, const AnyIntermediate& i_any,
   const HaPars& p_ha);
@@ -699,6 +701,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
 template <class HaState, class AnyIntermediate, class HaPars>
   requires requires (const HaState& ha, const HaPars& p_ha) {
     ha.p_hivpop;
+    ha.h_hivpop;
     ha.hiv_births;
     p_ha.input_adult_incidence_rate;
     p_ha.local_adj_factor;
