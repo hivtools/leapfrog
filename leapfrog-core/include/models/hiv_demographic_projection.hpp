@@ -165,21 +165,51 @@ struct HivDemographicProjection<Config> {
 
   // private methods that we don't want people to call
   private:
+  // Returns survival probability for HIV+ people at age a, adjusted down for PWID excess
+  // mortality. Only applies to working ages 15-49; returns surv unchanged outside that range.
+  //
+  // This is not used when running with direct incidence input
+  // (incidence_model_choice == 0) or if pwid_sex_ratio < 0. Spectrum uses
+  // pwid_sex_ratio = -1 to indicate that PWID adjustment is not used.
+  //
+  // pwid_hivpos_nonaids_mortality is expected as a rate (0-1)
+  real_type pwid_adjusted_surv(real_type surv, int a, int s) {
+    const bool no_adjustment = pars.ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS ||
+      a < p_idx_hiv_first_adult || a >= 50 ||
+      pars.ha.pwid_sex_ratio(t) < 0.0;
+
+    if (no_adjustment) return surv;
+
+    const real_type sex_ratio = pars.ha.pwid_sex_ratio(t);
+    const real_type pop_s     = state_curr.dp.p_totpop(a - 1, s);
+    const real_type total_pop = state_curr.dp.p_totpop(a - 1, SS::MALE) + state_curr.dp.p_totpop(a - 1, SS::FEMALE);
+    if (total_pop <= 0.0 || pop_s <= 0.0) return surv;
+
+    const real_type ratio = (s == SS::MALE)
+      ? 1.0 / (1.0 + sex_ratio)
+      : sex_ratio / (1.0 + sex_ratio);
+    const real_type background_mort = 1.0 - surv;
+    const real_type raw_excess = pars.ha.pwid_hivpos_nonaids_mortality - background_mort;
+    const real_type excess = (raw_excess > 0.0 ? raw_excess : 0.0)
+      * pars.ha.pwid_prop_hivpop(t) * ratio / (pop_s / total_pop);
+    return 1.0 - (background_mort + excess);
+  };
+
   void run_hiv_ageing_and_mortality() {
     const auto& p_dp = pars.dp;
     const auto& c_ha = state_curr.ha;
     auto& n_ha = state_next.ha;
 
-    // Non-hiv deaths
     for (int s = 0; s < NS; ++s) {
       for (int a = 1; a < pAG; ++a) {
-        n_ha.p_deaths_background_hivpop(a, s) = c_ha.p_hivpop(a - 1, s) * (1.0 - p_dp.survival_probability(a, s, t));
+        const real_type surv = p_dp.survival_probability(a, s, t);
+        n_ha.p_deaths_background_hivpop(a, s) = c_ha.p_hivpop(a - 1, s) * (1.0 - pwid_adjusted_surv(surv, a, s));
         n_ha.p_hivpop(a, s) = c_ha.p_hivpop(a - 1, s);
       }
 
       // open age group
-      n_ha.p_deaths_background_hivpop(pAG - 1, s) += c_ha.p_hivpop(pAG - 1, s) *
-                                                   (1.0 - p_dp.survival_probability(pAG, s, t));
+      n_ha.p_deaths_background_hivpop(pAG - 1, s) +=
+        c_ha.p_hivpop(pAG - 1, s) * (1 - p_dp.survival_probability(pAG, s, t));
       n_ha.p_hivpop(pAG - 1, s) += c_ha.p_hivpop(pAG - 1, s);
     }
   };
@@ -217,7 +247,7 @@ struct HivDemographicProjection<Config> {
       } // hm
     } // s
   };
-  
+
   void run_hiv_and_art_stratified_ageing() {
     const auto& c_ha = state_curr.ha;
     auto& n_ha = state_next.ha;
@@ -266,7 +296,7 @@ struct HivDemographicProjection<Config> {
 	  }
 	}
       }
-      
+
     // Entrants ageing into adult HIV population
     if constexpr (ModelVariant::run_child_model) {
       auto& i_hc = intermediate.hc;
@@ -290,7 +320,7 @@ struct HivDemographicProjection<Config> {
       }
     } // s
     // TODO: implement static entrants to adult HIV population here for case when child model not simulated
-    
+
   };
 
   void run_hiv_and_art_stratified_deaths_and_migration() {
@@ -317,7 +347,7 @@ struct HivDemographicProjection<Config> {
         }
       }
     }
-    
+
     // remove non-HIV deaths and net migration from adult stratified population
     for (int s = 0; s < NS; ++s) {
       int a = p_idx_hiv_first_adult;
