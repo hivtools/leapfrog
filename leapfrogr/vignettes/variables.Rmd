@@ -164,7 +164,7 @@ In 5 structs as part of the `Parameters`, named `Demography`, `Incidence`, `Natu
 | prop_gte350        | children.prop_gte350                     | Proportion of WLHIV with CD4 greater than 350 by year                                                                                                                 |
 | _                  | pwid_sex_ratio                           | From EPP: number of female PWID per male PWID                                                                                                                         |
 | _                  | pwid_hivpos_nonaids_mortality            | From EPP: non-AIDS mortality rate in HIV-positive PWID                                                                                                                |
-| _                  | prop_hivpop_pwid                         | From EPP: proportion of the HIV-positive population who are PWID                                                                                                      |
+| _                  | pwid_prop_hivpop                         | From EPP: proportion of the HIV-positive population who are PWID                                                                                                      |
 
 
 ## Outputs

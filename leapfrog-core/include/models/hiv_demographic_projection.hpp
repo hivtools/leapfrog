@@ -191,7 +191,7 @@ struct HivDemographicProjection<Config> {
     const real_type background_mort = 1.0 - surv;
     const real_type raw_excess = pars.ha.pwid_hivpos_nonaids_mortality - background_mort;
     const real_type excess = (raw_excess > 0.0 ? raw_excess : 0.0)
-      * pars.ha.prop_hivpop_pwid(t) * ratio / (pop_s / total_pop);
+      * pars.ha.pwid_prop_hivpop(t) * ratio / (pop_s / total_pop);
     return 1.0 - (background_mort + excess);
   };
 
