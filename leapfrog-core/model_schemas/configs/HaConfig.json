@@ -202,7 +202,7 @@
     "pwid_hivpos_nonaids_mortality": {
       "num_type": "real_type"
     },
-    "prop_hivpop_pwid": {
+    "pwid_prop_hivpop": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
     },
