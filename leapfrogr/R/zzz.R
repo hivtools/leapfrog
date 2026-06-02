@@ -8,6 +8,8 @@
 ## output. So declare a list of global variables to avoid this.
 utils::globalVariables(c("Value", "Sex", "Age", "Year"))
 
+options("pjnz.inform" = FALSE)
+
 #' Pipe operator
 #'
 #' See \code{magrittr::\link[magrittr:pipe]{\%>\%}} for details.
