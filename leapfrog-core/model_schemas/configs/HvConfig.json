@@ -602,9 +602,15 @@
       "num_type": "real_type"
     },
 
+    "incidence_goals": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS+1"]
+    },
+
+
     "new_infections_goals": {
       "num_type": "real_type",
-      "dims": ["SS::nNS"]
+      "dims": ["SS::nNS+1"]
     },
 
 

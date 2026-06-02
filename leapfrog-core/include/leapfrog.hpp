@@ -135,11 +135,17 @@ struct Leapfrog {
         hiv_sim.run_hiv_adult_pre_hiv_loop();
 
         for (int hiv_step = 0; hiv_step < args.opts.hts_per_year; ++hiv_step) {
+          
+          //CDP: confirm order of innner calcs/ DP should be first to complete ART allocation 
+          //which is then used by goals
+          //hiv_sim.run_hiv_adult_hiv_loop(hiv_step);
+
           if constexpr (ModelVariant::run_goals) {
             goals_sim.run_goals_hiv_loop(hiv_step);
           }
 
           hiv_sim.run_hiv_adult_hiv_loop(hiv_step);
+
         }
 
         if constexpr (ModelVariant::run_goals) {
