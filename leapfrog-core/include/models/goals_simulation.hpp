@@ -467,10 +467,10 @@ struct GoalsSimulation<Config> {
 
     //add new infections
     //add_new_infections();
-    if(t>15)
-    {
+    //if(t>15)
+    //{
        add_new_infections_goals(t, hiv_step);
-    }  
+    //}  
 
     //sum over the dimensions of adult pop
     //sum_adult_pop_dims(t);
@@ -501,14 +501,6 @@ struct GoalsSimulation<Config> {
 
   void set_goals_outputs(int t) {
 
-
-
-    auto& n_hv = state_next.hv;
-    auto& i_hv = intermediate.hv;
-    const auto& c_hv = state_curr.hv;
-
-    n_hv.total_population = n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_MALE)+n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_FEMALE);
-
      /* 
      Outputs to compare between leapfrog goals and spectrum delphi goals:  
      
@@ -523,6 +515,15 @@ struct GoalsSimulation<Config> {
      n_hv.prevalence(RG_ALL,S_ALL): prevalence for both sexes [0,1] 
      */
      
+    auto& n_hv = state_next.hv;
+    auto& i_hv = intermediate.hv;
+    const auto& c_hv = state_curr.hv;
+
+    n_hv.total_population = n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_MALE)+n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_FEMALE);
+
+    //toggle continue here:
+    //continue;
+  
 
     double total_pop=n_hv.total_population;
     std::cout << "pop goals: t " << t << " " << total_pop << " " << std::endl;
