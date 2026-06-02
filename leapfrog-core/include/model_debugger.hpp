@@ -66,6 +66,8 @@ template <class HvState, class IntermediateHv, class ParsHv>
     i_hv.hiv_mu;
     i_hv.art_alpha;
 
+    i_hv.b_riskgroup_proportions;
+
 
     //i_hv.totpop_1549;
     //i_hv.pop_1549;

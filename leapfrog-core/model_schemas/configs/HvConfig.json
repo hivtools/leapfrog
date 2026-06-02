@@ -1,5 +1,5 @@
 {
-  "name": "Hv",
+  "namehAG": "Hv",
   "long_name": "Goals",
   "namespace": "hv",
   "enable_if": "run_goals",
