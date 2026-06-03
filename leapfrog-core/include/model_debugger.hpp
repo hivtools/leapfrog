@@ -37,6 +37,9 @@ template <class HvState, class IntermediateHv, class ParsHv>
     hv.prevalence;
     hv.mult_no_art;
     hv.mult_art;
+    hv.new_inf_vrs;
+
+
     i_hv.r_mult;
 
 
@@ -72,7 +75,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
     i_hv.i_num_partners;
     i_hv.i_age_first_sex;
 
-
+  
     //i_hv.totpop_1549;
     //i_hv.pop_1549;
     //i_hv.entrants_age_15;
@@ -83,6 +86,10 @@ template <class HvState, class IntermediateHv, class ParsHv>
     //p_hv.b_balance_sex_acts;
     //p_hv.epi_months_in_primary;
    // p_hv.epi_initial_pulse;
+    p_hv.epi_redwhen_circum;
+    p_hv.prep_cov;
+    hv.cured_prop;
+
     p_hv.b_condom_prop;
     p_hv.b_behav_properties;
     p_hv.b_sex_acts;
@@ -273,6 +280,7 @@ struct HvDebugInfo {
   NdaInfo mult_art;
   NdaInfo r_mult;
   NdaInfo prevalence;
+  NdaInfo new_inf_vrs;
 
 
   // Intermediate
@@ -318,6 +326,10 @@ struct HvDebugInfo {
   NdaInfo i_condom_prop;
   NdaInfo i_num_partners;
   NdaInfo i_age_first_sex;
+
+  NdaInfo epi_redwhen_circum;
+  NdaInfo prep_cov;
+  NdaInfo cured_prop;
 
 
   // Pars
@@ -517,6 +529,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
     hv.mult_no_art;
     hv.mult_art;
+    hv.new_inf_vrs;
 
     i_hv.r_mult;
 
@@ -547,6 +560,10 @@ template <class HvState, class IntermediateHv, class ParsHv>
     i_hv.i_condom_prop;
     i_hv.i_num_partners;
     i_hv.i_age_first_sex;
+
+    p_hv.epi_redwhen_circum;
+    p_hv.prep_cov;
+    hv.cured_prop;
 
 
 
@@ -610,9 +627,10 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
 
   out.mult_no_art = nda_capture(hv.mult_no_art);
   out.mult_art = nda_capture(hv.mult_art);
-
+ 
   out.r_mult = nda_capture(i_hv.r_mult);
 
+  out.new_inf_vrs = nda_capture(hv.new_inf_vrs);
 
   out.prep_effect = nda_capture(i_hv.prep_effect);
 
@@ -641,6 +659,10 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.i_condom_prop = nda_capture(i_hv.i_condom_prop);
   out.i_num_partners = nda_capture(i_hv.i_num_partners);
   out.i_age_first_sex = nda_capture(i_hv.i_age_first_sex);
+
+  out.epi_redwhen_circum = nda_capture(p_hv.epi_redwhen_circum);
+  out.prep_cov = nda_capture(p_hv.prep_cov);
+  out.cured_prop = nda_capture(hv.cured_prop);
 
 
   //out.riskgroup_proportions = nda_capture(i_hv.entrants_age_15);

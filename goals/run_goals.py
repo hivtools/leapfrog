@@ -16,7 +16,7 @@ into a proper pytest test at some point.
 
 
 modvars, param, epp, shiny90 = GB_ImportProjectionFromFile(
-    os.path.join("tests", "resources", "SouthAfrica_withHIV_no_intvn_art.PJNZ") 
+    os.path.join("tests", "resources", "SouthAfrica_withHIV_no_intvn.PJNZ") 
 )
 
 print("Finished reading import")
@@ -53,6 +53,8 @@ output = run_goals(
     lf_data,
     output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
 )
+
+output["incidence_goals"][2, :]
 
 #print(output['total_population'])
 

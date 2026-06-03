@@ -37,7 +37,7 @@ wheels = [
 
 [[package]]
 name = "avenir-spectrum-common"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "../../SpectrumEngine/SpectrumCommon" }
 dependencies = [
     { name = "avenir-common" },
@@ -62,7 +62,7 @@ requires-dist = [
 
 [[package]]
 name = "avenir-spectrum-import-pjnz"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "C:/work/LeapFrog/V3/SpectrumEngine/Tools/ImportPJNZ" }
 dependencies = [
     { name = "avenir-common" },
