@@ -28,10 +28,12 @@ process_pjnz <- function(
 
   pars <- lapply(dat$data, `[[`, "data")
 
-  pars <- process_pjnz_dp(dat, pars, dim_vars)
-  pars <- process_pjnz_ha(dat, pars, dim_vars, use_coarse_age_groups)
+  dp_params <- process_pjnz_dp(dat, pars, dim_vars)
+  ha_params <- process_pjnz_ha(dat, pars, dim_vars, use_coarse_age_groups)
   if (extract_child_params || bypass_adult) {
-    pars <- process_pjnz_hc(dat, pars, dim_vars, use_coarse_age_groups, bypass_adult)
+    hc_params <- process_pjnz_hc(dat, pars, dim_vars, dp_params, use_coarse_age_groups, bypass_adult)
+  } else {
+    hc_params <- list()
   }
-  pars
+  c(dp_params, ha_params, hc_params)
 }
