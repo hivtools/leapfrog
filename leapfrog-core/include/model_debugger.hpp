@@ -68,6 +68,10 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
     i_hv.b_riskgroup_proportions;
 
+    i_hv.i_condom_prop;
+    i_hv.i_num_partners;
+    i_hv.i_age_first_sex;
+
 
     //i_hv.totpop_1549;
     //i_hv.pop_1549;
@@ -311,6 +315,10 @@ struct HvDebugInfo {
   NdaInfo b_riskgroup_proportions;
   NdaInfo b_behave_change_rate;
 
+  NdaInfo i_condom_prop;
+  NdaInfo i_num_partners;
+  NdaInfo i_age_first_sex;
+
 
   // Pars
   //int epi_start_year;
@@ -536,6 +544,10 @@ template <class HvState, class IntermediateHv, class ParsHv>
     i_hv.hiv_mu;
     i_hv.art_alpha;
 
+    i_hv.i_condom_prop;
+    i_hv.i_num_partners;
+    i_hv.i_age_first_sex;
+
 
 
 
@@ -625,6 +637,10 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.hiv_mu = nda_capture(i_hv.hiv_mu);
   out.hiv_lambda = nda_capture(i_hv.hiv_lambda);
   out.art_alpha = nda_capture(i_hv.art_alpha);
+
+  out.i_condom_prop = nda_capture(i_hv.i_condom_prop);
+  out.i_num_partners = nda_capture(i_hv.i_num_partners);
+  out.i_age_first_sex = nda_capture(i_hv.i_age_first_sex);
 
 
   //out.riskgroup_proportions = nda_capture(i_hv.entrants_age_15);

@@ -1,4 +1,4 @@
-def get_member_type(val):
+cddef get_member_type(val):
   if isinstance(val, int):
     return "int"
   elif isinstance(val[0], int):
