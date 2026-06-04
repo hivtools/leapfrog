@@ -1,12 +1,12 @@
 [project]
 name = "leapfrog-goals"
-version = "0.0.4"
+version = "0.0.5"
 description = "Python interface for Leapfrog Goals model"
 readme = "README.md"
 authors = [
     { name = "Rob Ashton", email = "robertashton94@gmail.com" }
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "h5py>3.11.0",
     "numpy>1.24.4",
@@ -21,7 +21,7 @@ Source = "https://github.com/hivtools/leapfrog"
 minimum-version = "build-system.requires"
 build-dir = "build/{wheel_tag}"
 build.verbose = false
-cmake.build-type = "Release"
+cmake.build-type = "release"
 install.strip = true
 
 [build-system]
@@ -33,7 +33,14 @@ dev = [
     "deepdiff>=8.4.2",
     "docopt>=0.6.2",
     "pytest>=8.3.5",
+    "avenir-spectrum-import-pjnz>=0.1.5",
+    "avenir-spectrum-common>=0.1.6"
 ]
+
+# Uncomment and set file path to use local development versions
+# [tool.uv.sources]
+# avenir-spectrum-common = { path = "../../../avenir/SpectrumEngine/SpectrumCommon", editable = true }
+# avenir-spectrum-import-pjnz = { path = "C:\\work\\LeapFrog\\V3\\SpectrumEngine\\Tools\\ImportPJNZ", editable = true }
 
 # Needed for full C++17 support on macOS
 [tool.cibuildwheel.macos.environment]
@@ -42,10 +49,10 @@ MACOSX_DEPLOYMENT_TARGET = "10.14"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
