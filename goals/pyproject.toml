@@ -1,6 +1,6 @@
 [project]
 name = "leapfrog-goals"
-version = "0.0.2"
+version = "0.0.5"
 description = "Python interface for Leapfrog Goals model"
 readme = "README.md"
 authors = [
@@ -35,12 +35,12 @@ dev = [
     "docopt>=0.6.2",
     "pytest>=8.3.5",
     "avenir-spectrum-import-pjnz>=0.1.5",
-    "avenir-spectrum-common>=0.1.5"
+    "avenir-spectrum-common>=0.1.6"
 ]
 
 # Uncomment and set file path to use local development versions
 # [tool.uv.sources]
-# avenir-spectrum-common = { path = "C:\\work\\LeapFrog\\V3\\SpectrumEngine\\SpectrumCommon", editable = true }
+# avenir-spectrum-common = { path = "../../../avenir/SpectrumEngine/SpectrumCommon", editable = true }
 # avenir-spectrum-import-pjnz = { path = "C:\\work\\LeapFrog\\V3\\SpectrumEngine\\Tools\\ImportPJNZ", editable = true }
 
 # Needed for full C++17 support on macOS

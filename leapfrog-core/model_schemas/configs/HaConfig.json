@@ -198,6 +198,17 @@
       "alias": {
         "r": "frr_scalar"
       }
+    },
+    "pwid_hivpos_nonaids_mortality": {
+      "num_type": "real_type"
+    },
+    "pwid_prop_hivpop": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+    "pwid_sex_ratio": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
     }
   },
   "intermediate": {

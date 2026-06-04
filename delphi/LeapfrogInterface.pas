@@ -140,6 +140,12 @@ type
     fertMultOnArtLength: Integer;
     localAdjFactor: Double;
     localAdjFactorLength: Integer;
+    pwidHivposNonaidsMortality: Double;
+    pwidHivposNonaidsMortalityLength: Integer;
+    pwidPropHivpop: PDouble;
+    pwidPropHivpopLength: Integer;
+    pwidSexRatio: PDouble;
+    pwidSexRatioLength: Integer;
 end;
 
 type
@@ -174,6 +180,9 @@ type
     fertMultOffArt: TGBFixedArray<Double>;
     fertMultOnArt: TGBFixedArray<Double>;
     localAdjFactor: Double;
+    pwidHivposNonaidsMortality: Double;
+    pwidPropHivpop: TGBFixedArray<Double>;
+    pwidSexRatio: TGBFixedArray<Double>;
     function getView(): LeapfrogHivAdultParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -827,6 +836,8 @@ begin;
   fertMultByAge.Free;
   fertMultOffArt.Free;
   fertMultOnArt.Free;
+  pwidPropHivpop.Free;
+  pwidSexRatio.Free;
   inherited;
 end;
 
@@ -913,6 +924,12 @@ begin;
   Result.fertMultOnArtLength := fertMultOnArt.GetLength();
   Result.localAdjFactor := localAdjFactor;
   Result.localAdjFactorLength := 1;
+  Result.pwidHivposNonaidsMortality := pwidHivposNonaidsMortality;
+  Result.pwidHivposNonaidsMortalityLength := 1;
+  Result.pwidPropHivpop := PDouble(pwidPropHivpop.data);
+  Result.pwidPropHivpopLength := pwidPropHivpop.GetLength();
+  Result.pwidSexRatio := PDouble(pwidSexRatio.data);
+  Result.pwidSexRatioLength := pwidSexRatio.GetLength();
 end;
 
 function LeapfrogHivAdultState.getView(): LeapfrogHivAdultStateView;
@@ -1424,6 +1441,8 @@ begin;
   fertMultByAge.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultByAge');
   fertMultOffArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOffArt');
   fertMultOnArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOnArt');
+  pwidPropHivpop.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pwidPropHivpop');
+  pwidSexRatio.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pwidSexRatio');
 end;
 
 procedure LeapfrogHivAdultState.writeToDisk(dir: string);
