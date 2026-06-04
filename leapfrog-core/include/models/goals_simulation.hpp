@@ -2,7 +2,6 @@
 
 #include "../options.hpp"
 #include "../generated/config_mixer.hpp"
-#include "../model_debugger.hpp"
 
 #include <list>
 #include <iostream>
@@ -2220,7 +2219,7 @@ double SexActsRatioF_IDU =1.0;
 
 double circum=p_hv.rn_coverage(INTVN_MC15_49,t);
 
-auto dbg_model = capture_model(state_next, intermediate, pars);
+//auto dbg_model = capture_model(state_next, intermediate, pars);
 
 
 double total_inf_m=0;

@@ -85,8 +85,6 @@ struct AdultHivModelSimulation<Config> {
     const auto& p_ha = pars.ha;
     auto& i_ha = intermediate.ha;
 
-    auto& n_hv = state_next.hv;
-
     nda::fill(i_ha.grad, 0.0);
     nda::fill(i_ha.gradART, 0.0);
     nda::fill(i_ha.h_hiv_deaths_age_sex, 0.0);
@@ -94,10 +92,8 @@ struct AdultHivModelSimulation<Config> {
     run_disease_progression_and_mortality(hiv_step);
 
     if constexpr (ModelVariant::run_goals) {
-      if(hiv_step=opts.hts_per_year){
-       if(hiv_step==0)
-        n_hv.new_infections_dp = 0.0;//init new infections from DP
-       calc_new_infections_agesex_goals(hiv_step);
+      if (hiv_step = opts.hts_per_year) {
+        calc_new_infections_agesex_goals(hiv_step);
       }
     }
     else {
@@ -105,9 +101,8 @@ struct AdultHivModelSimulation<Config> {
         calc_new_infections_agesex(hiv_step);
       } else if (p_ha.incidence_model_choice == SS::INCIDMOD_TRANSMRATE_HTS){
         calc_new_infections_incidmod_transmrate(hiv_step);
-      }
-      else {
-      throw std::invalid_argument("Incidence model choice not vaild\n");
+      } else {
+        throw std::invalid_argument("Incidence model choice not vaild\n");
       }
     }
 
