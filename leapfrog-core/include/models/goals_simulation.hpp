@@ -2219,8 +2219,8 @@ double PrevML = 0.0;
 double PrevFL = 0.0;
 double denom  = 0.0;
 
-double rMultM =1;
-double rMultF =1;
+double rMultM =1.0;
+double rMultF =1.0;
 
 double foi = 0.0;
 
@@ -2243,10 +2243,10 @@ double circum=p_hv.rn_coverage(INTVN_MC15_49,t);
 auto dbg_model = capture_model(state_next, intermediate, pars);
 
 
-double total_inf_m=0;
-double total_inf_f=0;
+double total_inf_m=0.0;
+double total_inf_f=0.0;
 
-double new_inf=0;
+double new_inf=0.0;
 
 for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
 {
