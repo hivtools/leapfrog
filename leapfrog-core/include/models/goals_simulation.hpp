@@ -416,8 +416,8 @@ struct GoalsSimulation<Config> {
 
     //set these rates to vars in goals
     if(t>p_hv.goals_base_year_idx){
-      //calc_HIV_cure(t);
-      //calc_HIV_mort_adjustments(t);
+      calc_HIV_cure(t);
+      calc_HIV_mort_adjustments(t);
     }
 
     //calc new vaccinations
@@ -532,7 +532,7 @@ struct GoalsSimulation<Config> {
     n_hv.total_population = n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_MALE)+n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_FEMALE);
 
     //toggle continue here:
-    //return;
+    return;
   
 
     double total_pop=n_hv.total_population;
