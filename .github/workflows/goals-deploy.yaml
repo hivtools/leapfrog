@@ -20,20 +20,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Generate C++ headers
         uses: ./.github/actions/setup
 
-      # Used to host cibuildwheel
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
-      - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==3.2.1
-
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse goals
+        uses: pypa/cibuildwheel@v3.4.1
+        with:
+          package-dir: goals
 
       - uses: actions/upload-artifact@v6
         with:
@@ -51,7 +47,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Build sdist
-        run: pipx run build --sdist goals
+        run: uvx --from build pyproject-build --installer uv --sdist goals
 
       - uses: actions/upload-artifact@v6
         with:
