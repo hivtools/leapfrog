@@ -21,8 +21,8 @@ Source = "https://github.com/hivtools/leapfrog"
 minimum-version = "build-system.requires"
 build-dir = "build/{wheel_tag}"
 build.verbose = false
-cmake.build-type = "debug"
-install.strip = false
+cmake.build-type = "release"
+install.strip = true
 
 
 [build-system]
@@ -34,14 +34,14 @@ dev = [
     "deepdiff>=8.4.2",
     "docopt>=0.6.2",
     "pytest>=8.3.5",
-    "avenir-spectrum-import-pjnz>=0.1.3",
-    "avenir-spectrum-common>=0.1.3"
+    "avenir-spectrum-import-pjnz>=0.1.5",
+    "avenir-spectrum-common>=0.1.5"
 ]
 
 # Uncomment and set file path to use local development versions
-[tool.uv.sources]
-avenir-spectrum-common = { path = "C:\\work\\LeapFrog\\V3\\SpectrumEngine\\SpectrumCommon", editable = true }
-avenir-spectrum-import-pjnz = { path = "C:\\work\\LeapFrog\\V3\\SpectrumEngine\\Tools\\ImportPJNZ", editable = true }
+# [tool.uv.sources]
+# avenir-spectrum-common = { path = "C:\\work\\LeapFrog\\V3\\SpectrumEngine\\SpectrumCommon", editable = true }
+# avenir-spectrum-import-pjnz = { path = "C:\\work\\LeapFrog\\V3\\SpectrumEngine\\Tools\\ImportPJNZ", editable = true }
 
 # Needed for full C++17 support on macOS
 [tool.cibuildwheel.macos.environment]
