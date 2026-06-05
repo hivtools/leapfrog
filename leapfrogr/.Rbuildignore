@@ -13,7 +13,11 @@ docker
 ^README\.Rmd$
 ^CPPLINT\.cfg$
 ^leapfrog-py$
+<<<<<<< HEAD
 ^cpp_generation$
+=======
+^codegen$
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
 ^c_interface$
 ^delphi$
 ^.pytest_cache$

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:/Users/mwalters/leapfrog/leapfrogr/inst/\")",
+      "Bash(python3 -c \"import os; p='C:/Users/mwalters/leapfrog/leapfrogr/inst/include'; print\\(os.path.islink\\(p\\)\\); print\\(os.path.realpath\\(p\\)\\)\")",
+      "Bash(python -c \"import os; p='C:/Users/mwalters/leapfrog/leapfrogr/inst/include'; print\\(os.path.islink\\(p\\)\\); print\\(os.path.realpath\\(p\\)\\)\")",
+      "Bash(python *)"
+    ]
+  }
+}

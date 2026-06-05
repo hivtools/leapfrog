@@ -97,8 +97,8 @@ spectrum_output <- function(file, ages = 0:14, country = 'Botswana', years_in = 
 df <- spectrum_output(pop1, ages = 0:80, 'country', years_in = 1970:2030)
 x <- df$total
 
-dp <- read_dp(pjnz_child)
-dat <- parse_dp(dp)
+dp <- pjnz:::read_dp_raw(pjnz_child)
+dat <- pjnz::read_dp(pjnz_child)
 
 aids_deathsnoart <- array(0, dim = c(15,2,61), dimnames = list(age = 0:14, sex = c('male', 'female'), years = 1970:2030))
 aids_deathsnoart[,'male',] <- dat$data$aids_deaths_no_art_single_age$data[as.character(0:14),"male",]

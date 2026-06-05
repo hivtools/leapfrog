@@ -21,7 +21,14 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
+<<<<<<< HEAD
       - uses: actions/checkout@v4
+=======
+      - uses: actions/checkout@v6
+
+      - name: Generate C++ headers
+        uses: ./.github/actions/setup
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
 
       - name: Compile DLL
         shell: bash

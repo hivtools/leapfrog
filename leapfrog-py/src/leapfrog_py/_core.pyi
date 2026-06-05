@@ -3,6 +3,10 @@ from leapfrog_py import (
     LeapfrogDataSingleYear,
     LeapfrogParameters,
     LeapfrogRange,
+<<<<<<< HEAD
+=======
+    LeapfrogStateSpace
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
 )
 
 def run_base_model(
@@ -21,3 +25,9 @@ def run_base_model_single_year(
     initial_state: LeapfrogDataSingleYear,
     simulation_start_year: int,
 ) -> LeapfrogDataSingleYear: ...
+<<<<<<< HEAD
+=======
+def get_leapfrog_ss_py(
+    configuration: str
+) -> LeapfrogStateSpace: ...
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7

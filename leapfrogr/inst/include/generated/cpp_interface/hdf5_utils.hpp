@@ -366,10 +366,11 @@ struct HcOwnedPars {
   using SS = SSMixed<ModelVariant>;
   
   struct Pars {
-    using shape_hc_nosocomial = nda::shape<
-    nda::dim<0, nda::dynamic, 1>
+    using shape_nosocomial_infections_by_age = nda::shape<
+    nda::dim<0, 3, 1>,
+    nda::dim<0, nda::dynamic, (3)>
   >;
-  nda::array<real_type, shape_hc_nosocomial> hc_nosocomial;
+  nda::array<real_type, shape_nosocomial_infections_by_age> nosocomial_infections_by_age;
 
     using shape_hc1_cd4_dist = nda::shape<
     nda::dim<0, SS::hc1DS, 1>
@@ -593,7 +594,7 @@ struct HcOwnedPars {
     const Options<real_type> &opts
   ) {
     return {
-      .hc_nosocomial = read_data<real_type, typename Pars::shape_hc_nosocomial>(params_file, "hc_nosocomial", { nda::dim<>(0, opts.proj_steps, 1) }),
+      .nosocomial_infections_by_age = read_data<real_type, typename Pars::shape_nosocomial_infections_by_age>(params_file, "nosocomial_infections_by_age", { nda::dim<>(0, 3, 1), nda::dim<>(0, opts.proj_steps, (3)) }),
       .hc1_cd4_dist = read_data<real_type, typename Pars::shape_hc1_cd4_dist>(params_file, "hc1_cd4_dist", { nda::dim<>(0, SS::hc1DS, 1) }),
       .hc1_cd4_mort = read_data<real_type, typename Pars::shape_hc1_cd4_mort>(params_file, "hc1_cd4_mort", { nda::dim<>(0, SS::hc1DS, 1), nda::dim<>(0, SS::hcTT, (SS::hc1DS)), nda::dim<>(0, SS::hc1AG, (SS::hc1DS) * (SS::hcTT)) }),
       .hc2_cd4_mort = read_data<real_type, typename Pars::shape_hc2_cd4_mort>(params_file, "hc2_cd4_mort", { nda::dim<>(0, SS::hc2DS, 1), nda::dim<>(0, SS::hcTT, (SS::hc2DS)), nda::dim<>(0, SS::hc2AG, (SS::hc2DS) * (SS::hcTT)) }),

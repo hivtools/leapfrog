@@ -7,6 +7,7 @@ on:
   pull_request:
 
 jobs:
+<<<<<<< HEAD
   run:
     strategy:
       fail-fast: false
@@ -70,3 +71,10 @@ jobs:
         run: |
           pip install .
           python -c "import leapfrog_py"
+=======
+  test:
+    uses: ./.github/workflows/py-package-test.yaml
+    with:
+      package_dir: leapfrog-py
+      import_name: leapfrog_py
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7

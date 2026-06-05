@@ -1,13 +1,21 @@
 [project]
 name = "leapfrog-py"
+<<<<<<< HEAD
 version = "1.0.1"
+=======
+version = "1.0.4"
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
 description = "Python interface for Leapfrog model"
 readme = "README.md"
 authors = [
     { name = "Mantra", email = "mantrakusumgar@outlook.com" },
     { name = "Rob Ashton", email = "robertashton94@gmail.com" }
 ]
+<<<<<<< HEAD
 requires-python = ">=3.10"
+=======
+requires-python = ">=3.11"
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
 dependencies = [
     "h5py>3.11.0",
     "numpy>1.24.4",
@@ -43,10 +51,17 @@ MACOSX_DEPLOYMENT_TARGET = "10.14"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
+<<<<<<< HEAD
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+=======
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]

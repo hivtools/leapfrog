@@ -14,5 +14,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 nanobind_add_module(_core MODULE src/main.cpp)
+<<<<<<< HEAD
 target_include_directories(_core PRIVATE ../leapfrogr/inst/include)
+=======
+target_include_directories(_core PRIVATE ../leapfrog-core/include)
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
 install(TARGETS _core DESTINATION ${SKBUILD_PROJECT_NAME})

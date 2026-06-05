@@ -359,9 +359,9 @@ struct HivDemographicProjection<Config> {
     auto& n_hc = state_next.hc;
     const auto& p_hc = pars.hc;
 
-    real_type deaths_migrate = 0.0;
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
+        real_type deaths_migrate = 0.0;
         deaths_migrate -= n_ha.p_deaths_background_hivpop(a, s);
         if (opts.proj_period_int == PROJPERIOD_MIDYEAR) {
           deaths_migrate += n_ha.p_net_migration_hivpop(a, s);

@@ -27,9 +27,25 @@ bench::mark(
 )
 
 parameters <- leapfrog::read_parameters(testthat::test_path("testdata/child_parms_full.h5"))
+<<<<<<< HEAD
 message("Benchmarking child model")
+=======
+message("Benchmarking child model (no adult model)")
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
 bench::mark(
   leapfrog = leapfrog::run_model(parameters, "ChildModel", 1970:2030),
   iterations = 10,
   check = FALSE
 )
+<<<<<<< HEAD
+=======
+
+
+parameters <- leapfrog::read_parameters(testthat::test_path("testdata/spectrum_params.h5"))
+message("Benchmarking Spectrum model")
+bench::mark(
+  leapfrog = leapfrog::run_model(parameters, "Spectrum", 1970:2030),
+  iterations = 10,
+  check = FALSE
+)
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7

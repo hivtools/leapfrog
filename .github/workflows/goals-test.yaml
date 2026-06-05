@@ -1,0 +1,14 @@
+name: goals test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    uses: ./.github/workflows/py-package-test.yaml
+    with:
+      package_dir: goals
+      import_name: leapfrog_goals

@@ -656,17 +656,28 @@ struct ChildModelSimulation<Config> {
     auto& n_ha = state_next.ha;
     auto& n_hc = state_next.hc;
 
+    // Ages 0-4
     for (int s = 0; s < NS; ++s) {
-      // Run only first 5 age groups in total population 0, 1, 2, 3, 4
       for (int a = 0; a < hc2_agestart; ++a) {
-        if (p_hc.hc_nosocomial(t) > 0) {
-          // 5.0 is used because we want to evenly distribute across the 5 age groups in 0-4
-          n_ha.p_infections(a, s) = p_hc.hc_nosocomial(t) / (5.0 * NS);
-          // Putting all nosocomial acquired HIV infections in perinatally acquired infection timing and highest CD4 category to match Spectrum implementation
-          n_hc.hc1_hivpop(0, 0, a, s) += n_ha.p_infections(a, s);
+        if (p_hc.nosocomial_infections_by_age(0, t) > 0) {
+          auto infections = p_hc.nosocomial_infections_by_age(0, t) / (5.0 * NS);
+          n_ha.p_infections(a, s) += infections;
+          n_hc.hc1_hivpop(0, 0, a, s) += infections;
         }
-      } // end a
-    } // end NS
+      }
+    }
+
+    // Ages 5-9 and 10-14
+    for (int s = 0; s < NS; ++s) {
+      for (int a = hc2_agestart; a < hcAG_end; ++a) {
+        int ag = (a - hc2_agestart) / 5 + 1;
+        if (p_hc.nosocomial_infections_by_age(ag, t) > 0) {
+          auto infections = p_hc.nosocomial_infections_by_age(ag, t) / (5.0 * NS);
+          n_ha.p_infections(a, s) += infections;
+          n_hc.hc2_hivpop(0, 0, a - hc2_agestart, s) += infections;
+        }
+      }
+    }
   };
 
   void add_infections() {

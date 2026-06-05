@@ -33,7 +33,11 @@ You can install the development version of leapfrog from
 
 ``` r
 # install.packages("remotes")
+<<<<<<< HEAD
 remotes::install_github("hivtools/leapfrog", subdir = "leapfrogr")
+=======
+remotes::install_github("hivtools/leapfrog", subdir = "leapfrogr", ref = "r-release")
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
 ```
 
 ### Python
@@ -49,7 +53,11 @@ pip install leapfrog-py
 ## Simulation model
 
 The simulation model is implemented in a header-only C++ library located
+<<<<<<< HEAD
 in [`leapfrogr/inst/include/leapfrog.hpp`](leapfrogr/inst/include/leapfrog.hpp). This location
+=======
+in [`leapfrog-core/include/leapfrog.hpp`](leapfrog-core/include/leapfrog.hpp). This location
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
 allows the C++ code to be imported in other R packages via specifying
 `LinkingTo: leapfrog` in the `DESCRIPTION` file.
 
@@ -63,7 +71,11 @@ See the [R README](leapfrogr/README.md) for details of running the model from R.
 ### Simulation model
 
 The simulation model is implemented as templated C++ code in
+<<<<<<< HEAD
 `leapfrogr/inst/include/leapfrog.hpp`. This is so the simulation model may be
+=======
+`leapfrog-core/include/leapfrog.hpp`. This is so the simulation model may be
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
 developed as a standalone C++ library that can be called by other
 software without requiring R-specific code features. The code uses
 header-only open source libraries to maximize portability.
@@ -72,12 +84,23 @@ header-only open source libraries to maximize portability.
 
 To change what parameters can be passed in from any interface or the structure of
 `Intermediate`, `State` or `OutputState`, please modify json files
+<<<<<<< HEAD
 [here](./cpp_generation/modelSchemas/).
 
 Then to run code generation follow
 [cpp\_generation/README.md](./cpp_generation/README.md)
 
 ## Development notes
+=======
+[here](./leapfrog-core/model_schemas/).
+
+Then to run code generation run `./scripts/generate`. See
+[codegen/README.md](./codegen/README.md) for more details.
+
+## Development
+
+See the [development vignette](https://hivtools.github.io/leapfrog/articles/development.html) for details.
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
 
 ### Simulation model
 
@@ -98,7 +121,11 @@ Then to run code generation follow
 
 ### Testing
 
+<<<<<<< HEAD
 To run any of the tests you will need to generate test data. To do this you must have `R` installed, you'll have to change directories to `leapfrog` and run
+=======
+To run any of the tests you will need to generate test data. To do this you must have `R` installed, you'll have to change directories to `leapfrogr` and run
+>>>>>>> 11ae9f4be0fefc897892a8eb6689b4043c7c0bd7
 
 ```bash
 ./scripts/create_test_data.R

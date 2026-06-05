@@ -1,0 +1,73 @@
+{
+  "name": "Dp",
+  "long_name": "DemProj",
+  "namespace": "dp",
+  "enable_if": "run_demographic_projection",
+  "state_space": {
+    "default": {
+      "NS": 2,
+      "pAG": 81,
+      "p_fertility_age_groups": 35
+    }
+  },
+  "pars": {
+    "base_pop": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"],
+      "alias": {
+        "r": "basepop"
+      }
+    },
+    "survival_probability": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG + 1", "SS::NS", "opts.proj_steps"],
+      "alias": {
+        "r": "Sx"
+      }
+    },
+    "net_migration": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS", "opts.proj_steps"],
+      "alias": {
+        "r": "netmigr_adj"
+      }
+    },
+    "age_specific_fertility_rate": {
+      "num_type": "real_type",
+      "dims": ["SS::p_fertility_age_groups", "opts.proj_steps"],
+      "alias": {
+        "r": "asfr"
+      }
+    },
+    "births_sex_prop": {
+      "num_type": "real_type",
+      "dims": ["SS::NS", "opts.proj_steps"]
+    },
+    "total_fertility_rate": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"],
+      "alias": {
+        "r": "tfr"
+      }
+    }
+  },
+  "intermediate": {
+    "migration_rate": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    }
+  },
+  "state": {
+    "p_totpop": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    },
+    "p_deaths_background_totpop": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    },
+    "births": {
+      "num_type": "real_type"
+    }
+  }
+}

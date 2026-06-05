@@ -2,7 +2,7 @@ test_that("stratified HIV population equals single-age HIV population", {
 
   parameters <- read_parameters(test_path("testdata/child_parms_full.h5"))
   out_full <- run_model(parameters, "HivFullAgeStratification")
-  out_coarse <- run_model(parameters, "HivCoarseAgeStratification") 
+  out_coarse <- run_model(parameters, "HivCoarseAgeStratification")
   out_child <- run_model(parameters, "ChildModel")
 
   expect_equal(colSums(out_full$p_hivpop[16:81,,]),
@@ -15,7 +15,7 @@ test_that("stratified HIV population equals single-age HIV population", {
                colSums(out_child$h_hivpop,,2) + colSums(out_child$h_artpop,,3))
 
 })
-                 
+
 test_that("Transmission rate models produces expected epidemics", {
 
   parameters <- read_parameters(test_path("testdata/child_parms_full.h5"))
@@ -183,7 +183,7 @@ test_that("Transmission rate models produces expected epidemics", {
 
 
   mod_full <- run_model(parameters, configuration = "HivFullAgeStratification")
-  mod_coarse <- run_model(parameters, configuration = "HivCoarseAgeStratification") 
+  mod_coarse <- run_model(parameters, configuration = "HivCoarseAgeStratification")
   mod_child <- run_model(parameters, configuration = "ChildModel")
 
   ## Check that models produce non-zero epidemics
@@ -191,9 +191,9 @@ test_that("Transmission rate models produces expected epidemics", {
     all(!is.na(x)) &&
       any(x > 0.0) && ## some non-zero
       all(x >= 0) &&
-      all(x <= 1) 
+      all(x <= 1)
   }
-  
+
   expect_true(check_valid_0to1(mod_full$prevalence_15to49_hts))
   ## expect_true(check_valid_0to1(mod_full$artcoverage_15to49_hts))
   expect_true(check_valid_0to1(mod_full$incidence_15to49_hts))
@@ -228,7 +228,7 @@ test_that("Transmission rate models produces expected epidemics", {
   expect_true(
     all(abs(mod_full$prevalence_15to49_hts[10,] - prev15to49_full) < 1e-2)
   )
-  
+
   prev15to49_coarse <- colSums(mod_coarse$p_hivpop[16:50,,],,2) / colSums(mod_coarse$p_totpop[16:50,,],,2)
   expect_true(
     all(abs(mod_coarse$prevalence_15to49_hts[10,] - prev15to49_coarse) < 1e-2)
@@ -243,11 +243,10 @@ test_that("Transmission rate models produces expected epidemics", {
   expect_true(
     all(abs(mod_full$artcoverage_15to49_hts[10,] - artcov15to49_full) < 1e-2)
   )
-  
+
   artcov15to49_coarse <- ifelse(colSums(mod_full$p_hivpop[16:50,,],,2) == 0, 0.0, colSums(colSums(mod_coarse$h_artpop[,,1:8,,],,4) / mod_coarse$p_hivpop[16:50,,],,2))
   expect_true(
     all(abs(mod_coarse$artcoverage_15to49_hts[10,] - artcov15to49_coarse) < 1e-2)
   )
 
-  
 })

@@ -195,12 +195,12 @@ prepare_cd4_progression <- function(dat, pars, dim_vars) {
   hc2_cd4_cat = c(">1000", "750-999", "500-749", "350-499", "200-349", "lte200")
 
   prog <- pars$child_ann_rate_progress_lower_cd4
-  hc1_cd4_prog <- array(0, dim = c(length(dim_vars$cd4_perc_0to4), 2, length(dim_vars$g)), dimnames = list(cd4pct = dim_vars$cd4_perc_0to4,
+  hc1_cd4_prog <- array(0, dim = c(length(dim_vars$cd4_perc_0to4), 2, length(dim_vars$s)), dimnames = list(cd4pct = dim_vars$cd4_perc_0to4,
                                                              age = c("0-2", "3-4"),
-                                                             sex = dim_vars$g))
-  hc2_cd4_prog <- array(0, dim = c(length(hc2_cd4_cat), 1, length(dim_vars$g)), dimnames = list(cd4 = hc2_cd4_cat,
+                                                             sex = dim_vars$s))
+  hc2_cd4_prog <- array(0, dim = c(length(hc2_cd4_cat), 1, length(dim_vars$s)), dimnames = list(cd4 = hc2_cd4_cat,
                                                              age = c("5-14"),
-                                                             sex = dim_vars$g))
+                                                             sex = dim_vars$s))
   hc1_cd4_prog[, "0-2", "male"] <- c(prog["male", grepl("Age: 0-2,", colnames(prog))], 0)
   hc1_cd4_prog[, "0-2", "female"] <- c(prog["female", grepl("Age: 0-2,", colnames(prog))], 0)
   hc1_cd4_prog[, "3-4", "male"] <- c(prog["male", grepl("Age: 3-4,", colnames(prog))], 0)
@@ -413,8 +413,10 @@ process_pjnz_hc <- function(dat, pars, dim_vars, use_coarse_age_groups = FALSE, 
   pars$breastfeeding_duration_art <- pars$infant_feeding_options[, "art", ] / 100
   pars$breastfeeding_duration_no_art <- pars$infant_feeding_options[, "no art", ] / 100
 
-  ##TODO: change this in leapfrog to be by multiple ages
-  pars$hc_nosocomial <- pars$nosocomial_infections_by_age[1, ]
+  ## Nosocomial infections by child age group (0-4, 5-9, 10-14); absent in older PJNZ files
+  if (is.null(pars$nosocomial_infections_by_age)) {
+    pars$nosocomial_infections_by_age <- matrix(0, nrow = 3, ncol = length(proj_years))
+  }
 
   pars$hc1_cd4_dist <- pars$child_dist_new_infections_cd4 / 100
 

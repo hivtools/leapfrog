@@ -147,8 +147,8 @@ struct HaOut {
 
 template<typename real_type>
 struct HcParams {
-  real_type* hc_nosocomial;
-  int hc_nosocomial_length;
+  real_type* nosocomial_infections_by_age;
+  int nosocomial_infections_by_age_length;
   real_type* hc1_cd4_dist;
   int hc1_cd4_dist_length;
   real_type* hc1_cd4_mort;
