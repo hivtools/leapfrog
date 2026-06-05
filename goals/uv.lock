@@ -21,7 +21,7 @@ wheels = [
 
 [[package]]
 name = "avenir-common"
-version = "0.1.4"
+version = "0.1.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "azure-storage-blob" },
@@ -31,13 +31,14 @@ dependencies = [
     { name = "scipy" },
     { name = "ujson" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/aa/b3/b6ed2d57054f3fdf5f577fbf9f2d8fe980262f886d55601cd44961a23b63/avenir_common-0.1.5.tar.gz", hash = "sha256:37f8c08cac8bd634e4e5e5336f1d81138a18310f43488cabc40bfc3f5440c49e", size = 10368, upload-time = "2026-05-28T16:00:23.643Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/75/73/eba871ee98cc9b60c3e804d68dca3aab0ccd28ef29295bff326b8b0c5b26/avenir_common-0.1.4-py3-none-any.whl", hash = "sha256:f13b69f26c9a6e229eae0f24775e4f837aa4766124952ca1342dc310fe23c0ff", size = 13089, upload-time = "2026-05-15T14:18:59.468Z" },
+    { url = "https://files.pythonhosted.org/packages/57/15/c5a495e3f5a1adc8f992e2c519fda08756256ec1c591e04bc93a74416edf/avenir_common-0.1.5-py3-none-any.whl", hash = "sha256:abf25dfc8da21c694e40c9ee0e2f4184ab913057b527397616b2ff77e5b11f45", size = 13222, upload-time = "2026-05-28T16:00:22.187Z" },
 ]
 
 [[package]]
 name = "avenir-spectrum-common"
-version = "0.1.4"
+version = "0.1.6"
 source = { editable = "../../SpectrumEngine/SpectrumCommon" }
 dependencies = [
     { name = "avenir-common" },
@@ -51,7 +52,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "avenir-common", specifier = ">=0.1.4" },
+    { name = "avenir-common", specifier = ">=0.1.5" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "numpy", specifier = ">=2.4.4" },
     { name = "pandas", specifier = ">=2.0.0" },
@@ -62,7 +63,7 @@ requires-dist = [
 
 [[package]]
 name = "avenir-spectrum-import-pjnz"
-version = "0.1.4"
+version = "0.1.5"
 source = { editable = "C:/work/LeapFrog/V3/SpectrumEngine/Tools/ImportPJNZ" }
 dependencies = [
     { name = "avenir-common" },
@@ -71,7 +72,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "avenir-common", specifier = ">=0.1.1" },
+    { name = "avenir-common", specifier = ">=0.1.5" },
     { name = "avenir-spectrum-common", editable = "../../SpectrumEngine/SpectrumCommon" },
 ]
 

@@ -75,6 +75,9 @@ template <class HvState, class IntermediateHv, class ParsHv>
     i_hv.i_num_partners;
     i_hv.i_age_first_sex;
 
+    i_hv.adj_coverage;
+    i_hv.adj_coverage_prod;
+
   
     //i_hv.totpop_1549;
     //i_hv.pop_1549;
@@ -113,6 +116,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
     p_hv.b_foi_idu;
 
     p_hv.rn_coverage;
+    p_hv.hv_impact_matrix;
 
 
 
@@ -319,6 +323,7 @@ struct HvDebugInfo {
   NdaInfo vac_effect;
   NdaInfo art_coverage_rg;
   NdaInfo prep_effect;
+  NdaInfo adj_coverage;
 
   NdaInfo b_riskgroup_proportions;
   NdaInfo b_behave_change_rate;
@@ -357,7 +362,8 @@ struct HvDebugInfo {
   NdaInfo prep_effectiveness;
   NdaInfo b_foi_idu;
   NdaInfo rn_coverage; 
-
+  NdaInfo hv_impact_matrix; 
+  NdaInfo adj_coverage_prod;
 
 
 };
@@ -565,6 +571,9 @@ template <class HvState, class IntermediateHv, class ParsHv>
     p_hv.prep_cov;
     hv.cured_prop;
 
+    i_hv.adj_coverage;
+    i_hv.adj_coverage_prod;
+
 
 
 
@@ -615,6 +624,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
     p_hv.prep_effectiveness;
     p_hv.b_foi_idu;
     p_hv.rn_coverage;
+    p_hv.hv_impact_matrix;
   
 
   }
@@ -663,6 +673,16 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.epi_redwhen_circum = nda_capture(p_hv.epi_redwhen_circum);
   out.prep_cov = nda_capture(p_hv.prep_cov);
   out.cured_prop = nda_capture(hv.cured_prop);
+
+  out.adj_coverage = nda_capture(i_hv.adj_coverage);
+  out.hv_impact_matrix = nda_capture(p_hv.hv_impact_matrix);
+  out.adj_coverage_prod = nda_capture(i_hv.adj_coverage_prod);
+
+
+  
+
+
+
 
 
   //out.riskgroup_proportions = nda_capture(i_hv.entrants_age_15);
