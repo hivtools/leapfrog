@@ -195,12 +195,12 @@ prepare_cd4_progression <- function(dat, pars, dim_vars) {
   hc2_cd4_cat = c(">1000", "750-999", "500-749", "350-499", "200-349", "lte200")
 
   prog <- pars$child_ann_rate_progress_lower_cd4
-  hc1_cd4_prog <- array(0, dim = c(length(dim_vars$cd4_perc_0to4), 2, length(dim_vars$g)), dimnames = list(cd4pct = dim_vars$cd4_perc_0to4,
+  hc1_cd4_prog <- array(0, dim = c(length(dim_vars$cd4_perc_0to4), 2, length(dim_vars$s)), dimnames = list(cd4pct = dim_vars$cd4_perc_0to4,
                                                              age = c("0-2", "3-4"),
-                                                             sex = dim_vars$g))
-  hc2_cd4_prog <- array(0, dim = c(length(hc2_cd4_cat), 1, length(dim_vars$g)), dimnames = list(cd4 = hc2_cd4_cat,
+                                                             sex = dim_vars$s))
+  hc2_cd4_prog <- array(0, dim = c(length(hc2_cd4_cat), 1, length(dim_vars$s)), dimnames = list(cd4 = hc2_cd4_cat,
                                                              age = c("5-14"),
-                                                             sex = dim_vars$g))
+                                                             sex = dim_vars$s))
   hc1_cd4_prog[, "0-2", "male"] <- c(prog["male", grepl("Age: 0-2,", colnames(prog))], 0)
   hc1_cd4_prog[, "0-2", "female"] <- c(prog["female", grepl("Age: 0-2,", colnames(prog))], 0)
   hc1_cd4_prog[, "3-4", "male"] <- c(prog["male", grepl("Age: 3-4,", colnames(prog))], 0)

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+echo "Cleaning up Makevars"
+
+if [ -f "./src/Makevars" ] ; then
+  rm ./src/Makevars
+fi
+
+if [ -f "./src/Makevars.win" ] ; then
+  rm ./src/Makevars.win
+fi

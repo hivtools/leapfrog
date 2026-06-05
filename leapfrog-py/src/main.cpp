@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 #include <vector>
@@ -99,6 +100,9 @@ nb::dict simulate_model(
   return build_output_py<ModelVariant>(state);
 }
 
+=======
+#include "../../leapfrog-core/include/leapfrog_py.hpp"
+>>>>>>> 66b296cb6502fc8d02f65f1349ba8ba9bfb290a7
 
 std::vector<std::string> list_model_configurations() {
   return std::vector<std::string>{

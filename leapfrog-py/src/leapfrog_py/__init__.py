@@ -15,6 +15,7 @@ LeapfrogParameters: TypeAlias = dict[str, Union[np.ndarray, int, float]]
 LeapfrogDataSingleYear: TypeAlias = LeapfrogParameters
 LeapfrogData: TypeAlias = dict[str, np.ndarray]
 LeapfrogRange: TypeAlias = Union[range, list]
+LeapfrogStateSpace: TypeAlias = dict[str, int | float]
 
 
 def read_h5_file(file_path: str) -> LeapfrogParameters:
@@ -86,5 +87,5 @@ def run_model_single_year(
     )
 
 
-def get_leapfrog_ss(configuration: str):
+def get_leapfrog_ss(configuration: str) -> LeapfrogStateSpace:
     return get_leapfrog_ss_py(configuration)

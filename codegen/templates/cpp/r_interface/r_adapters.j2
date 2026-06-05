@@ -1,0 +1,174 @@
+{% from "template_utils.j2" import comma_except_last %}
+{% include "header.j2" %}
+
+#pragma once
+
+#include <Rcpp.h>
+
+#include "../config_mixer.hpp"
+#include "../state_space.hpp"
+
+namespace leapfrog {
+namespace internal {
+
+template <typename T>
+T* r_data(SEXP x) {
+  static_assert(sizeof(T) == 0, "Only specializations of r_data can be used");
+}
+
+template <>
+double* r_data(SEXP x) {
+  return REAL(x);
+}
+
+template <>
+int* r_data(SEXP x) {
+  return INTEGER(x);
+}
+
+template <typename T, size_t Rank>
+nda::array_ref_of_rank<T, Rank> parse_data(const Rcpp::List& data, const std::string& key, nda::shape_of_rank<Rank> shape) {
+  SEXP array_data = data[key];
+
+  int actual_length = LENGTH(array_data);
+  int expected_length = shape.flat_max() + 1;
+
+  if (actual_length < expected_length) {
+    Rcpp::stop(
+      "Invalid size of data for '%s', expected %d got %d",
+      key, expected_length, actual_length
+    );
+  }
+  return { r_data<T>(array_data), shape };
+}
+
+template <typename T, typename Shape>
+void fill_initial_state(const Rcpp::List& data, const std::string& key, nda::array<T, Shape>& array) {
+  SEXP array_data = data[key];
+
+  nda::array_ref<T, Shape> array_ref(r_data<T>(array_data));
+
+  nda::for_each_index(Shape(), [&](auto i) {
+    array[i] = array_ref[i];
+  });
+}
+
+{% for config in configs %}
+template<typename real_type, MV ModelVariant>
+struct {{ config.name }}Adapter<Language::R, real_type, ModelVariant> {
+  using SS = SSMixed<ModelVariant>;
+  using Config = {{ config.name }}Config<real_type, ModelVariant>;
+
+  static Config::Pars get_pars(
+    const Rcpp::List &data,
+    const Options<real_type> &opts
+  ) {
+    return {
+      {% for name, cfg in config.pars.items() %}
+      .{{ name }} = {{ get_r_parse_data(cfg) }}{{ comma_except_last(loop) }}
+      {% endfor %}
+    };
+  };
+
+  static Config::State get_initial_state(
+    const Rcpp::List &data
+  ) {
+    typename Config::State state;
+    {% for name, cfg in config.state.items() %}
+    {{ get_r_initial_state(cfg, name) }};
+    {% endfor %}
+    return state;
+  };
+
+  static constexpr int output_count = {{ dict_len(config.state) }};
+
+  static int build_output(
+    int index,
+    const Config::OutputState& state,
+    Rcpp::List& ret,
+    Rcpp::CharacterVector& names,
+    const size_t& output_years
+  ) {
+    {% for name, cfg in config.state.items() %}
+    Rcpp::NumericVector r_{{ name }}({{ collapse_dims_with_trailing_sep(cfg, " * ") }}output_years);
+    r_{{ name }}.attr("dim") = Rcpp::IntegerVector::create({{ collapse_dims_with_trailing_sep(cfg) }}output_years);
+    std::copy_n(state.{{ name }}.data(), state.{{ name }}.size(), {{ get_r_internal_data_pointer(cfg) }}(r_{{ name }}));
+    names[index + {{ loop.index0 }}] = "{{ name }}";
+    ret[index + {{ loop.index0 }}] = r_{{ name }};
+    {% endfor %}
+    return index + output_count;
+  };
+
+  static int build_output_single_year(
+    int index,
+    const Config::State& state,
+    Rcpp::List& ret,
+    Rcpp::CharacterVector& names
+  ) {
+    {% for name, cfg in config.state.items() %}
+    {% if cfg.type == "scalar" %}
+    names[index + {{ loop.index0 }}] = "{{ name }}";
+    ret[index + {{ loop.index0 }}] = state.{{ name }};
+    {% else %}
+    Rcpp::NumericVector r_{{ name }}({{ collapse_dims(cfg, " * ") }});
+    r_{{ name }}.attr("dim") = Rcpp::IntegerVector::create({{ collapse_dims(cfg) }});
+    std::copy_n(state.{{ name }}.data(), state.{{ name }}.size(), {{ get_r_internal_data_pointer(cfg) }}(r_{{ name }}));
+    names[index + {{ loop.index0 }}] = "{{ name }}";
+    ret[index + {{ loop.index0 }}] = r_{{ name }};
+    {% endif %}
+    {% endfor %}
+    return index + output_count;
+  };
+};
+
+{% endfor %}
+
+struct SSTypeToR {
+  Rcpp::List& out;
+  const std::string& name;
+
+  void operator()(int v) const {
+    out[name] = v;
+  }
+
+  void operator()(double v) const {
+    out[name] = v;
+  }
+
+  void operator()(const std::vector<int>& v) const {
+    out[name] = v;
+  }
+
+  void operator()(const std::vector<double>& v) const {
+    out[name] = v;
+  }
+
+  void operator()(const std::vector<std::vector<double>>& v) const {
+    const size_t nrow = v.size();
+    const size_t ncol = nrow ? v[0].size() : 0;
+
+    Rcpp::NumericMatrix m(nrow, ncol);
+    for (size_t i = 0; i < nrow; ++i) {
+      for (size_t j = 0; j < ncol; ++j) {
+        m(i, j) = v[i][j];
+      }
+    }
+
+    out[name] = m;
+  }
+};
+
+} // namespace internal
+
+template<internal::MV ModelVariant>
+Rcpp::List get_ss_r() {
+  auto ss = get_ss<ModelVariant>();
+  Rcpp::List out;
+
+  for (const auto& [name, value] : ss) {
+    std::visit(internal::SSTypeToR{out, name}, value);
+  }
+
+  return out;
+}
+} // namespace leapfrog

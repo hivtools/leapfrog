@@ -1,0 +1,17 @@
+{
+  "overridable": {
+    "p_idx_fertility_first": 15,
+    "p_fertility_age_groups": 35,
+    "p_idx_hiv_first_adult": 15,
+    "hIDX_15PLUS": 0
+  },
+  "not_overridable": {
+    "MALE": 0,
+    "FEMALE": 1,
+    "ART0MOS": 0,
+    "PROJPERIOD_CALENDAR": 0,
+    "PROJPERIOD_MIDYEAR": 1,
+    "INCIDMOD_DIRECTINCID_HTS": 0,
+    "INCIDMOD_TRANSMRATE_HTS": 1
+  }
+}

@@ -1,0 +1,422 @@
+{
+  "name": "Ha",
+  "long_name": "HivAdult",
+  "namespace": "ha",
+  "enable_if": "run_hiv_simulation",
+  "state_space": {
+    "default": {
+      "hAG_span": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      "hDS": 7,
+      "hTS": 3,
+      "hAG": 66,
+      "pAG_fertility": 35,
+      "hAG_fertility": 35,
+      "pIDX_15to49": 15,
+      "pAG_15to49": 35,
+      "hIDX_15to49": 0,
+      "hAG_15to49": 35,
+      "HIV_STEPS_PER_YEAR": 10
+    },
+    "overrides": [
+      {
+        "applies_if": "use_coarse_stratification",
+        "vars": {
+          "hAG_span": [2, 3, 5, 5, 5, 5, 5, 5, 31],
+          "hAG": 9,
+          "hAG_fertility": 8,
+          "hAG_15to49": 8
+        }
+      }
+    ]
+  },
+  "pars": {
+    "incidence_model_choice": {
+      "num_type": "int"
+     },
+    "input_adult_incidence_rate": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"],
+      "alias": {
+        "r": "incidinput"
+      }
+    },
+    "transmission_rate_hts": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps * opts.hts_per_year"]
+    },
+    "initial_incidence": {
+      "num_type": "real_type"
+    },
+    "epidemic_start_hts": {
+      "num_type": "int"
+    },
+    "relative_infectiousness_art": {
+      "num_type": "real_type"
+    },
+    "incidence_rate_ratio_age": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG - SS::p_idx_hiv_first_adult", "SS::NS", "opts.proj_steps"],
+      "alias": {
+        "r": "incrr_age"
+      }
+    },
+    "incidence_rate_ratio_sex": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"],
+      "alias": {
+        "r": "incrr_sex"
+      }
+    },
+    "cd4_mortality": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS", "SS::hAG", "SS::NS"],
+      "alias": {
+        "r": "cd4_mort"
+      }
+    },
+    "cd4_progression": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS - 1", "SS::hAG", "SS::NS"],
+      "alias": {
+        "r": "cd4_prog"
+      }
+    },
+    "cd4_initial_distribution": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS", "SS::hAG", "SS::NS"],
+      "alias": {
+        "r": "cd4_initdist"
+      }
+    },
+    "scale_cd4_mortality": {
+      "num_type": "int",
+      "alias": {
+        "r": "scale_cd4_mort"
+      }
+    },
+    "idx_hm_elig": {
+      "num_type": "int",
+      "dims": ["opts.proj_steps"],
+      "alias": {
+        "r": "artcd4elig_idx"
+      }
+    },
+    "art_mortality": {
+      "num_type": "real_type",
+      "dims": ["SS::hTS", "SS::hDS", "SS::hAG", "SS::NS"],
+      "alias": {
+        "r": "art_mort"
+      }
+    },
+    "art_mortality_time_rate_ratio": {
+      "num_type": "real_type",
+      "dims": ["SS::hTS", "opts.proj_steps"],
+      "alias": {
+        "r": "artmx_timerr"
+      }
+    },
+    "cd4_nonaids_excess_mort": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS", "SS::hAG", "SS::NS"],
+      "alias": {
+        "r": "cd4_nonaids_excess_mort"
+      }
+    },
+    "art_nonaids_excess_mort": {
+      "num_type": "real_type",
+      "dims": ["SS::hTS", "SS::hDS", "SS::hAG", "SS::NS"],
+      "alias": {
+        "r": "art_nonaids_excess_mort"
+      }
+    },
+    "dropout_recover_cd4": {
+      "num_type": "int",
+      "alias": {
+        "r": "art_dropout_recover_cd4"
+      }
+    },
+    "dropout_rate": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"],
+      "alias": {
+        "r": "art_dropout_rate"
+      }
+    },
+    "adults_on_art": {
+      "num_type": "real_type",
+      "dims": ["SS::NS", "opts.proj_steps"],
+      "alias": {
+        "r": "art15plus_num"
+      }
+    },
+    "adults_on_art_is_percent": {
+      "num_type": "int",
+      "dims": ["SS::NS", "opts.proj_steps"],
+      "alias": {
+        "r": "art15plus_isperc"
+      }
+    },
+    "initiation_mortality_weight": {
+      "num_type": "real_type",
+      "alias": {
+        "r": "art_alloc_mxweight"
+      }
+    },
+    "h_art_stage_dur": {
+      "num_type": "real_type",
+      "dims": ["SS::hTS - 1"]
+    },
+    "pAG_INCIDPOP": {
+      "num_type": "int"
+    },
+    "pIDX_INCIDPOP": {
+      "num_type": "int"
+    },
+    "fert_mult_by_age": {
+      "num_type": "real_type",
+      "dims": ["SS::hAG_fertility", "opts.proj_steps"],
+      "alias": {
+        "r": "fert_rat"
+      }
+    },
+    "fert_mult_off_art": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS"],
+      "alias": {
+        "r": "cd4fert_rat"
+      }
+    },
+    "fert_mult_on_art": {
+      "num_type": "real_type",
+      "dims": ["SS::hAG_fertility"],
+      "alias": {
+         "r": "frr_art6mos"
+      }
+    },
+    "local_adj_factor": {
+      "num_type": "real_type",
+      "alias": {
+        "r": "frr_scalar"
+      }
+    },
+    "pwid_hivpos_nonaids_mortality": {
+      "num_type": "real_type"
+    },
+    "pwid_prop_hivpop": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+    "pwid_sex_ratio": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    }
+  },
+  "intermediate": {
+    "hiv_negative_pop": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG"]
+    },
+    "incidence_rate_sex": {
+      "num_type": "real_type",
+      "dims": ["SS::NS"]
+    },
+    "hiv_neg_aggregate": {
+      "num_type": "real_type",
+      "dims": ["SS::NS"]
+    },
+    "p_infections_ts": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    },
+    "p_coarse_ages_hivpop": {
+      "num_type": "real_type",
+      "dims": ["SS::hAG", "SS::NS"]
+    },
+    "hiv_age_up_prob": {
+      "num_type": "real_type",
+      "dims": ["SS::hAG", "SS::NS"]
+    },
+    "h_hiv_deaths_age_sex": {
+      "num_type": "real_type",
+      "dims": ["SS::hAG", "SS::NS"]
+    },
+    "h_deaths_excess_nonaids_agesex": {
+      "num_type": "real_type",
+      "dims": ["SS::hAG", "SS::NS"]
+    },
+    "grad": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS", "SS::hAG", "SS::NS"]
+    },
+    "gradART": {
+      "num_type": "real_type",
+      "dims": ["SS::hTS", "SS::hDS", "SS::hAG", "SS::NS"]
+    },
+    "hivpop_ha": {
+      "num_type": "real_type",
+      "dims": ["SS::hAG"]
+    },
+    "artelig_hahm": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS", "SS::hAG"]
+    },
+    "artelig_hm": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS"]
+    },
+    "expect_mort_artelig_hm": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS"]
+    },
+    "artinit_hm": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS"]
+    },
+    "Xart_15plus": {
+      "num_type": "real_type"
+    },
+    "Xartelig_15plus": {
+      "num_type": "real_type"
+    },
+    "expect_mort_artelig15plus": {
+      "num_type": "real_type"
+    },
+    "cd4mx_scale": {
+      "num_type": "real_type",
+      "default": 1
+    },
+    "artpop_hahm": {
+      "num_type": "real_type"
+    },
+    "p_infections_a": {
+      "num_type": "real_type"
+    },
+    "p_infections_ha": {
+      "num_type": "real_type"
+    },
+    "deaths_art": {
+      "num_type": "real_type"
+    },
+    "artnum_hts": {
+      "num_type": "real_type"
+    },
+    "artcov_hts": {
+      "num_type": "real_type"
+    },
+    "curr_coverage": {
+      "num_type": "real_type"
+    },
+    "artinit_hts": {
+      "num_type": "real_type"
+    },
+    "artinit_hahm": {
+      "num_type": "real_type"
+    },
+    "hivqx_ha": {
+      "num_type": "real_type"
+    },
+    "hivdeaths_a": {
+      "num_type": "real_type"
+    },
+    "Xhivn_incagerr": {
+      "num_type": "real_type"
+    },
+    "everARTelig_idx": {
+      "num_type": "int"
+    },
+    "cd4elig_idx": {
+      "num_type": "int"
+    },
+    "anyelig_idx": {
+      "num_type": "int"
+    },
+    "asfr_sum": {
+      "num_type": "real_type"
+    },
+    "nHIVcurr": {
+      "num_type": "real_type"
+    },
+    "nHIVlast": {
+      "num_type": "real_type"
+    },
+    "df": {
+      "num_type": "real_type"
+    },
+    "prev": {
+      "num_type": "real_type"
+    }
+  },
+  "state": {
+    "p_hivpop": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    },
+    "p_deaths_background_hivpop": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    },
+    "h_hivpop": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS", "SS::hAG", "SS::NS"]
+    },
+    "h_artpop": {
+      "num_type": "real_type",
+      "dims": ["SS::hTS", "SS::hDS", "SS::hAG", "SS::NS"]
+    },
+    "h_hiv_deaths_no_art": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS", "SS::hAG", "SS::NS"]
+    },
+    "h_deaths_excess_nonaids_no_art": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS", "SS::hAG", "SS::NS"]
+    },
+    "p_infections": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    },
+    "h_hiv_deaths_art": {
+      "num_type": "real_type",
+      "dims": ["SS::hTS", "SS::hDS", "SS::hAG", "SS::NS"]
+    },
+    "h_deaths_excess_nonaids_on_art": {
+      "num_type": "real_type",
+      "dims": ["SS::hTS", "SS::hDS", "SS::hAG", "SS::NS"]
+    },
+    "h_art_initiation": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS", "SS::hAG", "SS::NS"]
+    },
+    "p_hiv_deaths": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    },
+    "p_deaths_excess_nonaids": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    },
+    "p_net_migration_hivpop": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
+    },
+    "hiv_births_by_mat_age": {
+      "num_type": "real_type",
+      "dims": ["SS::hAG_fertility"]
+    },
+    "hiv_births": {
+      "num_type": "real_type"
+    },
+    "prevalence_15to49_hts": {
+       "num_type": "real_type",
+       "dims": ["SS::HIV_STEPS_PER_YEAR"]
+    },
+    "incidence_15to49_hts": {
+       "num_type": "real_type",
+       "dims": ["SS::HIV_STEPS_PER_YEAR"]
+    },
+    "artcoverage_15to49_hts": {
+       "num_type": "real_type",
+       "dims": ["SS::HIV_STEPS_PER_YEAR"]
+    }
+  }
+}

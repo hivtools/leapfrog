@@ -1,0 +1,44 @@
+{% from "template_utils.j2" import comma_except_last %}
+{% include "header.j2" %}
+
+#pragma once
+
+#include "hdf5_utils.hpp"
+#include "../config_mixer.hpp"
+
+namespace leapfrog {
+namespace internal {
+
+{% for config in configs %}
+template<typename real_type, MV ModelVariant>
+struct {{ config.name }}Adapter<Language::Cpp, real_type, ModelVariant> {
+  using SS = SSMixed<ModelVariant>;
+  using Config = {{ config.name }}Config<real_type, ModelVariant>;
+
+  static Config::Pars get_pars(
+    OwnedParsMixed<real_type, ModelVariant>::Pars& owned_pars
+  ) {
+    return {
+      {% for name, cfg in config.pars.items() %}
+      .{{ name }} = {{ get_pars_cpp(name, cfg, config.namespace) }}{{ comma_except_last(loop) }}
+      {% endfor %}
+    };
+  };
+
+  static constexpr int output_count = {{ dict_len(config.state) }};
+
+  static int build_output(
+    int index,
+    const Config::OutputState& state,
+    std::filesystem::path& output_file
+  ) {
+    {% for name, cfg in config.state.items() %}
+    write_data<{{ cfg.num_type }}, typename Config::OutputState::shape_{{ name }}>(output_file, "{{ name }}", state.{{ name }});
+    {% endfor %}
+    return index + output_count;
+  };
+};
+
+{% endfor %}
+} // namespace internal
+} // namespace leapfrog

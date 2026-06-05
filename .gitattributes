@@ -1,2 +1,6 @@
+<<<<<<< HEAD
 leapfrogr/inst/include/generated/** linguist-generated
+=======
+leapfrog-core/include/generated/** linguist-generated
+>>>>>>> 66b296cb6502fc8d02f65f1349ba8ba9bfb290a7
 delphi/LeapfrogInterface.pas linguist-generated

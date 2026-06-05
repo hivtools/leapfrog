@@ -11,7 +11,7 @@ output_dirs <- c("C:/Users/Test/Downloads/demProjState",
                  "C:/Users/Test/Downloads/hivChildState")
 
 repo_root <- gert::git_find()
-configs_dir <- file.path(repo_root, "cpp_generation/modelSchemas/configs")
+configs_dir <- file.path(repo_root, "leapfrog-core/model_schemas/configs")
 
 to_lower_camel <- function(x) {
   sp <- strsplit(tolower(x), "_", TRUE)

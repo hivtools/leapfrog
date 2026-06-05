@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 #include "../leapfrogr/inst/include/leapfrog.hpp"
 #include "../leapfrogr/inst/include/generated/c_interface/c_types.hpp"
 #include "../leapfrogr/inst/include/generated/c_interface/c_adapters.hpp"
+=======
+#include "../leapfrog-core/include/leapfrog.hpp"
+#include "../leapfrog-core/include/generated/c_interface/c_types.hpp"
+#include "../leapfrog-core/include/generated/c_interface/c_adapters.hpp"
+>>>>>>> 66b296cb6502fc8d02f65f1349ba8ba9bfb290a7
 
 #include <windows.h>
 #include <numeric>
