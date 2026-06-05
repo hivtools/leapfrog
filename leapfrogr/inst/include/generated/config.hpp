@@ -741,10 +741,11 @@ struct HcConfig {
   using SS = SSMixed<ModelVariant>;
 
   struct Pars {
-    using shape_hc_nosocomial = nda::shape<
-      nda::dim<0, nda::dynamic, 1>
+    using shape_hc_nosocomial_infections_by_age = nda::shape<
+      nda::dim<0, 3, 1>,
+      nda::dim<0, nda::dynamic, (3)>
     >;
-    nda::array_ref<real_type, shape_hc_nosocomial> hc_nosocomial;
+    nda::array_ref<real_type, shape_hc_nosocomial_infections_by_age> hc_nosocomial_infections_by_age;
     using shape_hc1_cd4_dist = nda::shape<
       nda::dim<0, SS::hc1DS, 1>
     >;

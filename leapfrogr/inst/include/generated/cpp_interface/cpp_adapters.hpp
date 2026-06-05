@@ -122,7 +122,7 @@ struct HcAdapter<Language::Cpp, real_type, ModelVariant> {
     OwnedParsMixed<real_type, ModelVariant>::Pars& owned_pars
   ) {
     return {
-      .hc_nosocomial = { owned_pars.hc.hc_nosocomial.data(), owned_pars.hc.hc_nosocomial.shape() },
+      .hc_nosocomial_infections_by_age = { owned_pars.hc.hc_nosocomial_infections_by_age.data(), owned_pars.hc.hc_nosocomial_infections_by_age.shape() },
       .hc1_cd4_dist = { owned_pars.hc.hc1_cd4_dist.data(), owned_pars.hc.hc1_cd4_dist.shape() },
       .hc1_cd4_mort = { owned_pars.hc.hc1_cd4_mort.data(), owned_pars.hc.hc1_cd4_mort.shape() },
       .hc2_cd4_mort = { owned_pars.hc.hc2_cd4_mort.data(), owned_pars.hc.hc2_cd4_mort.shape() },

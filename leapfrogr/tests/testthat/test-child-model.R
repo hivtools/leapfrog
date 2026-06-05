@@ -189,6 +189,72 @@ test_that("Model outputs are consistent", {
   expect_true(all(abs(c2$diff) < 1e-5))
 })
 
+test_that("Model outputs are consistent for midyear projections", {
+  parameters <- read_parameters(test_path("testdata/child_parms_full.h5"))
+  parameters$projection_period <- "midyear"
+  out <- run_model(parameters, "ChildModel", 1970:2030)
+
+  ###############################
+  ## Stratified hiv pop and population hiv pop should be the same (midyear)
+  ## Regression test for migration bug: run_hc_hivpop_end_year_migration() was
+  ## previously only called for calendar-year projections, causing hc1_hivpop
+  ## to diverge from p_hivpop[1:5,,] when migration was non-zero.
+  ###############################
+  hc1_hiv <- apply(out$hc1_hivpop, c(3,4,5), sum)
+  hc1_art <- apply(out$hc1_artpop, c(3,4,5), sum)
+  hc1 <- hc1_hiv + hc1_art
+  dimnames(hc1) <- list(age = 0:4, sex = c('male','female'), year = 1970:2030)
+  p_hiv <- out$p_hivpop[1:5, , ]
+  dimnames(p_hiv) <- list(age = 0:4, sex = c('male','female'), year = 1970:2030)
+  hc1_df <- as.data.frame(as.table(hc1))
+  out_df <- as.data.frame(as.table(p_hiv))
+  colnames(hc1_df) <- c("Var1", "Var2", "Var3", "strat")
+  colnames(out_df) <- c("Var1", "Var2", "Var3", "pop")
+  c1 <- hc1_df %>%
+    dplyr::inner_join(out_df, by = c("Var1", "Var2", "Var3")) %>%
+    dplyr::mutate(diff = strat - pop)
+  expect_true(all(abs(c1$diff) < 1e-5))
+
+  hc2_hiv <- apply(out$hc2_hivpop, c(3,4,5), sum)
+  hc2_art <- apply(out$hc2_artpop, c(3,4,5), sum)
+  hc2 <- hc2_hiv + hc2_art
+  dimnames(hc2) <- list(age = 5:14, sex = c('male','female'), year = 1970:2030)
+  p_hiv <- out$p_hivpop[6:15, , ]
+  dimnames(p_hiv) <- list(age = 5:14, sex = c('male','female'), year = 1970:2030)
+  hc2_df <- as.data.frame(as.table(hc2))
+  out_df <- as.data.frame(as.table(p_hiv))
+  colnames(hc2_df) <- c("Var1", "Var2", "Var3", "strat")
+  colnames(out_df) <- c("Var1", "Var2", "Var3", "pop")
+  c2 <- hc2_df %>%
+    dplyr::inner_join(out_df, by = c("Var1", "Var2", "Var3")) %>%
+    dplyr::mutate(diff = strat - pop)
+  expect_true(all(abs(c2$diff) < 1e-5))
+})
+
+test_that("Nosocomial infections are applied across all three child age groups", {
+  parameters <- read_parameters(test_path("testdata/child_parms_full.h5"))
+
+  ## Baseline: zero out all nosocomial infections
+  parameters_none <- parameters
+  parameters_none$hc_nosocomial_infections_by_age[] <- 0
+  out_none <- run_model(parameters_none, "ChildModel", 1970:2030)
+
+  ## Apply nosocomial infections only to age groups 5-9 and 10-14 (rows 2 and 3)
+  ## Regression test: previously only age group 0-4 received infections; rows 2
+  ## and 3 of hc_nosocomial_infections_by_age were silently ignored.
+  parameters_older <- parameters
+  parameters_older$hc_nosocomial_infections_by_age[] <- 0
+  parameters_older$hc_nosocomial_infections_by_age[2, ] <- 100
+  parameters_older$hc_nosocomial_infections_by_age[3, ] <- 100
+  out_older <- run_model(parameters_older, "ChildModel", 1970:2030)
+
+  ## Ages 5-14 should gain infections; ages 0-4 should be unaffected
+  expect_true(
+    sum(out_older$p_infections[6:15, , ]) > sum(out_none$p_infections[6:15, , ])
+  )
+  expect_equal(out_older$p_infections[1:5, , ], out_none$p_infections[1:5, , ])
+})
+
 test_that("Female 15-49y pop aligns", {
   testthat::skip("Skipping this test because the adult populations currently do not align")
   parameters <- read_parameters(test_path("testdata/child_parms_full.h5"))

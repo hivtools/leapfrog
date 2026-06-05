@@ -317,7 +317,7 @@ struct HcAdapter<Language::Py, real_type, ModelVariant> {
     const Options<real_type> &opts
   ) {
     return {
-      .hc_nosocomial = parse_data<real_type, 1>(data, "hc_nosocomial", { nda::dim<>(0, opts.proj_steps, 1) }),
+      .hc_nosocomial_infections_by_age = parse_data<real_type, 2>(data, "hc_nosocomial_infections_by_age", { nda::dim<>(0, 3, 1), nda::dim<>(0, opts.proj_steps, (3)) }),
       .hc1_cd4_dist = parse_data<real_type, 1>(data, "hc1_cd4_dist", { nda::dim<>(0, SS::hc1DS, 1) }),
       .hc1_cd4_mort = parse_data<real_type, 3>(data, "hc1_cd4_mort", { nda::dim<>(0, SS::hc1DS, 1), nda::dim<>(0, SS::hcTT, (SS::hc1DS)), nda::dim<>(0, SS::hc1AG, (SS::hc1DS) * (SS::hcTT)) }),
       .hc2_cd4_mort = parse_data<real_type, 3>(data, "hc2_cd4_mort", { nda::dim<>(0, SS::hc2DS, 1), nda::dim<>(0, SS::hcTT, (SS::hc2DS)), nda::dim<>(0, SS::hc2AG, (SS::hc2DS) * (SS::hcTT)) }),

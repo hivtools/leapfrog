@@ -413,8 +413,10 @@ process_pjnz_hc <- function(dat, pars, dim_vars, use_coarse_age_groups = FALSE, 
   pars$breastfeeding_duration_art <- pars$infant_feeding_options[, "art", ] / 100
   pars$breastfeeding_duration_no_art <- pars$infant_feeding_options[, "no art", ] / 100
 
-  ##TODO: change this in leapfrog to be by multiple ages
-  pars$hc_nosocomial <- pars$nosocomial_infections_by_age[1, ]
+  ## Nosocomial infections by child age group (0-4, 5-9, 10-14); absent in older PJNZ files
+  if (is.null(pars$hc_nosocomial_infections_by_age)) {
+    pars$hc_nosocomial_infections_by_age <- matrix(0, nrow = 3, ncol = length(proj_years))
+  }
 
   pars$hc1_cd4_dist <- pars$child_dist_new_infections_cd4 / 100
 

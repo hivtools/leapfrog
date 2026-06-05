@@ -851,7 +851,7 @@ get_pars_metadata <- function(dim_vars, dp) {
         list(tag = "ChildMortalityRatesMultiplier MV")
       )
     ),
-    nosocomial_infections_by_age = list(
+    hc_nosocomial_infections_by_age = list(
       ##Note: not listed in spectrum files before 2020
       allow_null = TRUE,
       type = "real",
