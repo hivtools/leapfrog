@@ -534,7 +534,7 @@ struct GoalsSimulation<Config> {
 
     //toggle continue here:
 
-    //if(t>13)
+    if(t<65)
     return;
 
 
