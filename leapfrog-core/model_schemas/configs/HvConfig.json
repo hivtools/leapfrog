@@ -39,7 +39,7 @@
       "nPREPRG":9,
       "RN_DurationMonths": 4,
       "nCure" : 4,
-      "nMAX_BEHAV_INTVN" :18,
+      "nMAX_BEHAV_INTVN" :19,
       "nMAX_BEHAV_IMPACTS" : 23,
       "nART_NUM_PERC" : 4,
       "nRNPopSizes":35
@@ -200,7 +200,7 @@
 
     "rn_coverage": {
       "num_type": "real_type",
-      "dims": ["SS::nIntervn", "opts.proj_steps"]
+      "dims": ["SS::nIntervnRN", "opts.proj_steps"] 
     },
 
     "rn_poc_cov": {
