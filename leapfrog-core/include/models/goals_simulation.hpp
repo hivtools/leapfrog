@@ -342,13 +342,13 @@ struct GoalsSimulation<Config> {
 
 
   void run_goals_simulation() {
-    const auto& c_dp = state_curr.dp;
+    //const auto& c_dp = state_curr.dp;
 
-    auto& n_hv = state_next.hv;
+    //auto& n_hv = state_next.hv;
 
     //auto dbg_model = capture_model(state_next, intermediate, pars);
 
-    n_hv.total_population += t; //c_dp.p_totpop(20,S_MALE);
+    //n_hv.total_population += t; //c_dp.p_totpop(20,S_MALE);
 
   };
 
@@ -532,6 +532,17 @@ struct GoalsSimulation<Config> {
 
     n_hv.total_population = n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_MALE)+n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_FEMALE);
 
+    n_hv.total_plhiv = n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_MALE)+n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_FEMALE) -
+                       n_hv.adults(VAC_ALL,RG_ALL,CD4_NEG,S_MALE)-n_hv.adults(VAC_ALL,RG_ALL,CD4_NEG,S_FEMALE); 
+
+    double on_art  = 0.0;
+    for (int hd = CD4_GT500_ART; hd <= CD4_LT50_ART; ++hd){
+       on_art += n_hv.adults(VAC_ALL,RG_ALL,hd,S_ALL);
+    } 
+
+    n_hv.total_on_art = on_art;
+
+
     //toggle continue here:
 
     if(t<65)
@@ -579,7 +590,7 @@ struct GoalsSimulation<Config> {
 
 
     double art_cov = 0.0;
-    double on_art  = 0.0;
+    on_art  = 0.0;
     for (int hd = CD4_GT500_ART; hd <= CD4_LT50_ART; ++hd){
        on_art += n_hv.adults(VAC_ALL,RG_ALL,hd,S_ALL);
     }
@@ -655,6 +666,11 @@ struct GoalsSimulation<Config> {
   nda::fill(n_hv.incidence_goals, 0.0);
 
 
+  n_hv.total_population=0;
+  n_hv.total_plhiv=0;
+  n_hv.total_on_art=0;
+
+  
   //CDP: temp, using i_hv change back to p_hv
    nda::fill(p_hv.art_coverage_rg, 0.0);
 

@@ -630,6 +630,14 @@
       "dims": ["SS::nCD4+1","SS::nNS+1"]
     },
 
+    "total_on_art": {
+      "num_type": "real_type"
+    },
+
+    "total_plhiv": {
+      "num_type": "real_type"
+    },
+
 
      "mult_no_art": {
       "num_type": "real_type",
