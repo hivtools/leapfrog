@@ -406,7 +406,7 @@ struct GoalsSimulation<Config> {
     //at hiv first year, apply initial pulse, t starts at 0
     //int proj_start_year = opts.proj_start_year;
     if(t==(p_hv.epi_start_year-opts.proj_start_year+1)){ //CDP reinstate correct time for pulse
-       std::cout << "initial pulse at: t " << t  << " " << std::endl;
+       //std::cout << "initial pulse at: t " << t  << " " << std::endl;
        nda::fill(n_hv.new_infections_goals, 0.0);//incidence for DP, init at initial pulse
        set_initial_pulse();
     }
@@ -433,11 +433,6 @@ struct GoalsSimulation<Config> {
     //sum over the dimensions of adult pop
     sum_adult_pop_dims(t);
 
-    //set these rates to vars in goals
-    if((hiv_step ==0) && (t>p_hv.goals_base_year_idx)){
-     calc_new_vaccinations(t);
-    }
-
     //make inner-time loop copy of adult structure
     set_adults_hiv_loop();
 
@@ -446,6 +441,11 @@ struct GoalsSimulation<Config> {
 
     //set the rates to vars in goals, including progression, aging and mortality
     calc_goals_rates(t,hiv_step);
+
+    //set these rates to vars in goals
+    if((hiv_step ==0) && (t>p_hv.goals_base_year_idx)){
+     calc_new_vaccinations(t);
+    }
 
     //adjust distribution of new entrants into different risk groups
     if( t>=2 ){ //&& hiv_step=0
@@ -1119,7 +1119,7 @@ void calc_new_vaccinations(int t)
     } //s
 
 
-    std::cout << "total new vaccinations: " << i_hv.new_vaccinations_total << std::endl;
+    //std::cout << "total new vaccinations: " << i_hv.new_vaccinations_total << std::endl;
 
 
 }
