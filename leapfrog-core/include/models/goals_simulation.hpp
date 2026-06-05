@@ -536,7 +536,7 @@ struct GoalsSimulation<Config> {
     //toggle continue here:
     
     //if(t>13)
-    //  return;
+    return;
   
 
     double total_pop=n_hv.total_population;
