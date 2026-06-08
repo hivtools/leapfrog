@@ -38,7 +38,7 @@
       "nPREPIntervn":32,
       "nPREPRG":9,
       "RN_DurationMonths": 4,
-      "nCure" : 4,
+      "nCure" : 6,
       "nMAX_BEHAV_INTVN" :19,
       "nMAX_BEHAV_IMPACTS" : 23,
       "nART_NUM_PERC" : 4,
@@ -599,6 +599,7 @@
     "total_new_infections": {
       "num_type": "real_type"
     },
+
 
     "new_infections_dp": {
       "num_type": "real_type"
