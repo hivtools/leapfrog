@@ -260,8 +260,8 @@ end;
 type
   LeapfrogHivChildParamsView = record
   private
-    hcNosocomial: PDouble;
-    hcNosocomialLength: Integer;
+    hcNosocomialInfectionsByAge: PDouble;
+    hcNosocomialInfectionsByAgeLength: Integer;
     hc1Cd4Dist: PDouble;
     hc1Cd4DistLength: Integer;
     hc1Cd4Mort: PDouble;
@@ -341,7 +341,7 @@ end;
 type
   LeapfrogHivChildParams = class
   public
-    hcNosocomial: TGBFixedArray<Double>;
+    hcNosocomialInfectionsByAge: TGBFixedArray<Double>;
     hc1Cd4Dist: TGBFixedArray<Double>;
     hc1Cd4Mort: TGBFixedArray<Double>;
     hc2Cd4Mort: TGBFixedArray<Double>;
@@ -974,7 +974,7 @@ end;
 
 destructor LeapfrogHivChildParams.Destroy;
 begin;
-  hcNosocomial.Free;
+  hcNosocomialInfectionsByAge.Free;
   hc1Cd4Dist.Free;
   hc1Cd4Mort.Free;
   hc2Cd4Mort.Free;
@@ -1037,8 +1037,8 @@ end;
 
 function LeapfrogHivChildParams.getView(): LeapfrogHivChildParamsView;
 begin;
-  Result.hcNosocomial := PDouble(hcNosocomial.data);
-  Result.hcNosocomialLength := hcNosocomial.GetLength();
+  Result.hcNosocomialInfectionsByAge := PDouble(hcNosocomialInfectionsByAge.data);
+  Result.hcNosocomialInfectionsByAgeLength := hcNosocomialInfectionsByAge.GetLength();
   Result.hc1Cd4Dist := PDouble(hc1Cd4Dist.data);
   Result.hc1Cd4DistLength := hc1Cd4Dist.GetLength();
   Result.hc1Cd4Mort := PDouble(hc1Cd4Mort.data);
@@ -1472,7 +1472,7 @@ procedure LeapfrogHivChildParams.writeToDisk(dir: string);
 begin;
   if not DirectoryExists(dir) then
     ForceDirectories(dir);
-  hcNosocomial.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hcNosocomial');
+  hcNosocomialInfectionsByAge.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hcNosocomialInfectionsByAge');
   hc1Cd4Dist.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hc1Cd4Dist');
   hc1Cd4Mort.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hc1Cd4Mort');
   hc2Cd4Mort.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hc2Cd4Mort');
