@@ -16,7 +16,7 @@ into a proper pytest test at some point.
 
 
 modvars, param, epp, shiny90 = GB_ImportProjectionFromFile(
-    os.path.join("tests", "resources", "SouthAfrica_withHIV_no_intvn_art.PJNZ") 
+    os.path.join("tests", "resources", "SouthAfrica_withHIV_no_intvn_m0_art.PJNZ") 
 )
 
 print("Finished reading import")
@@ -54,20 +54,21 @@ output = run_goals(
     output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
 )
 
-output["incidence_goals"][2, :]
-
-#print(output['total_population'])
-
-#print(output['total_deaths'])
-
-#print(output['total_deaths_hiv'])
-
-#print(output['incidence_dp'])
 
 
-#print(output['total_new_infections'])
+#output["incidence_goals"][2, :]
 
-#print(output['new_infections_dp'])
+print(output['total_on_art'])
+
+
+print(f"lfg total population, t end: {output["total_population"][-1]:.1f}")
+print(f"lfg total plhiv population, t end: {output["total_plhiv"][-1]:.1f}")
+print(f"lfg total deaths, t end: {output["total_deaths"][-1]:.1f}")
+print(f"lfg total deaths hiv, t end: {output["total_deaths_hiv"][-1]:.1f}")
+print(f"lfg total new infections, t end: {output["total_new_infections"][-1]:.1f}")
+print(f"lfg total on art, t end: {output["total_on_art"][-1]:.1f}")
+print(f"lfg total prevalence (%), t end: {100*output["prevalence"][-1][-1][-1]:.1f}")
+print(f"lfg total incidence (%), t end: {100*output["incidence_goals"][-1][-1]:.1f}")
 
 
 

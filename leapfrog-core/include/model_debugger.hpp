@@ -131,6 +131,7 @@ template <class HaState, class AnyIntermediate, class HaPars>
     ha.hiv_births;
     p_ha.input_adult_incidence_rate;
     p_ha.local_adj_factor;
+    p_ha.cd4_mortality;
 
   }
 inline HaDebugInfo capture_ha(const HaState& ha, const AnyIntermediate& i_any,
@@ -765,6 +766,7 @@ template <class HaState, class AnyIntermediate, class HaPars>
     ha.hiv_births;
     p_ha.input_adult_incidence_rate;
     p_ha.local_adj_factor;
+    p_ha.cd4_mortality;
   }
 inline HaDebugInfo capture_ha(const HaState& ha, const AnyIntermediate& i_any,
     const HaPars& p_ha) {
@@ -811,6 +813,7 @@ inline HaDebugInfo capture_ha(const HaState& ha, const AnyIntermediate& i_any,
   out.fert_mult_off_art = nda_capture(p_ha.fert_mult_off_art);
   out.fert_mult_on_art = nda_capture(p_ha.fert_mult_on_art);
   out.local_adj_factor = static_cast<double>(p_ha.local_adj_factor);
+  
 
   return out;
 }
