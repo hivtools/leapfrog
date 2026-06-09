@@ -45,7 +45,8 @@ process_pjnz_dp <- function(dat, pars, dim_vars) {
   netmigr[1:5, 1, ] <- u5prop[, 1, drop = FALSE] %*% netmigr_5year[1, 1, ]
   netmigr[1:5, 2, ] <- u5prop[, 2, drop = FALSE] %*% netmigr_5year[1, 2, ]
 
-  pars$projection_period <- if (pars$version_num > "6.2") "calendar" else "midyear"
+  ## valid_vers records the version number that PJNZ was saved with
+  pars$projection_period <- if (pars$valid_vers > "6.2") "calendar" else "midyear"
 
   if (pars$projection_period == "midyear") {
     netmigr_adj <- netmigr
