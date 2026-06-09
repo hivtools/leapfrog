@@ -400,6 +400,18 @@ struct GoalsSimulation<Config> {
             n_hv.cured_pop(rg, s)=c_hv.cured_pop(rg, s);
         }
 
+
+      //next state variables are cleared, make copy from current
+      for (int s = S_MALE; s <= S_FEMALE; ++s){
+        n_hv.new_inf_scale_factor(s)=c_hv.new_inf_scale_factor(s);
+      }
+
+
+      //next state variables are cleared, make copy from current
+      for (int s = S_MALE; s <= S_FEMALE; ++s){
+        n_hv.new_inf_scale_factor(s)=c_hv.new_inf_scale_factor(s);
+      }
+
     }
 
     //set these rates to vars in goals
@@ -454,11 +466,14 @@ struct GoalsSimulation<Config> {
     //if(t>=(p_hv.epi_start_year-opts.proj_start_year)){
     if(has_plhiv==true){
       //calc prevalence used for new infections calc
-      //calc_prevalence(t,hiv_step);
+      calc_prevalence(t,hiv_step);
       //std::cout << "calc multiplier at: t " << t  << " " << std::endl;
       //calc_r_multiplier(t);
       //std::cout << "calc new inf at: t " << t  << " " << std::endl;
       //calc_new_infections(t,hiv_step);
+
+      //calc_rescale_infections(t);
+
     }
 
     //progress, hiv-neg, not at risk (RG_NONE)
@@ -478,7 +493,7 @@ struct GoalsSimulation<Config> {
     }
 
 
-    bool has_new_inf=true;
+    bool has_new_inf=false;
     if(n_hv.new_inf_vrs(VAC_UNV,RG_LRH,S_MALE)>0.0){
       has_new_inf=true;
     }
@@ -565,7 +580,7 @@ struct GoalsSimulation<Config> {
 
     //toggle continue here:
 
-    if(t<65)
+    //if(t<65)
     return;
 
 
@@ -2399,6 +2414,40 @@ double new_inf=0.0;
 
 double circum=p_hv.rn_coverage(RN_MC15_49,t);
 
+real_type hiv_neg_pops[nRG][nNS]={};
+
+
+if(true){
+hiv_neg_pops[RG_LRH][S_MALE]=n_hv.adults(VAC_ALL,RG_LRH,CD4_NEG,S_MALE);
+hiv_neg_pops[RG_MRH][S_MALE]=n_hv.adults(VAC_ALL,RG_MRH,CD4_NEG,S_MALE);
+hiv_neg_pops[RG_HRH][S_MALE]=n_hv.adults(VAC_ALL,RG_HRH,CD4_NEG,S_MALE);
+hiv_neg_pops[RG_IDU][S_MALE]=n_hv.adults(VAC_ALL,RG_IDU,CD4_NEG,S_MALE);
+hiv_neg_pops[RG_MSM][S_MALE]=n_hv.adults(VAC_ALL,RG_MSM,CD4_NEG,S_MALE);
+
+hiv_neg_pops[RG_LRH][S_FEMALE]=n_hv.adults(VAC_ALL,RG_LRH,CD4_NEG,S_FEMALE);
+hiv_neg_pops[RG_MRH][S_FEMALE]=n_hv.adults(VAC_ALL,RG_MRH,CD4_NEG,S_FEMALE);
+hiv_neg_pops[RG_HRH][S_FEMALE]=n_hv.adults(VAC_ALL,RG_HRH,CD4_NEG,S_FEMALE);
+hiv_neg_pops[RG_IDU][S_FEMALE]=n_hv.adults(VAC_ALL,RG_IDU,CD4_NEG,S_FEMALE);
+hiv_neg_pops[RG_MSM][S_FEMALE]=n_hv.adults(VAC_ALL,RG_MSM,CD4_NEG,S_FEMALE);
+}
+else
+{
+
+hiv_neg_pops[RG_LRH][S_MALE]=2919569;
+hiv_neg_pops[RG_MRH][S_MALE]=3471960;
+hiv_neg_pops[RG_HRH][S_MALE]=221942;
+hiv_neg_pops[RG_IDU][S_MALE]=18326;
+hiv_neg_pops[RG_MSM][S_MALE]=59061;
+
+hiv_neg_pops[RG_LRH][S_FEMALE]=3010906;
+hiv_neg_pops[RG_MRH][S_FEMALE]=3478643;
+hiv_neg_pops[RG_HRH][S_FEMALE]=91479;
+hiv_neg_pops[RG_IDU][S_FEMALE]=2046;
+hiv_neg_pops[RG_MSM][S_FEMALE]=0;
+
+}
+
+double hiv_neg_pop=0;
 for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
 {
 
@@ -2490,6 +2539,35 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
        if(v==VAC_PARTIAL){
         vacc_effect = 1.0;
        }
+
+
+      // std::cout << "new inf men " << std::endl;
+
+      // std::cout << "initial pulse at: t " << t  << " " << std::endl;
+      // std::cout << "PrevF: " << PrevF  << " " << std::endl;
+      // std::cout << "epi_transm_hiv_F: " << p_hv.epi_transm_hiv_F  << " " << std::endl;
+      // std::cout << "rMultF: " << rMultF  << " " << std::endl;
+      // std::cout << "circum: " << circum  << " " << std::endl;
+      // std::cout << "epi_redwhen_circum: " << p_hv.epi_redwhen_circum(HV_SUCC)  << " " << std::endl;
+      // std::cout << "i_condom_prop: " << i_hv.i_condom_prop(RG_LRH)  << " " << std::endl;
+      // std::cout << "epi_condom_effect: " << p_hv.epi_condom_effect << " " << std::endl;
+      // std::cout << "b_sex_acts: " << p_hv.b_sex_acts(RG_LRH,t)  << " " << std::endl;
+      // std::cout << "SexActsRatioM: " << SexActsRatioM  << " " << std::endl;
+      // std::cout << "i_num_partners: " <<i_hv.i_num_partners(RG_LRH) << " " << std::endl;
+      // std::cout << "pop size " << n_hv.adults(v,rg,CD4_NEG,S_MALE) << " " << std::endl;
+      // std::cout << "prep_cov: " <<p_hv.prep_cov(S_MALE,rg,t)<< " " << std::endl;
+      // std::cout << "prep_effect: " <<i_hv.prep_effect(rg,s) << " " << std::endl;
+      // std::cout << "cured_prop: " <<n_hv.cured_prop(rg,S_MALE) << " " << std::endl;
+
+      // double val1=p_hv.epi_transm_hiv_F * (1-vacc_effect) * rMultF;
+      // double val2=((1 - circum) + (1 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum);
+      // double val3=(1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(rg,t));
+      // double val4=(1 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect);
+      // double val5=(1 - p_hv.prep_cov(S_MALE,rg,t) * i_hv.prep_effect(rg,t));
+      // double val6=(1 - n_hv.cured_prop(rg,S_MALE));
+      // double val7=p_hv.b_sex_acts(rg,t) * SexActsRatioM;
+
+       //PrevF=0.000222546;
        foi  =    1     - std::pow(
                      PrevF * std::pow(
                            (1 - p_hv.epi_transm_hiv_F * (1-vacc_effect) * rMultF *
@@ -2502,7 +2580,9 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
                            p_hv.b_sex_acts(rg,t) * SexActsRatioM) + (1 - PrevF),
                            i_hv.i_num_partners(rg));
 
-      n_hv.new_inf_vrs(v,rg,S_MALE)=std::max(0.0,foi*n_hv.adults(v,rg,CD4_NEG,S_MALE));
+      //hiv_neg_pop=hiv_neg_pops[rg][S_MALE];
+      hiv_neg_pop=n_hv.adults(v,rg,CD4_NEG,S_MALE) ;
+      n_hv.new_inf_vrs(v,rg,S_MALE)=std::max(0.0,foi*hiv_neg_pop);
 
        new_inf=n_hv.new_inf_vrs(v,rg,S_MALE);
        total_inf_m+= new_inf;
@@ -2527,6 +2607,7 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
         vacc_effect = 1.0;
       }
 
+      //rMultM=0.00022149;
       foi  =    1     - std::pow(
                        PrevM * std::pow(
                           (1 - p_hv.epi_transm_hiv_F * (1-vacc_effect) * p_hv.epi_transm_mult_M * rMultM * //CDP check per act prob
@@ -2539,7 +2620,10 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
                           p_hv.b_sex_acts(rg,t) * SexActsRatioF) + (1 - PrevM),
                           i_hv.i_num_partners(rg));
 
-      n_hv.new_inf_vrs(v,rg,S_FEMALE)=std::max(0.0,foi*n_hv.adults(v,rg,CD4_NEG,S_FEMALE));
+
+      //hiv_neg_pop=hiv_neg_pops[rg][S_FEMALE];
+      hiv_neg_pop=n_hv.adults(v,rg,CD4_NEG,S_MALE) ;
+      n_hv.new_inf_vrs(v,rg,S_FEMALE)=std::max(0.0,foi*hiv_neg_pop);
 
       new_inf=n_hv.new_inf_vrs(v,rg,S_FEMALE);
       total_inf_f+= new_inf;
@@ -2579,6 +2663,7 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
             vacc_effect = 1.0;
           }
 
+          //PrevM=0.0006979;
           foi  =    1     - std::pow(
                         PrevM * std::pow(
                               (1 - p_hv.epi_transm_hiv_F * (1-vacc_effect) * rMultM *
@@ -2592,7 +2677,9 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
                               p_hv.b_sex_acts(rg,t) * SexActsRatioM) + (1 - PrevM),
                               i_hv.i_num_partners(rg));
 
-          n_hv.new_inf_vrs(v,rg,S_MALE)=std::max(0.0,foi*n_hv.adults(v,rg,CD4_NEG,S_MALE));
+          //hiv_neg_pop=hiv_neg_pops[rg][S_MALE];
+          hiv_neg_pop=n_hv.adults(v,rg,CD4_NEG,S_MALE);
+          n_hv.new_inf_vrs(v,rg,S_MALE)=std::max(0.0,foi*hiv_neg_pop);
 
           new_inf= n_hv.new_inf_vrs(v,rg,S_MALE);
           total_inf_m+= new_inf;
@@ -2735,6 +2822,76 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
 
   //std::cout << "new inf women " << std::endl;
   //nda_print_info(dbg_model.hv.new_inf_vrs,VAC_UNV,VAC_UNV,1,5,1,1);
+
+}
+
+
+
+void calc_rescale_infections(int t)
+{
+
+  const auto& p_hv = pars.hv;
+  auto& n_hv = state_next.hv;
+
+  double new_inf_goals=0;
+  double new_inf_lf=0;
+  double scale_factor=1;
+
+  for (int s = S_MALE; s <= S_FEMALE; ++s){
+
+
+    new_inf_goals=0;
+    new_inf_lf=0;
+
+    //get total new inf by sex
+    for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
+    {
+        for (int rg = RG_LRH; rg <= RG_MSMIDU; ++rg)
+        {
+
+                if (!((s == S_FEMALE) && (rg >= RG_MSM)))
+                {
+                    //New inf from goals used as inputs
+                    new_inf_goals += p_hv.out_new_inf(s,rg,v,t);
+
+                    //New inf from goals used as inputs
+                    new_inf_lf +=n_hv.new_inf_vrs(v,rg,s);
+
+                }
+
+        }//rg
+
+    }//v
+
+    scale_factor=1;
+    if(t<p_hv.goals_base_year_idx){
+        scale_factor=(new_inf_lf>0) ? (new_inf_goals/new_inf_lf) : 1;
+        n_hv.new_inf_scale_factor(s)=scale_factor;
+    }
+    else{
+        scale_factor=n_hv.new_inf_scale_factor(s);
+    }
+
+    //rescale
+    for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
+    {
+        for (int rg = RG_LRH; rg <= RG_MSMIDU; ++rg)
+        {
+
+                if (!((s == S_FEMALE) && (rg >= RG_MSM)))
+                {
+                    //rescale lf new inf to match goals at level of sex
+                    n_hv.new_inf_vrs(v,rg,s) = scale_factor * n_hv.new_inf_vrs(v,rg,s);
+
+                }
+
+        }//rg
+
+    }//v
+
+
+
+  }//s
 
 }
 
