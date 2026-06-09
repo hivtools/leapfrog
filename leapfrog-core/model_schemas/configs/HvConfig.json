@@ -669,6 +669,11 @@
     "resources_required": {
       "num_type": "real_type",
       "dims": ["SS::nIntervnRN"]
+    },
+
+    "new_inf_scale_factor" :{
+      "num_type": "real_type",
+       "dims": ["SS::nNS+1"]
     }
 
   }

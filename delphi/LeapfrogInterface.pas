@@ -687,6 +687,8 @@ type
     numPeopleReachedLength: Integer;
     resourcesRequired: PDouble;
     resourcesRequiredLength: Integer;
+    newInfScaleFactor: PDouble;
+    newInfScaleFactorLength: Integer;
 end;
 
 type
@@ -719,6 +721,7 @@ type
     newInfS: TGBFixedArray<Double>;
     numPeopleReached: TGBFixedArray<Double>;
     resourcesRequired: TGBFixedArray<Double>;
+    newInfScaleFactor: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsStateView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -1236,6 +1239,7 @@ begin;
   newInfS.Free;
   numPeopleReached.Free;
   resourcesRequired.Free;
+  newInfScaleFactor.Free;
   inherited;
 end;
 
@@ -1391,6 +1395,8 @@ begin;
   Result.numPeopleReachedLength := numPeopleReached.GetLength();
   Result.resourcesRequired := PDouble(resourcesRequired.data);
   Result.resourcesRequiredLength := resourcesRequired.GetLength();
+  Result.newInfScaleFactor := PDouble(newInfScaleFactor.data);
+  Result.newInfScaleFactorLength := newInfScaleFactor.GetLength();
 end;
 
 procedure LeapfrogDemProjParams.writeToDisk(dir: string);
@@ -1601,6 +1607,7 @@ begin;
   newInfS.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newInfS');
   numPeopleReached.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'numPeopleReached');
   resourcesRequired.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'resourcesRequired');
+  newInfScaleFactor.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newInfScaleFactor');
 end;
 
 procedure LeapfrogParams.SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);
