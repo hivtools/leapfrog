@@ -258,11 +258,13 @@ test_that("Nosocomial infections map to the correct child age bands", {
 
   ## Infections are divided evenly across the 5 single-year ages in each band
   ## (the C++ divides by 5.0 * NS, so every age/sex cell gets the same value).
+  ## Year index 1 is the initial state (1970, pre-simulation); index 2 is the
+  ## first computed year (1971) where nosocomial infections are first applied.
   noso_per_age_sex <- 100 / (5 * 2)
-  expect_equal(out2$p_infections[6:10, , 1],
+  expect_equal(out2$p_infections[6:10, , 2],
                matrix(noso_per_age_sex, nrow = 5, ncol = 2),
                tolerance = 1e-10, ignore_attr = TRUE)
-  expect_equal(out3$p_infections[11:15, , 1],
+  expect_equal(out3$p_infections[11:15, , 2],
                matrix(noso_per_age_sex, nrow = 5, ncol = 2),
                tolerance = 1e-10, ignore_attr = TRUE)
 })
