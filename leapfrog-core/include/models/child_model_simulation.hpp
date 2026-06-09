@@ -656,25 +656,17 @@ struct ChildModelSimulation<Config> {
     auto& n_ha = state_next.ha;
     auto& n_hc = state_next.hc;
 
-    // Ages 0-4 (hc1, age group index 0)
     for (int s = 0; s < NS; ++s) {
-      for (int a = 0; a < hc2_agestart; ++a) {
-        if (p_hc.hc_nosocomial_infections_by_age(0, t) > 0) {
-          auto infections = p_hc.hc_nosocomial_infections_by_age(0, t) / (5.0 * NS);
-          n_ha.p_infections(a, s) += infections;
-          n_hc.hc1_hivpop(0, 0, a, s) += infections;
-        }
-      }
-    }
-
-    // Ages 5-9 (ag=1) and 10-14 (ag=2)
-    for (int s = 0; s < NS; ++s) {
-      for (int a = hc2_agestart; a < hcAG_end; ++a) {
-        int ag = (a - hc2_agestart) / 5 + 1;
+      for (int a = 0; a < hcAG_end; ++a) {
+        const int ag = hc_age_coarse[a] - 1;
         if (p_hc.hc_nosocomial_infections_by_age(ag, t) > 0) {
           auto infections = p_hc.hc_nosocomial_infections_by_age(ag, t) / (5.0 * NS);
           n_ha.p_infections(a, s) += infections;
-          n_hc.hc2_hivpop(0, 0, a - hc2_agestart, s) += infections;
+          if (a < hc2_agestart) {
+            n_hc.hc1_hivpop(0, 0, a, s) += infections;
+          } else {
+            n_hc.hc2_hivpop(0, 0, a - hc2_agestart, s) += infections;
+          }
         }
       }
     }

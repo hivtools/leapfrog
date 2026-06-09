@@ -227,27 +227,44 @@ test_that("Model outputs are consistent for midyear projections", {
   expect_true(all(abs(c2$diff) < 1e-5))
 })
 
-test_that("Nosocomial infections are applied across all three child age groups", {
+test_that("Nosocomial infections map to the correct child age bands", {
   parameters <- read_parameters(test_path("testdata/child_parms_full.h5"))
+  parameters$hc_nosocomial_infections_by_age[] <- 0
 
-  ## Baseline: zero out all nosocomial infections
-  parameters_none <- parameters
-  parameters_none$hc_nosocomial_infections_by_age[] <- 0
-  out_none <- run_model(parameters_none, "ChildModel", 1970:2030)
+  ## VT/BF only contribute to p_infections at ages 0-2, so ages 3-14 (R indices
+  ## 4:15) are zero in the baseline and only receive nosocomial infections.
+  ## This lets us use exact equality to verify the hc_age_coarse[a]-1 routing.
 
-  ## Apply nosocomial infections only to age groups 5-9 and 10-14 (rows 2 and 3).
-  ## Regression test: previously only age group 0-4 received infections.
-  parameters_older <- parameters
-  parameters_older$hc_nosocomial_infections_by_age[] <- 0
-  parameters_older$hc_nosocomial_infections_by_age[2, ] <- 100
-  parameters_older$hc_nosocomial_infections_by_age[3, ] <- 100
-  out_older <- run_model(parameters_older, "ChildModel", 1970:2030)
+  pars1 <- parameters; pars1$hc_nosocomial_infections_by_age[1, ] <- 100
+  pars2 <- parameters; pars2$hc_nosocomial_infections_by_age[2, ] <- 100
+  pars3 <- parameters; pars3$hc_nosocomial_infections_by_age[3, ] <- 100
 
-  ## Ages 5-14 should gain infections; ages 0-4 should be unaffected
-  expect_true(
-    sum(out_older$p_infections[6:15, , ]) > sum(out_none$p_infections[6:15, , ])
-  )
-  expect_equal(out_older$p_infections[1:5, , ], out_none$p_infections[1:5, , ])
+  out1 <- run_model(pars1, "ChildModel", 1970:2030)
+  out2 <- run_model(pars2, "ChildModel", 1970:2030)
+  out3 <- run_model(pars3, "ChildModel", 1970:2030)
+
+  ## Row 1 → ages 0-4 only; ages 5-14 stay at their baseline (zero)
+  expect_true(sum(out1$p_infections[4:5, , ]) > 0)    # ages 3-4 receive infections
+  expect_true(all(out1$p_infections[6:15, , ] == 0))  # ages 5-14 untouched
+
+  ## Row 2 → ages 5-9 only; ages 3-4 and 10-14 stay at zero
+  expect_true(all(out2$p_infections[4:5, , ]  == 0))  # ages 3-4 untouched
+  expect_true(sum(out2$p_infections[6:10, , ]) > 0)   # ages 5-9 receive infections
+  expect_true(all(out2$p_infections[11:15, , ] == 0)) # ages 10-14 untouched
+
+  ## Row 3 → ages 10-14 only; ages 5-9 stay at zero
+  expect_true(all(out3$p_infections[6:10, , ]  == 0)) # ages 5-9 untouched
+  expect_true(sum(out3$p_infections[11:15, , ]) > 0)  # ages 10-14 receive infections
+
+  ## Infections are divided evenly across the 5 single-year ages in each band
+  ## (the C++ divides by 5.0 * NS, so every age/sex cell gets the same value).
+  noso_per_age_sex <- 100 / (5 * 2)
+  expect_equal(out2$p_infections[6:10, , 1],
+               matrix(noso_per_age_sex, nrow = 5, ncol = 2),
+               tolerance = 1e-10, ignore_attr = TRUE)
+  expect_equal(out3$p_infections[11:15, , 1],
+               matrix(noso_per_age_sex, nrow = 5, ncol = 2),
+               tolerance = 1e-10, ignore_attr = TRUE)
 })
 
 test_that("Female 15-49y pop aligns", {
