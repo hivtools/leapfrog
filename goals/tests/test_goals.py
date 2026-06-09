@@ -1,4 +1,5 @@
 from deepdiff import DeepDiff
+import numpy as np
 
 from leapfrog_goals import (
     get_goals_ss,
@@ -21,6 +22,9 @@ def test_goals_model(test_data):
     modvars = modvars_to_numpy(modvars)
     ss = get_goals_ss()
     lf_data = modvars_to_leapfrog(modvars, ss, "Goals")
+    n_years = modvars[PJN_FinalYearTag] - modvars[PJN_FirstYearTag] + 1
+    if "hc_nosocomial_infections_by_age" not in lf_data:
+        lf_data["hc_nosocomial_infections_by_age"] = np.zeros((3, n_years))
 
     ret = run_goals(
         lf_data,
