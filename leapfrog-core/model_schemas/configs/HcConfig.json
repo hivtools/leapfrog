@@ -50,7 +50,7 @@
   "pars": {
       "hc_nosocomial_infections_by_age": {
         "num_type": "real_type",
-        "dims": ["ss:hcAG_c", "opts.proj_steps"]
+        "dims": ["SS::hcAG_c", "opts.proj_steps"]
       },
       "hc1_cd4_dist": {
         "num_type": "real_type",
