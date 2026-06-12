@@ -35,7 +35,7 @@
       "nIntervn":43,
       "nIntervnRN":53,
       "nPREP":9,
-      "nPREPIntervn":32,
+      "nPREPIntervn":9,
       "nPREPRG":9,
       "RN_DurationMonths": 4,
       "nCure" : 6,
@@ -170,7 +170,7 @@
 
      "prep_method_mix": {
       "num_type": "real_type",
-      "dims": ["SS::nNS","SS::nPREPRG","SS::nPREPIntervn","opts.proj_steps"]
+      "dims": ["SS::nNS","SS::nPREPRG","SS::nPREP+1","opts.proj_steps"]
     },
 
    "prep_effectiveness": {
