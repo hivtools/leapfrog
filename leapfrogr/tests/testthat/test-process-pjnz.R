@@ -69,8 +69,7 @@ test_that("process_pjnz extract_child_params adds child-specific parameters", {
   pars_adult <- process_pjnz(bwa_pmtct_pjnz)
   pars_child <- process_pjnz(bwa_pmtct_pjnz, extract_child_params = TRUE)
 
-  child_pars <- c("hc_nosocomial", "hc1_cd4_dist", "hc1_cd4_mort",
-                  "hc2_cd4_mort", "hc1_cd4_prog", "hc2_cd4_prog",
+  child_pars <- c("hc_nosocomial_infections_by_age", "hc1_cd4_dist", "hc1_cd4_mort",                  "hc2_cd4_mort", "hc1_cd4_prog", "hc2_cd4_prog",
                   "ctx_val", "PMTCT", "vertical_transmission_rate")
   expect_true(all(child_pars %in% names(pars_child)))
   expect_false(any(child_pars %in% names(pars_adult)))
