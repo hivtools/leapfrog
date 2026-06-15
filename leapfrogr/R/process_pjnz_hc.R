@@ -455,7 +455,7 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
   hc_art_mort_rr <- prepare_hc_art_mort_rr(dat, pars, dim_vars, proj_years, year_idx)
 
   list(
-    hc_nosocomial = hc_nosocomial,
+    hc_nosocomial_infections_by_age = hc_nosocomial_infections_by_age,
     hc1_cd4_dist = hc1_cd4_dist,
     hc1_cd4_mort = hc1_cd4_mort,
     hc2_cd4_mort = hc2_cd4_mort,
