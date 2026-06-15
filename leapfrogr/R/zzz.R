@@ -8,6 +8,8 @@
 ## output. So declare a list of global variables to avoid this.
 utils::globalVariables(c("Value", "Sex", "Age", "Year"))
 
+## Stop PJNZ package from raising "inform" notes about
+## missing tags in PJNZ files
 options("pjnz.inform" = FALSE)
 
 #' Pipe operator
