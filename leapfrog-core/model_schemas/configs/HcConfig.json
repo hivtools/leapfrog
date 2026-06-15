@@ -13,6 +13,7 @@
       "hc1AG_c": 2,
       "hc2AG": 10,
       "hc2AG_c": 1,
+      "hcAG_c": 3,
       "hc_infant": 2,
       "hcTT": 4,
       "hcTT_expanded": 5,
@@ -47,9 +48,9 @@
     }
   },
   "pars": {
-      "hc_nosocomial": {
+      "hc_nosocomial_infections_by_age": {
         "num_type": "real_type",
-        "dims": ["opts.proj_steps"]
+        "dims": ["SS::hcAG_c", "opts.proj_steps"]
       },
       "hc1_cd4_dist": {
         "num_type": "real_type",
