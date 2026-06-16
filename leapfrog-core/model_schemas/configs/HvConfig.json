@@ -248,7 +248,7 @@
 
     "rn_unit_costs": {
       "num_type": "real_type",
-      "dims": ["SS::nIntervn", "opts.proj_steps"]
+      "dims": ["SS::nIntervnRN", "opts.proj_steps"]
     },
 
     "rn_pop_sizes": {
