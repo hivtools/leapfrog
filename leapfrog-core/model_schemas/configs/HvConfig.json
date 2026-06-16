@@ -43,7 +43,7 @@
       "nMAX_BEHAV_IMPACTS" : 23,
       "nART_NUM_PERC" : 4,
       "nRNPopSizes":35,
-      "nRG_VNM":5
+      "nRG_VMM":5
 
     }
   },
@@ -199,21 +199,21 @@
       "num_type": "int"
     },
 
-    "rn_vnm_effect": {
+    "rn_vmm_effect": {
       "num_type": "real_type"
     },
 
-    "rn_vnm_coverage_rg": {
+    "rn_vmm_coverage_rg": {
       "num_type": "real_type",
-      "dims": ["SS::nRG_VNM","opts.proj_steps"]
+      "dims": ["SS::nRG_VMM","opts.proj_steps"]
     },
 
-    "rn_vnm_coverage_all": {
+    "rn_vmm_coverage_all": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
     },
 
-    "rn_vmn_coverage_type": {
+    "rn_vmm_coverage_type": {
       "num_type": "int"
     },
 
@@ -550,7 +550,6 @@
       "dims": ["SS::nMAX_BEHAV_IMPACTS"]
     }
 
-    
 
   },
 
