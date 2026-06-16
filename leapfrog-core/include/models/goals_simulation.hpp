@@ -200,7 +200,6 @@ struct GoalsSimulation<Config> {
       PREP_SUB = 2,
       PREP_DUR  = 3,
 
-
       //Intervention mapping
       RN_COM_MOB          = 1,
       RN_MASS_MEDIA       = 2,
@@ -248,9 +247,9 @@ struct GoalsSimulation<Config> {
       RN_UNIV_PREC        = 38,
       //Vaccines
       RN_VACCINES         = 39,
-      RN_CURE_NEO         = 40,
-      RN_VMM              = 41 ,
-      RN_CURE             = 42,
+      RN_CURE_Adults      = 40,
+      RN_CURE_NEO         = 41,
+      RN_VMM              = 42,
       RN_AHD_TX           = 43,
       RN_POC_CD4_INT      = 44,
       RN_POC_VL_INT       = 45,
@@ -258,6 +257,7 @@ struct GoalsSimulation<Config> {
       RN_HIV_TEST_ANC      = 46,
       RN_HIV_WOMAN_COUNS   = 47,
       RN_EXPOSED_INFANT_Dx = 48,
+      //ART
       RN_ADULT_ON_ART      = 49,
       RN_CHILD_ON_ART      = 50,
 
@@ -895,8 +895,8 @@ struct GoalsSimulation<Config> {
     */
 
   auto dbg_model = capture_model(state_next, intermediate, pars);
-  nda_print_info(dbg_model.hv.rn_unit_costs,-1,-1,54,56);
-  nda_print_info(dbg_model.hv.rn_unit_costs,4,7,54,56);
+  nda_print_info(dbg_model.hv.rn_unit_costs,-1,-1,55,55);
+
 
 
   //nda_print_info(dbg_model.hv.epi_start_year);
@@ -4105,10 +4105,9 @@ void calc_resource_needs()
                                         RN_PrEP_Inject2Mo,RN_PrEP_Inject6Mo,RN_PrEP_Ring,
                                         RN_PrEP_bNABs,RN_PrEP_Implant,RN_PrEP_PEP,
                                         RN_HIV_TEST_ANC,RN_HIV_WOMAN_COUNS,RN_EXPOSED_INFANT_Dx,
-                                        RN_ADULT_ON_ART,RN_CHILD_ON_ART,
-                                        RN_CURE,RN_AHD_TX,RN_POC_CD4_INT,
-                                        RN_POC_VL_INT,RN_VACCINES};
-
+                                        RN_ADULT_ON_ART,RN_CHILD_ON_ART,RN_VACCINES,
+                                        RN_CURE_Adults,RN_CURE_NEO,RN_AHD_TX,RN_POC_CD4_INT,
+                                        RN_POC_VL_INT,RN_VMM};
 
    double value=0.0;
    double pop_reached=0.0;
@@ -4353,7 +4352,7 @@ void calc_resource_needs()
               break;
             }
 
-            case RN_CURE://HIV cure
+            case RN_CURE_Adults://HIV cure
             {
               if(p_hv.rn_cure_coverage_type==CURE_COV_ALLRISK){
                 pop_reached = (i_hv.total_pop_hivpos+i_hv.total_art_adults+i_hv.total_art_children) *
@@ -4383,7 +4382,7 @@ void calc_resource_needs()
         } // switch i
 
 
-    n_hv.num_people_reached(i)=pop_reached;
+    n_hv.num_people_reached(i)=i;//pop_reached;
     pop_reached=1.0;
     n_hv.resources_required(i)=pop_reached * p_hv.rn_unit_costs(i,t);
     total_direct_costs+=n_hv.resources_required(i);
