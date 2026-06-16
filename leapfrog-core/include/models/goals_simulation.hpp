@@ -370,7 +370,6 @@ struct GoalsSimulation<Config> {
     //initialize annual variables
     init_vars_pre_hiv_loop(t);
 
-
     //check goals inputs
     //print_goals_inputs();
 
