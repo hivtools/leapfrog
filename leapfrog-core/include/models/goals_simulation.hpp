@@ -168,6 +168,9 @@ struct GoalsSimulation<Config> {
       CURE_COV_ALLRISK       = 0,
       CURE_COV_SINGLE        = 1,
 
+      VMM_COV_ALLRISK       = 0,
+      VMM_COV_SINGLE        = 1,
+
       ART_NUM_PERCENT       =0,
       ART_CD4_PERCENT       =1,
       ART_CD4_NUMBER        =2,
@@ -2568,6 +2571,7 @@ double total_inf_f=0.0;
 double new_inf=0.0;
 
 double circum=p_hv.rn_coverage(RN_MC15_49,t);
+double vmm_coverage=0.0;
 
 real_type hiv_neg_pops[nRG][nNS]={};
 
@@ -2753,6 +2757,12 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
     for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v)
     {
 
+      vmm_coverage = p_hv.rn_vmm_coverage_all(t);
+      if (p_hv.rn_vmm_coverage_type != VMM_COV_ALLRISK)
+      {
+        vmm_coverage = p_hv.rn_vmm_coverage_rg(rg, t);
+      }
+      
       double vacc_effect = 0.0;
 
       //no new infections in take category
@@ -2773,6 +2783,7 @@ for (int rg = RG_LRH; rg <= RG_HRH; ++rg)
                               (1 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(rg+RG_NONE_F3 ,t)) * //check index
                               (1 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)   *   //
                               (1 - p_hv.prep_cov(S_FEMALE,rg,t) * i_hv.prep_effect(rg,s))  *
+                              (1 - vmm_coverage * p_hv.rn_vmm_effect) *
                               (1 - n_hv.cured_prop(rg,S_FEMALE))
                           ),
                           p_hv.b_sex_acts(rg,t) * SexActsRatioF) + (1 - PrevM),
