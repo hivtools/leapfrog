@@ -118,6 +118,8 @@ template <class HvState, class IntermediateHv, class ParsHv>
     p_hv.rn_coverage;
     p_hv.hv_impact_matrix;
 
+    p_hv.rn_unit_costs;
+
 
 
   }
@@ -365,6 +367,7 @@ struct HvDebugInfo {
   NdaInfo rn_coverage; 
   NdaInfo hv_impact_matrix; 
   NdaInfo adj_coverage_prod;
+  NdaInfo rn_unit_costs;
 
 
 };
@@ -626,6 +629,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
     p_hv.b_foi_idu;
     p_hv.rn_coverage;
     p_hv.hv_impact_matrix;
+    p_hv.rn_unit_costs;
   
 
   }
@@ -678,10 +682,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.adj_coverage = nda_capture(i_hv.adj_coverage);
   out.hv_impact_matrix = nda_capture(p_hv.hv_impact_matrix);
   out.adj_coverage_prod = nda_capture(i_hv.adj_coverage_prod);
-
-
-  
-
+  out.rn_unit_costs = nda_capture(p_hv.rn_unit_costs);
 
 
 
