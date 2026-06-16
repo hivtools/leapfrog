@@ -42,7 +42,8 @@
       "nMAX_BEHAV_INTVN" :19,
       "nMAX_BEHAV_IMPACTS" : 23,
       "nART_NUM_PERC" : 4,
-      "nRNPopSizes":35
+      "nRNPopSizes":35,
+      "nRG_VNM":5
 
     }
   },
@@ -195,6 +196,24 @@
     },
 
     "rn_cure_coverage_type": {
+      "num_type": "int"
+    },
+
+    "rn_vnm_effect": {
+      "num_type": "real_type"
+    },
+
+    "rn_vnm_coverage_rg": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG_VNM","opts.proj_steps"]
+    },
+
+    "rn_vnm_coverage_all": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+
+    "rn_vmn_coverage_type": {
       "num_type": "int"
     },
 
