@@ -722,7 +722,7 @@ struct AdultHivModelSimulation<Config> {
     } // end ha
 
     if constexpr (ModelVariant::run_goals) {
-      n_ha.hiv_births *= (1-state_next.hv.rn_cure_coverage_neonates(t)*state_next.hv.rn_cure_effect_neonates);
+      n_ha.hiv_births *= (1-pars.hv.rn_cure_coverage_neonates(t)*pars.hv.rn_cure_effect_neonates);
     }
   };
 

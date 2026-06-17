@@ -1692,8 +1692,8 @@ void calc_goals_rates(int t, int hiv_step) {
         for (int rg = RG_NONE; rg <= RG_TOTAL; ++rg) {
             i_hv.hiv_exit_rates(rg,hd,s) = i_hv.background_death_rate(s)+
                                         i_hv.hiv_mu(hd,s)+
-                                        (p_hv.b_behav_properties(rg,DUR_AVG) > 0.0) ? (1 /p_hv.b_behav_properties(rg,DUR_AVG)) : 0.0 +
-                                        i_hv.rate_aging_50(POP_H_NoART, hd, s);
+                                        (p_hv.b_behav_properties(rg,DUR_AVG) > 0.0) ? (1 /p_hv.b_behav_properties(rg,DUR_AVG)) : (0.0 +
+                                        i_hv.rate_aging_50(POP_H_NoART, hd, s));
 
             i_hv.art_exit_rates(rg,hd,s) = i_hv.background_death_rate(s)+
                                         i_hv.art_alpha(hd,s)+
