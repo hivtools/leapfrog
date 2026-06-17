@@ -176,10 +176,12 @@ struct ChildModelSimulation<Config> {
     for (int s = 0; s < NS; ++s) {
       // less than 5 because there is a cd4 transition between ages 4 and 5
       for (int a = 1; a < hc2_agestart; ++a) {
-        for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc1DS; ++hd) {
             n_hc.hc1_hivpop(hd, cat, a, s) += c_hc.hc1_hivpop(hd, cat, a - 1, s) * p_dp.survival_probability(a, s, t);
           }
+        }
+        for (int hd = 0; hd < hc1DS; ++hd) {
           for (int dur = 0; dur < hTS; ++dur) {
             n_hc.hc1_artpop(dur, hd, a, s) += c_hc.hc1_artpop(dur, hd, a - 1, s) * p_dp.survival_probability(a, s, t);
           }
@@ -189,12 +191,14 @@ struct ChildModelSimulation<Config> {
 
     for (int s = 0; s < NS; ++s) {
       for (int hd = 0; hd < hc1DS; ++hd) {
-        for (int hd_alt = 0; hd_alt < hc2DS; ++hd_alt) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd_alt = 0; hd_alt < hc2DS; ++hd_alt) {
             n_hc.hc2_hivpop(hd_alt, cat, 0, s) += c_hc.hc1_hivpop(hd, cat, (hc2_agestart-1), s) *
                                                    p_dp.survival_probability(hc2_agestart, s, t) *
                                                    hc1_to_hc2_cd4_transition[hd_alt][hd];
           }
+        }
+        for (int hd_alt = 0; hd_alt < hc2DS; ++hd_alt) {
           for (int dur = 0; dur < hTS; ++dur) {
             n_hc.hc2_artpop(dur, hd_alt, 0, s) += c_hc.hc1_artpop(dur, hd, (hc2_agestart-1), s) *
                                                    p_dp.survival_probability(hc2_agestart, s, t) *
@@ -206,11 +210,13 @@ struct ChildModelSimulation<Config> {
 
     for (int s = 0; s < NS; ++s) {
       for (int a = (hc2_agestart + 1); a < hcAG_end; ++a) {
-        for (int hd = 0; hd < hc2DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc2DS; ++hd) {
             n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) += c_hc.hc2_hivpop(hd, cat, a - hc2_agestart - 1, s) *
                                                               p_dp.survival_probability(a, s, t);
           }
+        }
+        for (int hd = 0; hd < hc2DS; ++hd) {
           for (int dur = 0; dur < hTS; ++dur) {
             n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s) += c_hc.hc2_artpop(dur, hd, a - hc2_agestart - 1, s) *
                                                               p_dp.survival_probability(a, s, t);
@@ -827,8 +833,8 @@ struct ChildModelSimulation<Config> {
 
     // all children under a certain CD4 eligible for ART
     for (int s = 0; s < NS; ++s) {
-      for (int cat = 0; cat < hcTT; ++cat) {
-        for (int a = hc_art_elig_age; a < hcAG_end; ++a) {
+      for (int a = hc_art_elig_age; a < hcAG_end; ++a) {
+        for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc1DS; ++hd) {
             if (hd >= p_hc.hc_art_elig_cd4(a, t)) {
               if (a < hc2_agestart) {
@@ -838,8 +844,8 @@ struct ChildModelSimulation<Config> {
               }
             }
           } // end hc1DS
-        } // end a
-      } // end hcTT
+        } // end hcTT
+      } // end a
     } // end NS
   };
 
@@ -870,30 +876,30 @@ struct ChildModelSimulation<Config> {
     // Children under five on ART also eligible
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hc2_agestart; ++a) {
-        for (int dur = 0; dur < hTS; ++dur) {
-          for (int hd = 0; hd < hc1DS; ++hd) {
+        for (int hd = 0; hd < hc1DS; ++hd) {
+          for (int dur = 0; dur < hTS; ++dur) {
             if (a == age_1) {
               n_hc.ctx_need += n_hc.hc1_artpop(dur, hd, a, s) * 0.5;
             } else {
               n_hc.ctx_need += n_hc.hc1_artpop(dur, hd, a, s) ;
             }
-          } // end hc1DS
-        } // end a
-      } // end hcTT
+          } // end hTS
+        } // end hc1DS
+      } // end hc2_agestart
     } // end NS
 
     // All ART eligible children ages 5-14 eligible
     // Spectrum uses a lagged population and eligibility for children over five (TODO: verify, noted in issue #274)
     for (int s = 0; s < NS; ++s) {
-      for (int cat = 0; cat < hcTT; ++cat) {
-        for (int a = hc2_agestart; a < hcAG_end; ++a) {
+      for (int a = hc2_agestart; a < hcAG_end; ++a) {
+        for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc2DS; ++hd) {
             if (a < p_hc.hc_art_elig_age(t) || hd >= p_hc.hc_art_elig_cd4(a, t - 1)) {
               n_hc.ctx_need += c_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
             }
-          } // end hc1DS
-        } // end a
-      } // end hcTT
+          } // end hc2DS
+        } // end hcTT
+      } // end hcAG_end
     } // end NS
   };
 
@@ -943,9 +949,9 @@ struct ChildModelSimulation<Config> {
 
     // progress through CD4 categories
     for (int s = 0; s < NS; ++s) {
-      for (int hd = 1; hd < hc1DS; ++hd) {
-        for (int a = 0; a < hc2_agestart; ++a) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+      for (int a = 0; a < hc2_agestart; ++a) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 1; hd < hc1DS; ++hd) {
             const auto& coarse_hc1_cd4_prog = p_hc.hc1_cd4_prog(hd - 1, hc_age_coarse_cd4[a], s);
             auto cd4_grad = coarse_hc1_cd4_prog *
                             (i_hc.hc_posthivmort(hd - 1, cat, a, s) + n_hc.hc1_hivpop(hd - 1, cat, a, s)) /
@@ -959,9 +965,9 @@ struct ChildModelSimulation<Config> {
 
     // progress through CD4 categories
     for (int s = 0; s < NS; ++s) {
-      for (int hd = 1; hd < hc2DS; ++hd) {
-        for (int a = hc2_agestart; a < hcAG_end; ++a) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+      for (int a = hc2_agestart; a < hcAG_end; ++a) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 1; hd < hc2DS; ++hd) {
             auto cd4_grad = p_hc.hc2_cd4_prog(hd - 1, 0, s) *
                             (i_hc.hc_posthivmort(hd - 1, cat, a, s) + n_hc.hc2_hivpop(hd - 1, cat, a - hc2_agestart, s)) /
                             2.0;
@@ -1117,10 +1123,10 @@ struct ChildModelSimulation<Config> {
     auto& n_hc = state_next.hc;
     auto& i_hc = intermediate.hc;
 
-    for (int dur = 0; dur < hTS; ++dur) {
-      for (int s = 0; s < NS; ++s) {
+    for (int s = 0; s < NS; ++s) {
+      for (int a = 0; a < hcAG_end; ++a) {
         for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int a = 0; a < hcAG_end; ++a) {
+          for (int dur = 0; dur < hTS; ++dur) {
             i_hc.hc_death_rate = 0.0;
 
             if (dur == 0) {
@@ -1162,10 +1168,10 @@ struct ChildModelSimulation<Config> {
                                                              n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
               }
             }
-          } // end a
+          } // end hTS
         } // end hc1DS
-      } // end NS
-    } // end dur
+      } // end hcAG_end
+    } // end NS
 
     i_hc.hc_art_deaths(0) = 0.0;
     for (int hca = 1; hca < hcAG_coarse; ++hca) {
@@ -1177,9 +1183,9 @@ struct ChildModelSimulation<Config> {
     auto& n_hc = state_next.hc;
 
     // Progress ART to the correct time on ART
-    for (int hd = 0; hd < hc1DS; ++hd) {
+    for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
-        for (int s = 0; s < NS; ++s) {
+        for (int hd = 0; hd < hc1DS; ++hd) {
           if (a < hc2_agestart) {
             if (n_hc.hc1_artpop(curr_t_idx, hd, a, s) > 0) {
               n_hc.hc1_artpop(end_t_idx, hd, a, s) += n_hc.hc1_artpop(curr_t_idx, hd, a, s);
@@ -1258,7 +1264,7 @@ struct ChildModelSimulation<Config> {
 
       i_hc.total_art_last_year(0) = 0.0;
       for (int hca = 1; hca < hcAG_coarse; ++hca) {
-	i_hc.total_art_last_year(0) += i_hc.total_art_last_year(hca);
+	      i_hc.total_art_last_year(0) += i_hc.total_art_last_year(hca);
       }
 
       for (int ag = 1; ag < hcAG_coarse; ++ag) {
@@ -1294,10 +1300,10 @@ struct ChildModelSimulation<Config> {
         // ART entered as number last year but this year isn't then aggregate
         // ages
 
-	i_hc.total_art_last_year(0) = 0.0;
-	for (int hca = 1; hca < hcAG_coarse; ++hca) {
-	  i_hc.total_art_last_year(0) += p_hc.hc_art_val(hca, t - 1);
-	}
+	      i_hc.total_art_last_year(0) = 0.0;
+	      for (int hca = 1; hca < hcAG_coarse; ++hca) {
+	        i_hc.total_art_last_year(0) += p_hc.hc_art_val(hca, t - 1);
+	      }
       } else {
         // Last year was age aggregated and a number so use previous value
         i_hc.total_art_last_year(0) = p_hc.hc_art_val(0, t - 1);
@@ -1345,36 +1351,36 @@ struct ChildModelSimulation<Config> {
 
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
-        for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc1DS; ++hd) {
             if (a < hc2_agestart) {
               i_hc.hc_hiv_total(hd, a, s) += n_hc.hc1_hivpop(hd, cat, a, s);
             } else if (hd < hc2DS) {
               i_hc.hc_hiv_total(hd, a, s) += n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
             }
-          } // end hcTT
-        } // end hc1DS
-      } // end a
-    } // end NS
-
-    for (int s = 0; s <NS; ++s) {
-      for (int a = 0; a < hcAG_end; ++a) {
-        for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
-            if (a < hc2_agestart) {
-              i_hc.hc_hiv_dist(hd, cat, a, s) += n_hc.hc1_hivpop(hd, cat, a, s) / i_hc.hc_hiv_total(hd, a, s);
-            } else if (hd < hc2DS) {
-              i_hc.hc_hiv_dist(hd, cat, a, s) += n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) / i_hc.hc_hiv_total(hd, a, s);
-            }
-          } // end hcTT
-        } // end hc1DS
+          } // end hc1DS
+        } // end hcTT
       } // end a
     } // end NS
 
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
-        for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc1DS; ++hd) {
+            if (a < hc2_agestart) {
+              i_hc.hc_hiv_dist(hd, cat, a, s) += n_hc.hc1_hivpop(hd, cat, a, s) / i_hc.hc_hiv_total(hd, a, s);
+            } else if (hd < hc2DS) {
+              i_hc.hc_hiv_dist(hd, cat, a, s) += n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) / i_hc.hc_hiv_total(hd, a, s);
+            }
+          } // end hc1DS
+        } // end hcTT
+      } // end a
+    } // end NS
+
+    for (int s = 0; s < NS; ++s) {
+      for (int a = 0; a < hcAG_end; ++a) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc1DS; ++hd) {
             if (a < hc2_agestart) {
               auto ltfu_grad = (n_hc.hc1_artpop(2, hd, a, s) + n_hc.hc1_artpop(0, hd, a, s)) *
                                p_hc.hc_art_ltfu(t);
@@ -1392,9 +1398,9 @@ struct ChildModelSimulation<Config> {
                 i_hc.art_ltfu_grad(hd, cat, a, s) += ltfu_grad * 0.25;
               }
             }
-          } // end hcTT
-        } // end hc1DS
-      } // end a
+          } // end hc1DS
+        } // end hcTT
+      } // end hcAG_end
     } // end NS
   };
 
@@ -1404,15 +1410,15 @@ struct ChildModelSimulation<Config> {
 
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
-        for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc1DS; ++hd) {
             if (a < hc2_agestart) {
               n_hc.hc1_hivpop(hd, cat, a, s) += i_hc.art_ltfu_grad(hd, cat, a, s);
             } else if (hd < hc2DS) {
               n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) += i_hc.art_ltfu_grad(hd, cat, a, s);
             }
-          } // end hcTT
-        } // end hc1DS
+          } // end hc1DS
+        } // end hcTT
       } // end a
     } // end NS
   };
@@ -1423,16 +1429,16 @@ struct ChildModelSimulation<Config> {
 
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
-        for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc1DS; ++hd) {
             if (a < hc2_agestart) {
               // hard coded two as this will only occur among children that are on ART more than a year
               n_hc.hc1_artpop(2, hd, a, s) -= i_hc.art_ltfu_grad(hd, cat, a, s);
             } else if (hd < hc2DS) {
               n_hc.hc2_artpop(2, hd, a - hc2_agestart, s) -= i_hc.art_ltfu_grad(hd, cat, a, s);
             }
-          } // end hcTT
-        } // end hc1DS
+          } // end hc1DS
+        } // end hcTT
       } // end a
     } // end NS
   };
@@ -1445,12 +1451,12 @@ struct ChildModelSimulation<Config> {
     if (p_hc.hc_art_is_age_spec(t)) {
       for (int s = 0; s < NS; ++s) {
         for (int a = 0; a < hcAG_end; ++a) {
-          for (int hd = 0; hd < hc1DS; ++hd) {
-            for (int cat = 0; cat < hcTT; ++cat) {
+          for (int cat = 0; cat < hcTT; ++cat) {
+            for (int hd = 0; hd < hc1DS; ++hd) {
               i_hc.hc_initByAge(hc_age_coarse[a]) += n_hc.hc_art_need_init(hd, cat, a, s) *
                                                           p_hc.hc_art_init_dist(a, t);
-            } // end hcTT
-          } // end hc1DS
+            } // end hc1DS
+          } // end hcTT
         } // end a
       } // end NS
 
@@ -1463,8 +1469,8 @@ struct ChildModelSimulation<Config> {
       }
 
       for (int s = 0; s < NS; ++s) {
-        for (int cat = 0; cat < hcTT; ++cat) {
-          for (int a = 0; a < hcAG_end; ++a) {
+        for (int a = 0; a < hcAG_end; ++a) {
+          for (int cat = 0; cat < hcTT; ++cat) {
             for (int hd = 0; hd < hc1DS; ++hd) {
               auto& coarse_hc_adj = i_hc.hc_adj(hc_age_coarse[a]);
               auto& coarse_hc_art_scalar = i_hc.hc_art_scalar(hc_age_coarse[a]);
@@ -1492,17 +1498,17 @@ struct ChildModelSimulation<Config> {
                 n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) -=  art_initiates;
               }
             } // end hc1DS
-          } // end a
-        } // end hcTT
+          } // end hcTT
+        } // end a
       } // end  NS
     } else {
       for (int s = 0; s < NS; ++s) {
         for (int a = 0; a < hcAG_end; ++a) {
-          for (int hd = 0; hd < hc1DS; ++hd) {
-            for (int cat = 0; cat < hcTT; ++cat) {
+          for (int cat = 0; cat < hcTT; ++cat) {
+            for (int hd = 0; hd < hc1DS; ++hd) {
               i_hc.hc_initByAge(0) += n_hc.hc_art_need_init(hd, cat, a, s) * p_hc.hc_art_init_dist(a, t);
-            } // end hcTT
-          } // end hc1DS
+            } // end hc1DS
+          } // end hcTT
         } // end a
       } // end  NS
 
@@ -1513,8 +1519,8 @@ struct ChildModelSimulation<Config> {
       }
 
       for (int s = 0; s < NS; ++s) {
-        for (int cat = 0; cat < hcTT; ++cat) {
-          for (int a = 0; a < hcAG_end; ++a) {
+        for (int a = 0; a < hcAG_end; ++a) {
+          for (int cat = 0; cat < hcTT; ++cat) {
             for (int hd = 0; hd < hc1DS; ++hd) {
               auto hc_art_val_sum = p_hc.hc_art_val(0, t) + p_hc.hc_art_val(0, t - 1);
               if (hc_art_val_sum <= 0) {
@@ -1534,8 +1540,8 @@ struct ChildModelSimulation<Config> {
               }
 
             } // end hc1DS
-          } // end a
-        } // end hcTT
+          } // end hcTT
+        } // end a
       } // end  NS
     } // end if
   };
@@ -1545,17 +1551,19 @@ struct ChildModelSimulation<Config> {
     auto& n_hc = state_next.hc;
     auto& n_dp = state_next.dp;
 
-    for (int hd = 0; hd < hDS; ++hd) {
-      for (int a = 0; a < hcAG_end; ++a) {
-        for (int s = 0; s < NS; ++s) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+    for (int a = 0; a < hcAG_end; ++a) {
+      for (int s = 0; s < NS; ++s) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hDS; ++hd) {
             if (a < hc2_agestart) {
               n_ha.p_hiv_deaths(a, s) += n_hc.hc1_noart_aids_deaths(hd, cat, a, s);
             } else if (hd < hc2DS) {
               n_ha.p_hiv_deaths(a, s) +=  n_hc.hc2_noart_aids_deaths(hd, cat, a - hc2_agestart, s);
             }
-          } // end hcTT
+          } // end hDS
+        } // end hcTT
 
+        for (int hd = 0; hd < hDS; ++hd) {
           for (int dur = 0; dur < hTS; ++dur) {
             if (a < hc2_agestart) {
               n_ha.p_hiv_deaths(a, s) += n_hc.hc1_art_aids_deaths(dur, hd, a, s);
@@ -1563,9 +1571,9 @@ struct ChildModelSimulation<Config> {
               n_ha.p_hiv_deaths(a, s) += n_hc.hc2_art_aids_deaths(dur, hd, a - hc2_agestart, s);
             }
           } // end dur
-        } // end NS
-      } // end a
-    } // end hDS
+        } // end hDS
+      } // end NS
+    } // end a
 
     for (int a = 0; a < hcAG_end; ++a) {
       for (int s = 0; s < NS; ++s) {

@@ -32,43 +32,32 @@ prepare_bypass_adult_model <- function(dat, pars, dim_vars, year_idx, bypass_adu
        prop_lt200 = prop_lt200)
 }
 
-prepare_coarse_stratification <- function(dat, pars, dim_vars) {
-  inc <- pars$adult_female_infections
-
-  h_fert_idx <- which((15L - 1 + cumsum(pars$h_ag_span_coarse)) %in% 15:49)
-  fert_rat_h_ag <- findInterval(
-    as.integer(rownames(pars$hivnpop)),
-    15L + cumsum(pars$h_ag_span_coarse[h_fert_idx]) - pars$h_ag_span_coarse[h_fert_idx]
-  )
+prepare_coarse_stratification <- function(asfr, hivnpop, adult_female_infections, fp) {
   coarse_age_groups <- cut(
     15:49,
     breaks = c(
-      15L + cumsum(pars$h_ag_span_coarse[h_fert_idx]) - pars$h_ag_span_coarse[h_fert_idx],
+      15L + cumsum(fp$h_ag_span_coarse[fp$h_fert_idx]) - fp$h_ag_span_coarse[fp$h_fert_idx],
       50
     ),
     right = FALSE
   )
-
-  hivnpop_coarse <- as.array(rowsum(pars$hivnpop, group = coarse_age_groups))
-  adult_female_infections_coarse <- as.array(rowsum(inc, group = coarse_age_groups))
-
-  ##Make a coarse ASFR, needed to run WLHIV births at the coarse level
-  fert_ages_idx <- 1L + cumsum(pars$h_ag_span_coarse[h_fert_idx]) - pars$h_ag_span_coarse[h_fert_idx]
-  asfr_coarse <- as.array(rowsum(pars$asfr, group = coarse_age_groups))
-
-  list(hivnpop = hivnpop_coarse,
-       adult_female_infections = adult_female_infections_coarse,
-       asfr = asfr_coarse,
-       fert_rat = pars$fert_rat_coarse,
-       frr_art6mos = pars$frr_art6mos_coarse)
+  list(
+    hivnpop = as.array(rowsum(hivnpop, group = coarse_age_groups)),
+    adult_female_infections = as.array(rowsum(adult_female_infections, group = coarse_age_groups)),
+    asfr = as.array(rowsum(asfr, group = coarse_age_groups)),
+    fert_rat = fp$fert_rat_coarse,
+    frr_art6mos = fp$frr_art6mos_coarse
+  )
 }
 
-prepare_full_stratification <- function(dat, pars, dim_vars) {
-  list(hivnpop = pars$hivnpop,
-       adult_female_infections = pars$adult_female_infections,
-       asfr = pars$asfr,
-       fert_rat = pars$fert_rat_full,
-       frr_art6mos = pars$frr_art6mos_full)
+prepare_full_stratification <- function(asfr, hivnpop, adult_female_infections, fp) {
+  list(
+    hivnpop = hivnpop,
+    adult_female_infections = adult_female_infections,
+    asfr = asfr,
+    fert_rat = fp$fert_rat_full,
+    frr_art6mos = fp$frr_art6mos_full
+  )
 }
 
 prepare_abortion_input <- function(dat, pars, dim_vars, proj_years) {
@@ -280,10 +269,9 @@ prepare_cotrim_effect <- function(dat, pars, dim_vars) {
   off_art_ctx <- sum(as.numeric(unlist(ctx_effect["no art", ]))) / ctx_yrs_no_art
   on_art_ctx_lte12mo <- sum(as.numeric(unlist(ctx_effect["art", 1])))
   on_art_ctx_gte12mo <- sum(as.numeric(unlist(ctx_effect["art", 2:5]))) /  ctx_yrs_art
-  ctx_effect <- array(data = c(off_art_ctx, on_art_ctx_lte12mo, on_art_ctx_gte12mo),
-                      dim = c(3),
-                      dimnames = list(ctx_effect = c("Off ART", "On ART, lte12mo", "On ART, gte12mo")))
-  ctx_effect
+  array(data = c(off_art_ctx, on_art_ctx_lte12mo, on_art_ctx_gte12mo),
+        dim = c(3),
+        dimnames = list(ctx_effect = c("Off ART", "On ART, lte12mo", "On ART, gte12mo")))
 }
 
 prepare_art_mort <- function(dat, pars, dim_vars) {
@@ -356,117 +344,154 @@ prepare_hc_art_mort_rr <- function(dat, pars, dim_vars, proj_years, year_idx) {
   mort_rr_art_target
 }
 
-process_pjnz_hc <- function(dat, pars, dim_vars, use_coarse_age_groups = FALSE, bypass_adult = FALSE) {
-  ## projection parameters
+process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_groups = FALSE, bypass_adult = FALSE) {
   yr_start <- pars$first_year
   yr_end <- pars$final_year
   proj_years <- yr_start:yr_end
-  timedat_idx <- 4 + seq_along(proj_years) - 1
   year_idx <- seq_along(proj_years)
+
+  fp <- hiv_age_span_params(dat, pars, dim_vars)
+  asfr <- dp_params$asfr
 
   #############################################################
   # Bypass adult inputs
   #############################################################
-  bypass_adult <- prepare_bypass_adult_model(dat, pars, dim_vars, year_idx, bypass_adult)
-  pars$total_births <- pars$births
-  pars$mat_hiv_births <- bypass_adult$mat_hiv_births
-  pars$mat_prev_input <- as.integer(bypass_adult$mat_prev_input)
-  pars$prop_gte350 <- bypass_adult$prop_gte350
-  pars$prop_lt200 <- bypass_adult$prop_lt200
-  ## Need sex ratio of 1 and 2 year olds for option when running model without adult input
-  pars$infant_pop <- pars$big_pop[as.character(1:2), , ]
-  pars$hivnpop <- bypass_adult$hivnpop
-  pars$adult_female_infections <- bypass_adult$adult_female_infections
+  bypass <- prepare_bypass_adult_model(dat, pars, dim_vars, year_idx, bypass_adult)
+  total_births <- pars$births
+  mat_hiv_births <- bypass$mat_hiv_births
+  mat_prev_input <- as.integer(bypass$mat_prev_input)
+  prop_gte350 <- bypass$prop_gte350
+  prop_lt200 <- bypass$prop_lt200
+  infant_pop <- pars$big_pop[as.character(1:2), , ]
+  hivnpop <- bypass$hivnpop
+  adult_female_infections <- bypass$adult_female_infections
 
   #############################################################
   # Births to WLHIV
   #############################################################
-  if (use_coarse_age_groups) {
-    subparms <- prepare_coarse_stratification(dat, pars, dim_vars)
+  subparms <- if (use_coarse_age_groups) {
+    prepare_coarse_stratification(asfr, hivnpop, adult_female_infections, fp)
   } else {
-    subparms <- prepare_full_stratification(dat, pars, dim_vars)
+    prepare_full_stratification(asfr, hivnpop, adult_female_infections, fp)
   }
-  pars$adult_female_hivnpop <- subparms$hivnpop
-  pars$adult_female_infections <- subparms$adult_female_infections
-  pars$hc_age_specific_fertility_rate <- subparms$asfr
-  pars$fert_mult_by_age <- subparms$fert_rat
-  pars$fert_mult_on_art <- subparms$frr_art6mos
+  adult_female_hivnpop <- subparms$hivnpop
+  adult_female_infections <- subparms$adult_female_infections
+  hc_age_specific_fertility_rate <- subparms$asfr
 
-  pars$abortion <- prepare_abortion_input(dat, pars, dim_vars, proj_years)
-  pars$patients_reallocated <- pars$dp_tgx_patients_reallocated
+  abortion <- prepare_abortion_input(dat, pars, dim_vars, proj_years)
+  patients_reallocated <- pars$dp_tgx_patients_reallocated
 
   #############################################################
   # Paediatric incidence
   #############################################################
   ##PMTCT
   pmtct <- prepare_pmtct(dat, pars, dim_vars, proj_years)
-  pars$PMTCT <- pmtct$pmtct_new
-  pars$PMTCT_input_is_percent <- as.integer(pmtct$pmtct_input_isperc)
-  pars$PMTCT_dropout <- prepare_pmtct_dropout(dat, pars, dim_vars, proj_years)
+  PMTCT <- pmtct$pmtct_new
+  PMTCT_input_is_percent <- as.integer(pmtct$pmtct_input_isperc)
+  PMTCT_dropout <- prepare_pmtct_dropout(dat, pars, dim_vars, proj_years)
 
   ##rates of MTCT
   mtct <- prepare_vertical_transmission(dat, pars, dim_vars)
-  pars$PMTCT_transmission_rate <- mtct$pmtct_mtct
-  pars$vertical_transmission_rate <- mtct$mtct
+  PMTCT_transmission_rate <- mtct$pmtct_mtct
+  vertical_transmission_rate <- mtct$mtct
 
   ##BF duration
-  pars$breastfeeding_duration_art <- pars$infant_feeding_options[, "art", ] / 100
-  pars$breastfeeding_duration_no_art <- pars$infant_feeding_options[, "no art", ] / 100
+  breastfeeding_duration_art <- pars$infant_feeding_options[, "art", ] / 100
+  breastfeeding_duration_no_art <- pars$infant_feeding_options[, "no art", ] / 100
 
   ## Nosocomial infections by child age group (0-4, 5-9, 10-14); absent in older PJNZ files
-  if (is.null(pars$hc_nosocomial_infections_by_age)) {
-    pars$hc_nosocomial_infections_by_age <- matrix(0, nrow = 3, ncol = length(proj_years))
+  if (!is.null(pars$hc_nosocomial_infections_by_age)) {
+    hc_nosocomial_infections_by_age <- pars$hc_nosocomial_infections_by_age
+  } else {
+    hc_nosocomial_infections_by_age <- matrix(0, nrow = 3, ncol = length(proj_years))
   }
-  pars$hc1_cd4_dist <- pars$child_dist_new_infections_cd4 / 100
+  hc1_cd4_dist <- pars$child_dist_new_infections_cd4 / 100
 
   #############################################################
   # Natural history
   #############################################################
   prog <- prepare_cd4_progression(dat, pars, dim_vars)
-  pars$hc1_cd4_prog <- prog$hc1_cd4_prog
-  pars$hc2_cd4_prog <- prog$hc2_cd4_prog
+  hc1_cd4_prog <- prog$hc1_cd4_prog
+  hc2_cd4_prog <- prog$hc2_cd4_prog
 
   mort <- prepare_no_art_mort(dat, pars, dim_vars)
-  pars$hc1_cd4_mort <- mort$hc1_cd4_mort
-  pars$hc2_cd4_mort <- mort$hc2_cd4_mort
+  hc1_cd4_mort <- mort$hc1_cd4_mort
+  hc2_cd4_mort <- mort$hc2_cd4_mort
 
   #############################################################
   # Paediatric treatment
   #############################################################
   ## Treatment eligibility
   art_elig <- prepare_art_elig(dat, pars, dim_vars, proj_years, year_idx)
-  pars$hc_art_elig_age <- art_elig$hc_art_elig_age
-  pars$hc_art_elig_cd4 <- art_elig$hc_art_elig_cd4
-  pars$hc_art_init_dist <- pars$child_art_dist
+  hc_art_elig_age <- art_elig$hc_art_elig_age
+  hc_art_elig_cd4 <- art_elig$hc_art_elig_cd4
+  hc_art_init_dist <- pars$child_art_dist
 
   ## Cotrim coverage
-  pars$ctx_val_is_percent <- pars$child_art_by_age_group_pernum["Cotrim", ] == 1
-  pars$ctx_val_is_percent <- as.integer(pars$ctx_val_is_percent)
-  pars$ctx_val <- pars$child_treat_inputs["Cotrim", ]
-  if (any(pars$ctx_val_is_percent == 1)) {
-    pars$ctx_val[pars$ctx_val_is_percent == 1] <- pars$ctx_val[pars$ctx_val_is_percent == 1] / 100
+  ctx_val_is_percent <- as.integer(pars$child_art_by_age_group_pernum["Cotrim", ] == 1)
+  ctx_val <- pars$child_treat_inputs["Cotrim", ]
+  if (any(ctx_val_is_percent == 1)) {
+    ctx_val[ctx_val_is_percent == 1] <- ctx_val[ctx_val_is_percent == 1] / 100
   }
-  pars$ctx_effect <- prepare_cotrim_effect(dat, pars, dim_vars)
+  ctx_effect <- prepare_cotrim_effect(dat, pars, dim_vars)
 
   ## ART coverage
   art <- pars$child_treat_inputs
-  pars$hc_art_is_age_spec <- unname(art[c("ART: 0-14y"), ] == -9999)
+  hc_art_is_age_spec <- unname(art[c("ART: 0-14y"), ] == -9999)
   art[which(art == -9999)] <- 0
-  ## only 0-14 input can be put in as percent
-  pars$hc_art_isperc <- as.integer(pars$child_art_by_age_group_pernum["ART: 0-14y", ])
-  art["ART: 0-14y", which(pars$hc_art_isperc == 1)] <- art["ART: 0-14y", which(pars$hc_art_isperc == 1)] / 100
-  pars$hc_art_val <- art[c("ART: 0-14y", "ART: 0-4y", "ART: 5-9y", "ART: 10-14y"), ]
-  pars$hc_art_start <- as.integer(unname(which(colSums(pars$hc_art_val) > 0)[1]) - 1)
+  hc_art_isperc <- as.integer(pars$child_art_by_age_group_pernum["ART: 0-14y", ])
+  art["ART: 0-14y", which(hc_art_isperc == 1)] <- art["ART: 0-14y", which(hc_art_isperc == 1)] / 100
+  hc_art_val <- art[c("ART: 0-14y", "ART: 0-4y", "ART: 5-9y", "ART: 10-14y"), ]
+  hc_art_start <- as.integer(unname(which(colSums(hc_art_val) > 0)[1]) - 1)
 
-  pars$hc_art_ltfu <- pars$perc_lost_follow_up_child / 100
+  hc_art_ltfu <- pars$perc_lost_follow_up_child / 100
 
   #############################################################
   # On ART mortality
   #############################################################
   art_mort <- prepare_art_mort(dat, pars, dim_vars)
-  pars$hc1_art_mort <- art_mort$hc1_art_mort
-  pars$hc2_art_mort <- art_mort$hc2_art_mort
-  pars$hc_art_mort_rr <- prepare_hc_art_mort_rr(dat, pars, dim_vars, proj_years, year_idx)
+  hc1_art_mort <- art_mort$hc1_art_mort
+  hc2_art_mort <- art_mort$hc2_art_mort
+  hc_art_mort_rr <- prepare_hc_art_mort_rr(dat, pars, dim_vars, proj_years, year_idx)
 
-  pars
+  list(
+    hc_nosocomial_infections_by_age = hc_nosocomial_infections_by_age,
+    hc1_cd4_dist = hc1_cd4_dist,
+    hc1_cd4_mort = hc1_cd4_mort,
+    hc2_cd4_mort = hc2_cd4_mort,
+    hc1_cd4_prog = hc1_cd4_prog,
+    hc2_cd4_prog = hc2_cd4_prog,
+    ctx_val = ctx_val,
+    hc_art_elig_age = hc_art_elig_age,
+    hc_art_elig_cd4 = hc_art_elig_cd4,
+    hc_art_mort_rr = hc_art_mort_rr,
+    hc1_art_mort = hc1_art_mort,
+    hc2_art_mort = hc2_art_mort,
+    hc_art_isperc = hc_art_isperc,
+    hc_art_val = hc_art_val,
+    hc_art_init_dist = hc_art_init_dist,
+    PMTCT = PMTCT,
+    vertical_transmission_rate = vertical_transmission_rate,
+    PMTCT_transmission_rate = PMTCT_transmission_rate,
+    PMTCT_dropout = PMTCT_dropout,
+    PMTCT_input_is_percent = PMTCT_input_is_percent,
+    breastfeeding_duration_art = breastfeeding_duration_art,
+    breastfeeding_duration_no_art = breastfeeding_duration_no_art,
+    infant_pop = infant_pop,
+    mat_hiv_births = mat_hiv_births,
+    mat_prev_input = mat_prev_input,
+    prop_lt200 = prop_lt200,
+    prop_gte350 = prop_gte350,
+    ctx_val_is_percent = ctx_val_is_percent,
+    hc_art_is_age_spec = hc_art_is_age_spec,
+    abortion = abortion,
+    patients_reallocated = patients_reallocated,
+    hc_art_ltfu = hc_art_ltfu,
+    adult_female_infections = adult_female_infections,
+    adult_female_hivnpop = adult_female_hivnpop,
+    total_births = total_births,
+    ctx_effect = ctx_effect,
+    hc_art_start = hc_art_start,
+    hc_age_specific_fertility_rate = hc_age_specific_fertility_rate
+  )
 }
