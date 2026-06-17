@@ -894,19 +894,19 @@ struct GoalsSimulation<Config> {
     "b_foi_idu":b_foi_idu,
     */
 
-  auto dbg_model = capture_model(state_next, intermediate, pars);
-  nda_print_info(dbg_model.hv.rn_unit_costs,-1,-1,55,55);
+  //auto dbg_model = capture_model(state_next, intermediate, pars);
+  //nda_print_info(dbg_model.hv.rn_unit_costs,-1,-1,55,55);
 
 
 
   //nda_print_info(dbg_model.hv.epi_start_year);
   //nda_print_info(dbg_model.hv.epi_months_in_primary);
   //nda_print_info(dbg_model.hv.b_balance_sex_acts);
-  nda_print_info(dbg_model.hv.b_condom_prop,-1,-1,50,50);
-  nda_print_info(dbg_model.hv.b_sex_acts,-1,-1,50,50);
-  nda_print_info(dbg_model.hv.b_num_partners,-1,-1,50,50);
-  nda_print_info(dbg_model.hv.b_incr_recruit);
-  nda_print_info(dbg_model.hv.b_idu_share_prop);
+  //nda_print_info(dbg_model.hv.b_condom_prop,-1,-1,50,50);
+  //nda_print_info(dbg_model.hv.b_sex_acts,-1,-1,50,50);
+  //nda_print_info(dbg_model.hv.b_num_partners,-1,-1,50,50);
+  //nda_print_info(dbg_model.hv.b_incr_recruit);
+  //nda_print_info(dbg_model.hv.b_idu_share_prop);
 
 
   //nda_print_info(dbg_model.hv.epi_transm_mult_M);
@@ -1512,7 +1512,7 @@ void calc_new_vaccinations(int t)
 
   if(t>1500)
   {
-  auto dbg_model = capture_model(state_next, intermediate, pars);
+  //auto dbg_model = capture_model(state_next, intermediate, pars);
 
   // nda_print_info(dbg_model.hv.dp_totpop_deaths_background);
    //nda_print_info(dbg_model.hv.dp_totpop_1549);
@@ -1721,8 +1721,8 @@ void calc_goals_rates(int t, int hiv_step) {
 //nda_print_info(dbg_model.ha.cd4_progression,-1,-1,25,25,-1,-1);
 //nda_print_info(dbg_model.hv.hiv_lambda);
 
-auto dbg_model = capture_model(state_next, intermediate, pars);
-nda_print_info(dbg_model.hv.migration_rate);
+//auto dbg_model = capture_model(state_next, intermediate, pars);
+//nda_print_info(dbg_model.hv.migration_rate);
 
 }
 
@@ -4122,7 +4122,7 @@ void calc_resource_needs()
                                         RN_CURE_Adults,RN_CURE_NEO,RN_AHD_TX,RN_POC_CD4_INT,
                                         RN_POC_VL_INT,RN_VMM};
 
-  //std::list<int> RN_UsedInterventions = {RN_CURE_Adults};                                     
+  //std::list<int> RN_UsedInterventions = {RN_CURE_Adults};
 
    double value=0.0;
    double pop_reached=0.0;
@@ -4397,10 +4397,10 @@ void calc_resource_needs()
 
              case RN_CURE_NEO://HIV cure
             {
-              //adjust hiv births to get those reached  
+              //adjust hiv births to get those reached
               pop_reached =  n_ha.hiv_births/(1-p_hv.rn_cure_coverage_neonates(t)*p_hv.rn_cure_effect_neonates);
               pop_reached =  p_hv.rn_cure_coverage_neonates(t);
-                
+
               break;
             }
 
@@ -4409,15 +4409,15 @@ void calc_resource_needs()
               vmm_coverage = p_hv.rn_vmm_coverage_all(t);
               for (int rg = RG_NONE; rg <= RG_HRH; ++rg)
               {
-                    
+
                 if (p_hv.rn_vmm_coverage_type != VMM_COV_ALLRISK)
                 {
                   vmm_coverage = p_hv.rn_vmm_coverage_rg(rg, t);
                 }
-                
+
                 pop_reached += (n_hv.adults(VAC_ALL,rg,CD4_ALL,S_FEMALE)-n_hv.adults(VAC_ALL,rg,CD4_NEG,S_FEMALE)) *
                                 vmm_coverage;
-              }      
+              }
 
              break;
             }

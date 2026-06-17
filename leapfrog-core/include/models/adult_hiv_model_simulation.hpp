@@ -92,8 +92,8 @@ struct AdultHivModelSimulation<Config> {
     run_disease_progression_and_mortality(hiv_step);
 
     if constexpr (ModelVariant::run_goals) {
-      if(hiv_step==0) {
-        n_hv.new_infections_dp = 0.0;//init new infections from DP
+      if (hiv_step==0) {
+        state_next.hv.new_infections_dp = 0.0;//init new infections from DP
       }
       calc_new_infections_agesex_goals(hiv_step);
     }
@@ -377,7 +377,7 @@ struct AdultHivModelSimulation<Config> {
           if constexpr (ModelVariant::run_goals) {
             // Temporary, used for checking new infections updates in goals model
             if (i == 0 && SS::pIDX_15to49 <= a && a < SS::pIDX_15to49 + SS::pAG_15to49) {
-                n_hv.new_infections_dp += new_infections;
+                state_next.hv.new_infections_dp += new_infections;
             }
           }
         }
