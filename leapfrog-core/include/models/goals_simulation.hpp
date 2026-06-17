@@ -4102,6 +4102,8 @@ void calc_resource_needs()
   const auto& c_dp = state_curr.dp;
   auto& n_dp = state_next.dp;
 
+  auto& n_ha = state_next.ha;
+
   const auto& p_hc = pars.hc;
   auto& i_hc = intermediate.hc;
 
@@ -4120,9 +4122,13 @@ void calc_resource_needs()
                                         RN_CURE_Adults,RN_CURE_NEO,RN_AHD_TX,RN_POC_CD4_INT,
                                         RN_POC_VL_INT,RN_VMM};
 
+  //std::list<int> RN_UsedInterventions = {RN_CURE_Adults};                                     
+
    double value=0.0;
    double pop_reached=0.0;
    double total_direct_costs=0.0;
+
+   double vmm_coverage=0.0;
 
    for (int i = 1; i <= RN_MAX_INTERVN; ++i)
     {
@@ -4158,9 +4164,9 @@ void calc_resource_needs()
             case RN_CONDOMS://condoms
             case RN_CONDOM_SUPPLY://condom supply
             {
-              pop_reached *= //i_hv.dp_totpop_1549(S_MALE)*
+              pop_reached += //i_hv.dp_totpop_1549(S_MALE)*
                              (//p_hv.b_behav_properties(RG_LRH, PERC_POP) *
-                              n_hv.adults(VAC_ALL,RG_LRH ,CD4_ALL,S_MALE) *
+                              n_hv.adults(VAC_ALL,RG_LRH,CD4_ALL,S_MALE) *
                               i_hv.i_num_partners(RG_LRH) *
                               p_hv.b_sex_acts(RG_LRH,t)+
 
@@ -4222,7 +4228,7 @@ void calc_resource_needs()
 
             case RN_FSW_OUTREACH:// Community mobilization
             {
-              pop_reached = n_hv.adults(VAC_ALL,RG_MRH,CD4_ALL,S_FEMALE)*p_hv.rn_coverage(i,t);
+              pop_reached = n_hv.adults(VAC_ALL,RG_HRH,CD4_ALL,S_FEMALE)*p_hv.rn_coverage(i,t);
               break;
             }
 
@@ -4319,18 +4325,20 @@ void calc_resource_needs()
             case RN_PrEP_PEP:
             {
               int m = i-RN_PrEP_OralDaily;
+              //prep for men
               for (int rg = RG_LRH; rg <= RG_MSMIDU; ++rg)
               {
                   pop_reached += n_hv.adults(VAC_ALL,rg,CD4_NEG,S_MALE) *
                                  p_hv.prep_method_mix(S_MALE,rg,m,t)*
-                                 p_hv.rn_coverage(i,t);
+                                 p_hv.prep_cov(S_MALE,rg,t);
               }
 
+              //prep for women
               for (int rg = RG_LRH; rg <= RG_IDU; ++rg)
               {
                   pop_reached += n_hv.adults(VAC_ALL,rg,CD4_NEG,S_FEMALE)*
                                  p_hv.prep_method_mix(S_FEMALE,rg,m,t)*
-                                 p_hv.rn_coverage(i,t);
+                                 p_hv.prep_cov(S_MALE,rg,t);
               }
 
                break;
@@ -4383,6 +4391,33 @@ void calc_resource_needs()
                 }
 
               }
+
+             break;
+            }
+
+             case RN_CURE_NEO://HIV cure
+            {
+              //adjust hiv births to get those reached  
+              pop_reached =  n_ha.hiv_births/(1-p_hv.rn_cure_coverage_neonates(t)*p_hv.rn_cure_effect_neonates);
+              pop_reached =  p_hv.rn_cure_coverage_neonates(t);
+                
+              break;
+            }
+
+            case RN_VMM://microbiome
+            {
+              vmm_coverage = p_hv.rn_vmm_coverage_all(t);
+              for (int rg = RG_NONE; rg <= RG_HRH; ++rg)
+              {
+                    
+                if (p_hv.rn_vmm_coverage_type != VMM_COV_ALLRISK)
+                {
+                  vmm_coverage = p_hv.rn_vmm_coverage_rg(rg, t);
+                }
+                
+                pop_reached += (n_hv.adults(VAC_ALL,rg,CD4_ALL,S_FEMALE)-n_hv.adults(VAC_ALL,rg,CD4_NEG,S_FEMALE)) *
+                                vmm_coverage;
+              }      
 
              break;
             }

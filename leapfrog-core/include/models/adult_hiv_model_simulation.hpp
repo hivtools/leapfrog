@@ -92,9 +92,10 @@ struct AdultHivModelSimulation<Config> {
     run_disease_progression_and_mortality(hiv_step);
 
     if constexpr (ModelVariant::run_goals) {
-      if (hiv_step = opts.hts_per_year) {
-        calc_new_infections_agesex_goals(hiv_step);
+      if(hiv_step==0) {
+        n_hv.new_infections_dp = 0.0;//init new infections from DP
       }
+      calc_new_infections_agesex_goals(hiv_step);
     }
     else {
       if (p_ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS) {
