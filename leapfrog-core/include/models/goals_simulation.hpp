@@ -1170,7 +1170,7 @@ public:
           i_hv.dp_pop_1549_hiv(hd, s) += n_ha.h_hivpop(hd_hds, a_hv, s);
 
           double hivpop_h = n_ha.h_hivpop(hd_hds, a_hv, s);
-          double hivpop_h1 = n_ha.h_hivpop(hd_hds - 1, a_hv, s);
+          double hivpop_h1 = n_ha.h_hivpop(hd_hds, a_hv, s);
 
           i_hv.dp_pop_sex_age_hiv(POP_H_NoART, s) += hivpop_h;
           i_hv.dp_aging_denom_1549(POP_H_NoART, hd, s) += hivpop_h;
@@ -1186,7 +1186,7 @@ public:
               n_ha.h_hiv_deaths_no_art(hd_hds, a_hv, s);
           if (hd > CD4_GT500) {
             i_hv.dp_hiv_cd4_progression(hd - 1, s) +=
-                p_ha.cd4_progression(hd_hds - 1, a_hv, s) * hivpop_h1;
+                p_ha.cd4_progression(hd_hds, a_hv, s) * hivpop_h1;
           }
 
           for (int ht = 0; ht < nART; ++ht) {
@@ -1245,8 +1245,6 @@ public:
     nda::fill(i_hv.art_alpha, 0.0);  // mort rate, hiv on ART
 
     // aggregate rates
-    nda::fill(i_hv.hiv_exit_rates, 0.0);  // total exit rate, hiv not on ART
-    nda::fill(i_hv.art_exit_rates, 0.0);  // total exit rate, hiv on ART
     nda::fill(
         i_hv.hiv_stage_progressors, 0.0
     );  // progression rate, hiv not on ART
@@ -1376,23 +1374,6 @@ public:
         }
         i_hv.rate_aging_50(POP_H_OnART, hd, s) =
             (denominator != 0.0) ? numerator / denominator : 0.0;
-      }
-
-      // aggregate exit rates  CDP review if still needed - seems not
-      for (int hd = CD4_GT500; hd < CD4_LT50; ++hd) {
-        for (int rg = RG_NONE; rg <= RG_TOTAL; ++rg) {
-          i_hv.hiv_exit_rates(rg, hd, s) = i_hv.background_death_rate(s)
-                  + i_hv.hiv_mu(hd, s)
-                  + (p_hv.b_behav_properties(rg, DUR_AVG) > 0.0)
-              ? (1 / p_hv.b_behav_properties(rg, DUR_AVG))
-              : 0.0 + i_hv.rate_aging_50(POP_H_NoART, hd, s);
-
-          i_hv.art_exit_rates(rg, hd, s) = i_hv.background_death_rate(s)
-                  + i_hv.art_alpha(hd, s)
-                  + (p_hv.b_behav_properties(rg + RG_NONE_F3, DUR_AVG) > 0.0)
-              ? (1 / p_hv.b_behav_properties(rg + RG_NONE_F3, DUR_AVG))
-              : 0.0 + i_hv.rate_aging_50(POP_H_OnART, hd, s);
-        }
       }
     }
   }
@@ -2580,10 +2561,7 @@ public:
         // needle sharing
         double idu_inf = 0.0;
         idu_inf = p_hv.b_foi_idu(s, t) * i_hv.r_mult(RG_ALL, S_ALL) * PrevB
-            * SusceptibleIDU;  //*
-        (1 - p_hv.prep_cov(s, rg, t) * i_hv.prep_effect(rg, t));
-        //+_ForceNeedleTransmIDU*SusceptibleIDU;//no explicit needle sharing
-        //mechanism
+            * SusceptibleIDU;
         n_hv.new_inf_vrs(v, rg, s) = std::max(idu_inf, 0.0);
 
         SusceptibleIDU = n_hv.adults(v, RG_IDU, CD4_NEG, s);
@@ -3058,7 +3036,7 @@ public:
             for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
               if (hd == CD4_GT500) {
                 prop1[hd] = (eligible_art_vrhs[v][rg][hd][s]
-                             + eligible_art_vrhs[v][CD4_PRIM][rg][s])
+                             + eligible_art_vrhs[v][rg][CD4_PRIM][s])
                     / sum_elig_art[v][rg][s];
               } else {
                 prop1[hd] =
@@ -3725,7 +3703,7 @@ private:
           for (int rg = RG_LRH; rg <= RG_IDU; ++rg) {
             pop_reached += n_hv.adults(VAC_ALL, rg, CD4_NEG, S_FEMALE)
                 * p_hv.prep_method_mix(S_FEMALE, rg, m, t)
-                * p_hv.prep_cov(S_MALE, rg, t);
+                * p_hv.prep_cov(S_FEMALE, rg, t);
           }
 
           break;
