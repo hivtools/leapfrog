@@ -434,8 +434,6 @@ struct GoalsSimulation<Config> {
     //sum over the dimensions of adult pop
     sum_adult_pop_dims(t);
 
-    //double val_1=n_hv.adults(VAC_ALL,RG_ALL,CD4_ALL,S_MALE);
-
     //make inner-time loop copy of adult structure
     set_adults_hiv_loop();
 
@@ -1714,6 +1712,9 @@ void calc_goals_rates(int t, int hiv_step) {
 
 //nda_print_info(dbg_model.ha.cd4_progression,-1,-1,25,25,-1,-1);
 //nda_print_info(dbg_model.hv.hiv_lambda);
+
+auto dbg_model = capture_model(state_next, intermediate, pars);
+nda_print_info(dbg_model.hv.migration_rate);
 
 }
 
@@ -4384,8 +4385,7 @@ void calc_resource_needs()
         } // switch i
 
              
-    n_hv.num_people_reached(i)=i;//pop_reached;
-    pop_reached=1.0;
+    n_hv.num_people_reached(i)=pop_reached;
     n_hv.resources_required(i)=pop_reached * p_hv.rn_unit_costs(i,t);
     total_direct_costs+=n_hv.resources_required(i);
 
