@@ -92,9 +92,10 @@ struct AdultHivModelSimulation<Config> {
     run_disease_progression_and_mortality(hiv_step);
 
     if constexpr (ModelVariant::run_goals) {
-      if (hiv_step = opts.hts_per_year) {
-        calc_new_infections_agesex_goals(hiv_step);
+      if (hiv_step==0) {
+        state_next.hv.new_infections_dp = 0.0;//init new infections from DP
       }
+      calc_new_infections_agesex_goals(hiv_step);
     }
     else {
       if (p_ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS) {
@@ -372,6 +373,13 @@ struct AdultHivModelSimulation<Config> {
           const auto new_infections = opts.dt * i_ha.p_infections_a;
           n_ha.p_infections(a, s) += new_infections;
           n_ha.p_hivpop(a, s) += new_infections;
+
+          if constexpr (ModelVariant::run_goals) {
+            // Temporary, used for checking new infections updates in goals model
+            if (i == 0 && SS::pIDX_15to49 <= a && a < SS::pIDX_15to49 + SS::pAG_15to49) {
+                state_next.hv.new_infections_dp += new_infections;
+            }
+          }
         }
 
         // add p_infections to grad hivpop
@@ -712,6 +720,10 @@ struct AdultHivModelSimulation<Config> {
 
       n_ha.hiv_births += n_ha.hiv_births_by_mat_age(ha);
     } // end ha
+
+    if constexpr (ModelVariant::run_goals) {
+      n_ha.hiv_births *= (1-pars.hv.rn_cure_coverage_neonates(t)*pars.hv.rn_cure_effect_neonates);
+    }
   };
 
 
