@@ -199,6 +199,15 @@
       "num_type": "int"
     },
 
+     "rn_cure_coverage_neonates": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+
+    "rn_cure_effect_neonates": {
+      "num_type": "real_type"
+    },
+
     "rn_vmm_effect": {
       "num_type": "real_type"
     },
