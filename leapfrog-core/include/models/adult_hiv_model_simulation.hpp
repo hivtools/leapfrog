@@ -373,6 +373,13 @@ struct AdultHivModelSimulation<Config> {
           const auto new_infections = opts.dt * i_ha.p_infections_a;
           n_ha.p_infections(a, s) += new_infections;
           n_ha.p_hivpop(a, s) += new_infections;
+
+          if constexpr (ModelVariant::run_goals) {
+            // Temporary, used for checking new infections updates in goals model
+            if (i == 0 && SS::pIDX_15to49 <= a && a < SS::pIDX_15to49 + SS::pAG_15to49) {
+                n_hv.new_infections_dp += new_infections;
+            }
+          }
         }
 
         // add p_infections to grad hivpop
