@@ -655,8 +655,6 @@ struct AdultHivModelSimulation<Config> {
     auto& n_dp = state_next.dp;
     auto& i_ha = intermediate.ha;
 
-    const auto& p_hv = pars.hv;
-
     i_ha.asfr_sum = 0.0;
     for (int a = 0; a < p_fertility_age_groups; ++a) {
       i_ha.asfr_sum += p_dp.age_specific_fertility_rate(a, t);
@@ -724,7 +722,7 @@ struct AdultHivModelSimulation<Config> {
     } // end ha
 
     if constexpr (ModelVariant::run_goals) {
-      n_ha.hiv_births *= (1-p_hv.rn_cure_coverage_neonates(t)*p_hv.rn_cure_effect_neonates);
+      n_ha.hiv_births *= (1-state_next.hv.rn_cure_coverage_neonates(t)*state_next.hv.rn_cure_effect_neonates);
     }
   };
 
