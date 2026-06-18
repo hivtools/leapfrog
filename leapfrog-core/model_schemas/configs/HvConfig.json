@@ -228,7 +228,7 @@
 
     "rn_coverage": {
       "num_type": "real_type",
-      "dims": ["SS::nIntervnRN", "opts.proj_steps"] 
+      "dims": ["SS::nIntervnRN", "opts.proj_steps"]
     },
 
     "rn_poc_cov": {
@@ -379,16 +379,6 @@
    "rate_aging_50": {
       "num_type": "real_type",
       "dims": ["SS::nHIV", "SS::nCD4","SS::nNS"]
-    },
-
-    "hiv_exit_rates": {
-      "num_type": "real_type",
-      "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
-    },
-
-     "art_exit_rates": {
-      "num_type": "real_type",
-      "dims": ["SS::nRG", "SS::nCD4a+1","SS::nNS"]
     },
 
     "hiv_stage_exits": {
@@ -604,7 +594,7 @@
       "num_type": "real_type",
       "dims": ["SS::nVAC+1","SS::nRG+1","SS::nCD4+1","SS::nNS+1"]
     },
-    
+
     "total_deaths": {
       "num_type": "real_type"
     },
