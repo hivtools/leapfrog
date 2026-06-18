@@ -170,7 +170,8 @@ struct HivDemographicProjection<Config> {
     const auto& c_ha = state_curr.ha;
     const auto& c_vg = state_curr.vg;
     const auto& i_hc = intermediate.hc;
-    const auto& p_hc = pars.hc;    
+    const auto& p_hc = pars.hc;
+    const auto& p_vg = pars.vg;
     auto& n_vg = state_next.vg;
 
     // Non-hiv deaths and ageing
@@ -212,8 +213,6 @@ struct HivDemographicProjection<Config> {
 	    }
 	  }
         }
-
-        // TO DO: becoming sexually active
       }
 
       // Entrants into virgin population from total population age (p_idx_virginpop_first - 1)
@@ -253,6 +252,23 @@ struct HivDemographicProjection<Config> {
 	    }
 	  }
 	}
+      }
+
+      // Becoming sexually active
+      for (int va = 0; va < SS::vAG; ++va) {
+        n_vg.p_totpop_virgin(va, s) *= 1.0 - p_vg.sexdebut_annual_prob(va, s, t);
+	n_vg.p_hivpop_virgin(va, s) *= 1.0 - p_vg.sexdebut_annual_prob(va, s, t);
+
+	for (int hm = 0; hm < hDS; ++hm) {
+	  n_vg.h_hivpop_virgin(hm, va, s) *= 1.0 - p_vg.sexdebut_annual_prob(va, s, t);
+	  
+	  if (t > opts.ts_art_start) {	  
+	    for (int hu = 0; hu < hTS; ++hu) {
+	      n_vg.h_artpop_virgin(hu, hm, va, s) *= 1.0 - p_vg.sexdebut_annual_prob(va, s, t);
+	    }
+	  }
+	}
+
       }
 
       

@@ -515,11 +515,14 @@ end;
 type
   LeapfrogVirginParamsView = record
   private
+    sexdebutAnnualProb: PDouble;
+    sexdebutAnnualProbLength: Integer;
 end;
 
 type
   LeapfrogVirginParams = class
   public
+    sexdebutAnnualProb: TGBFixedArray<Double>;
     function getView(): LeapfrogVirginParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -1027,6 +1030,7 @@ end;
 
 destructor LeapfrogVirginParams.Destroy;
 begin;
+  sexdebutAnnualProb.Free;
   inherited;
 end;
 
@@ -1041,6 +1045,8 @@ end;
 
 function LeapfrogVirginParams.getView(): LeapfrogVirginParamsView;
 begin;
+  Result.sexdebutAnnualProb := PDouble(sexdebutAnnualProb.data);
+  Result.sexdebutAnnualProbLength := sexdebutAnnualProb.GetLength();
 end;
 
 function LeapfrogVirginState.getView(): LeapfrogVirginStateView;
@@ -1221,6 +1227,7 @@ procedure LeapfrogVirginParams.writeToDisk(dir: string);
 begin;
   if not DirectoryExists(dir) then
     ForceDirectories(dir);
+  sexdebutAnnualProb.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'sexdebutAnnualProb');
 end;
 
 procedure LeapfrogVirginState.writeToDisk(dir: string);
