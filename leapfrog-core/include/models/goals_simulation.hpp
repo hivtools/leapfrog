@@ -876,9 +876,6 @@ public:
         if (rg == RG_NONE || rg == RG_IDU) {
           pulse = 0.0;
         }
-        if (rg == S_FEMALE && rg == RG_MSM) {
-          pulse = 0.0;
-        }
 
         for (int hd = CD4_PRIM; hd <= CD4_LT50; ++hd) {
           int hd_hds = 0;  // set prim
