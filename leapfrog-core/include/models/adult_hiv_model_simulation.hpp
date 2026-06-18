@@ -43,7 +43,7 @@ struct AdultHivModelSimulation<Config> {
   static constexpr int hAG_fertility = SS::hAG_fertility;
   static constexpr int p_idx_fertility_first = SS::p_idx_fertility_first;
   static constexpr int p_fertility_age_groups = SS::p_fertility_age_groups;
-  
+
 
   // function args
   int t;
@@ -64,7 +64,7 @@ struct AdultHivModelSimulation<Config> {
     opts(args.opts)
   {};
 
-  void run_hiv_model_simulation() {
+  void run_hiv_adult_pre_hiv_loop() {
     const auto& p_ha = pars.ha;
     auto& i_ha = intermediate.ha;
 
@@ -80,14 +80,26 @@ struct AdultHivModelSimulation<Config> {
       // Rob Glaubius, 5 August 2022: https://github.com/mrc-ide/leaptfrog/issues/18
       calculate_annual_incidence_rate_by_sex();
     }
+  };
 
-    for (int hiv_step = 0; hiv_step < opts.hts_per_year; ++hiv_step) {
-      nda::fill(i_ha.grad, 0.0);
-      nda::fill(i_ha.grad_infections, 0.0);      
-      nda::fill(i_ha.gradART, 0.0);
-      nda::fill(i_ha.h_hiv_deaths_age_sex, 0.0);
-      nda::fill(i_ha.h_deaths_excess_nonaids_agesex, 0.0);
-      run_disease_progression_and_mortality(hiv_step);
+  void run_hiv_adult_hiv_loop(int hiv_step) {
+    const auto& p_ha = pars.ha;
+    auto& i_ha = intermediate.ha;
+
+    nda::fill(i_ha.grad, 0.0);
+    nda::fill(i_ha.grad_infections, 0.0);
+    nda::fill(i_ha.gradART, 0.0);
+    nda::fill(i_ha.h_hiv_deaths_age_sex, 0.0);
+    nda::fill(i_ha.h_deaths_excess_nonaids_agesex, 0.0);
+    run_disease_progression_and_mortality(hiv_step);
+
+    if constexpr (ModelVariant::run_goals) {
+      if (hiv_step==0) {
+        state_next.hv.new_infections_dp = 0.0;//init new infections from DP
+      }
+      calc_new_infections_agesex_goals(hiv_step);
+      
+    } else {
 
       if (p_ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS) {
         calc_new_infections_agesex(hiv_step);
@@ -96,34 +108,36 @@ struct AdultHivModelSimulation<Config> {
       } else {
         throw std::invalid_argument("Incidence model choice not vaild\n");
       }
-      add_new_hiv_infections(hiv_step);
-
-      if (t >= opts.ts_art_start) {
-        run_art_progression_and_mortality(hiv_step);
-        run_h_art_initiation(hiv_step);
-
-	if constexpr (ModelVariant::run_virgin) {
-       // Note: must be run before run_update_art_adult() because it
-       // relies on the proportion of population virgin before updating       
-       run_update_art_virgin(hiv_step);
-	}
-        run_update_art_adult(hiv_step);
-      }
-
-      if constexpr (ModelVariant::run_virgin) {
-	// Note: must be run before run_update_hiv_adult() because it
-	// relies on the proportion of population virgin before updating
-	run_update_hiv_virgin(hiv_step);
-      }      
-      run_update_hiv_adult(hiv_step);
-      
-      run_calc_p_hiv_deaths(hiv_step);
-      if constexpr (ModelVariant::run_virgin) {
-        run_remove_p_virgin_hiv_deaths(hiv_step);
-      }
-      run_remove_p_hiv_deaths(hiv_step);
-      run_wlhiv_births();
     }
+      
+    add_new_hiv_infections(hiv_step);
+
+    if (t >= opts.ts_art_start) {
+      run_art_progression_and_mortality(hiv_step);
+      run_h_art_initiation(hiv_step);
+      
+      if constexpr (ModelVariant::run_virgin) {
+	// Note: must be run before run_update_art_adult() because it
+	// relies on the proportion of population virgin before updating       
+	run_update_art_virgin(hiv_step);
+      }
+      run_update_art_adult(hiv_step);
+      }
+    
+    if constexpr (ModelVariant::run_virgin) {
+      // Note: must be run before run_update_hiv_adult() because it
+      // relies on the proportion of population virgin before updating
+      run_update_hiv_virgin(hiv_step);
+    }      
+    run_update_hiv_adult(hiv_step);
+    
+    run_calc_p_hiv_deaths(hiv_step);
+    if constexpr (ModelVariant::run_virgin) {
+        run_remove_p_virgin_hiv_deaths(hiv_step);
+    }
+    run_remove_p_hiv_deaths(hiv_step);
+    run_wlhiv_births();
+    
   };
 
   // private methods that we don't want people to call
@@ -200,12 +214,11 @@ struct AdultHivModelSimulation<Config> {
   };
 
   void calc_new_infections_incidmod_transmrate(int hiv_step) {
-    
+
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
     auto& n_dp = state_next.dp;
     auto& i_ha = intermediate.ha;
-
 
     // calculate HIV negative sexually active by age and sex
     nda::fill(i_ha.hiv_negative_pop, 0.0);
@@ -223,7 +236,6 @@ struct AdultHivModelSimulation<Config> {
       }
     } // end s
 
-    
     // sum population sizes
     real_type Xhivn_s[NS];
     real_type Xhivn_incagerr[NS];
@@ -272,7 +284,7 @@ struct AdultHivModelSimulation<Config> {
             }
           }
         }
-        
+
       } // end loop over ha
     } // end loop over s
 
@@ -334,7 +346,7 @@ struct AdultHivModelSimulation<Config> {
       i_ha.p_infections_ts(a, s) = hivn_a * incrate15to49_s[s] * p_ha.incidence_rate_ratio_age(a - SS::p_idx_hiv_first_adult, s, t) * Xhivn_s[s] / Xhivn_incagerr[s];
     }
   }
-  
+
   void calc_new_infections_agesex(int hiv_step) {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
@@ -345,7 +357,7 @@ struct AdultHivModelSimulation<Config> {
     const auto adult_incid_last_age_group = adult_incid_first_age_group + p_ha.pAG_INCIDPOP;
 
     // Calculate HIV infections by age. This uses the updated
-    // 'current year' population [state_next] (vs. previous year 
+    // 'current year' population [state_next] (vs. previous year
     // population used for overall incidence rate and incidence by sex)
 
     nda::fill(i_ha.hiv_negative_pop, 0.0);
@@ -381,6 +393,45 @@ struct AdultHivModelSimulation<Config> {
     }
   };
 
+  void calc_new_infections_agesex_goals(int hiv_step) {
+    const auto& p_ha = pars.ha;
+    auto& n_ha = state_next.ha;
+    auto& n_dp = state_next.dp;
+    auto& i_ha = intermediate.ha;
+
+    //map incidence from goals
+    auto& n_hv = state_next.hv;
+
+    const auto adult_incid_first_age_group = p_ha.pIDX_INCIDPOP;
+    const auto adult_incid_last_age_group = adult_incid_first_age_group + p_ha.pAG_INCIDPOP;
+
+    // Calculate HIV infections by age. This uses the updated
+    // 'current year' population [state_next] (vs. previous year
+    // population used for overall incidence rate and incidence by sex)
+
+    for (int s = 0; s < NS; ++s) {
+
+      nda::fill(i_ha.hiv_negative_pop, 0.0);
+      i_ha.Xhivn_incagerr = 0.0;
+
+      for (int a = adult_incid_first_age_group; a < pAG; ++a) {
+        i_ha.hiv_negative_pop(a) = n_dp.p_totpop(a, s) - n_ha.p_hivpop(a, s);
+      }
+
+      for (int a = adult_incid_first_age_group; a < adult_incid_last_age_group; ++a) {
+        i_ha.Xhivn_incagerr += p_ha.incidence_rate_ratio_age(a - adult_incid_first_age_group, s, t) *
+                               i_ha.hiv_negative_pop(a);
+      }
+
+      for (int a = SS::p_idx_hiv_first_adult; a < pAG; ++a) {
+        i_ha.p_infections_ts(a, s) =  n_hv.new_infections_goals(s) * // new infections from goals
+                                      i_ha.hiv_negative_pop(a) *
+                                      p_ha.incidence_rate_ratio_age(a - adult_incid_first_age_group, s, t)/
+                                      i_ha.Xhivn_incagerr;
+      }
+    }
+  };
+
   void add_new_hiv_infections(int hiv_step) {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
@@ -396,6 +447,13 @@ struct AdultHivModelSimulation<Config> {
           const auto new_infections = opts.dt * i_ha.p_infections_a;
           n_ha.p_infections(a, s) += new_infections;
           n_ha.p_hivpop(a, s) += new_infections;
+
+          if constexpr (ModelVariant::run_goals) {
+            // Temporary, used for checking new infections updates in goals model
+            if (i == 0 && SS::pIDX_15to49 <= a && a < SS::pIDX_15to49 + SS::pAG_15to49) {
+                state_next.hv.new_infections_dp += new_infections;
+            }
+          }
         }
 
         // add p_infections to grad hivpop
@@ -807,6 +865,10 @@ struct AdultHivModelSimulation<Config> {
 
       n_ha.hiv_births += n_ha.hiv_births_by_mat_age(ha);
     } // end ha
+
+    if constexpr (ModelVariant::run_goals) {
+      n_ha.hiv_births *= (1-pars.hv.rn_cure_coverage_neonates(t)*pars.hv.rn_cure_effect_neonates);
+    }
   };
 
 

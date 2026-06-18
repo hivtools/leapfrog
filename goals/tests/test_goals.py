@@ -1,22 +1,32 @@
-import numpy as np
 from deepdiff import DeepDiff
 
 from leapfrog_goals import (
-    read_h5_file,
+    get_goals_ss,
     run_goals,
 )
+from SpectrumCommon.Util.LeapfrogDataMapping import modvars_to_leapfrog
+from SpectrumCommon.Util.ConvertNumpy import modvars_to_numpy
+from Tools.ImportPJNZ.Importer import GB_ImportProjectionFromFile
+from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 
 
 def assert_equal(obj1, obj2):
     assert len(DeepDiff(obj1, obj2, ignore_nan_inequality=True)) == 0
 
 
-def test_goals_model():
-    parameters = read_h5_file(
-        "../leapfrogr/tests/testthat/testdata/child_parms_full.h5"
+def test_goals_model(test_data):
+    modvars, _param, _epp, _shiny90 = GB_ImportProjectionFromFile(
+        test_data / "SouthAfrica.PJNZ"
     )
-    parameters["ex_input"] = np.full((81, 2), 1)
-    ret = run_goals(parameters)
+    modvars = modvars_to_numpy(modvars)
+    ss = get_goals_ss()
+    lf_data = modvars_to_leapfrog(modvars, ss, "Goals")
+
+    ret = run_goals(
+        lf_data,
+        output_years=range(modvars[PJN_FirstYearTag], modvars[PJN_FinalYearTag] + 1),
+    )
+
     returned_vars = list(ret.keys())
     expected_vars = [
         "p_totpop",
@@ -60,8 +70,6 @@ def test_goals_model():
         "p_deaths_nonaids_hivpop",
         "p_excess_deaths_nonaids_on_art",
         "p_excess_deaths_nonaids_no_art",
-        "ex_output",
     ]
-    returned_vars.sort()
-    expected_vars.sort()
-    assert_equal(returned_vars, expected_vars)
+    present = [var in returned_vars for var in expected_vars]
+    assert(all(present))

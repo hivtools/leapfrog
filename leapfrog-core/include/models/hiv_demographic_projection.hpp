@@ -136,11 +136,13 @@ struct HivDemographicProjection<Config> {
         }
 
         if (a < hc2_agestart) {
-          for (int hd = 0; hd < hc1DS; ++hd) {
-            for (int cat = 0; cat < hcTT; ++cat) {
+          for (int cat = 0; cat < hcTT; ++cat) {
+            for (int hd = 0; hd < hc1DS; ++hd) {
               n_hc.hc1_hivpop(hd, cat, a, s) *= 1.0 + migration_rate;
             }
-            if (t >= p_hc.hc_art_start) {
+          }
+          if (t >= p_hc.hc_art_start) {
+            for (int hd = 0; hd < hc1DS; ++hd) {
               for (int dur = 0; dur < hTS; ++dur) {
                 n_hc.hc1_artpop(dur, hd, a, s) *= 1.0 + migration_rate;
               }
@@ -278,21 +280,51 @@ struct HivDemographicProjection<Config> {
 
   // private methods that we don't want people to call
   private:
+  // Returns survival probability for HIV+ people at age a, adjusted down for PWID excess
+  // mortality. Only applies to working ages 15-49; returns surv unchanged outside that range.
+  //
+  // This is not used when running with direct incidence input
+  // (incidence_model_choice == 0) or if pwid_sex_ratio < 0. Spectrum uses
+  // pwid_sex_ratio = -1 to indicate that PWID adjustment is not used.
+  //
+  // pwid_hivpos_nonaids_mortality is expected as a rate (0-1)
+  real_type pwid_adjusted_surv(real_type surv, int a, int s) {
+    const bool no_adjustment = pars.ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS ||
+      a < p_idx_hiv_first_adult || a >= 50 ||
+      pars.ha.pwid_sex_ratio(t) < 0.0;
+
+    if (no_adjustment) return surv;
+
+    const real_type sex_ratio = pars.ha.pwid_sex_ratio(t);
+    const real_type pop_s     = state_curr.dp.p_totpop(a - 1, s);
+    const real_type total_pop = state_curr.dp.p_totpop(a - 1, SS::MALE) + state_curr.dp.p_totpop(a - 1, SS::FEMALE);
+    if (total_pop <= 0.0 || pop_s <= 0.0) return surv;
+
+    const real_type ratio = (s == SS::MALE)
+      ? 1.0 / (1.0 + sex_ratio)
+      : sex_ratio / (1.0 + sex_ratio);
+    const real_type background_mort = 1.0 - surv;
+    const real_type raw_excess = pars.ha.pwid_hivpos_nonaids_mortality - background_mort;
+    const real_type excess = (raw_excess > 0.0 ? raw_excess : 0.0)
+      * pars.ha.pwid_prop_hivpop(t) * ratio / (pop_s / total_pop);
+    return 1.0 - (background_mort + excess);
+  };
+
   void run_hiv_ageing_and_mortality() {
     const auto& p_dp = pars.dp;
     const auto& c_ha = state_curr.ha;
     auto& n_ha = state_next.ha;
 
-    // Non-hiv deaths
     for (int s = 0; s < NS; ++s) {
       for (int a = 1; a < pAG; ++a) {
-        n_ha.p_deaths_background_hivpop(a, s) = c_ha.p_hivpop(a - 1, s) * (1.0 - p_dp.survival_probability(a, s, t));
+        const real_type surv = p_dp.survival_probability(a, s, t);
+        n_ha.p_deaths_background_hivpop(a, s) = c_ha.p_hivpop(a - 1, s) * (1.0 - pwid_adjusted_surv(surv, a, s));
         n_ha.p_hivpop(a, s) = c_ha.p_hivpop(a - 1, s);
       }
 
       // open age group
-      n_ha.p_deaths_background_hivpop(pAG - 1, s) += c_ha.p_hivpop(pAG - 1, s) *
-                                                   (1.0 - p_dp.survival_probability(pAG, s, t));
+      n_ha.p_deaths_background_hivpop(pAG - 1, s) +=
+        c_ha.p_hivpop(pAG - 1, s) * (1 - p_dp.survival_probability(pAG, s, t));
       n_ha.p_hivpop(pAG - 1, s) += c_ha.p_hivpop(pAG - 1, s);
     }
   };
@@ -310,27 +342,27 @@ struct HivDemographicProjection<Config> {
 
     for (int s = 0; s < NS; ++s) {
       for (int hm = 0; hm < hDS; ++hm) {
-	i_hc.age15_hivpop(hm, s) = 0.0;
-	for (int hm_adol = 0; hm_adol < hc2DS; ++hm_adol) {
-	  auto age15_hivpop_hm_adol = 0.0;
-	  for (int htm = 0; htm < hcTT; ++htm) {
-	    age15_hivpop_hm_adol += c_hc.hc2_hivpop(hm_adol, htm, (hc2AG - 1), s);
-	  }
-	  i_hc.age15_hivpop(hm, s) += age15_hivpop_hm_adol * SS::hc2_to_ha_cd4_transition[hm][hm_adol];
-	}
+	      i_hc.age15_hivpop(hm, s) = 0.0;
+	      for (int hm_adol = 0; hm_adol < hc2DS; ++hm_adol) {
+	        auto age15_hivpop_hm_adol = 0.0;
+	        for (int htm = 0; htm < hcTT; ++htm) {
+	          age15_hivpop_hm_adol += c_hc.hc2_hivpop(hm_adol, htm, (hc2AG - 1), s);
+	        }
+	        i_hc.age15_hivpop(hm, s) += age15_hivpop_hm_adol * SS::hc2_to_ha_cd4_transition[hm][hm_adol];
+	      }
 
-	if (t > p_hc.hc_art_start) {
-	  for (int hu = 0; hu < hTS; ++hu) {
-	    i_hc.age15_artpop(hu, hm, s) = 0.0;
-	    for (int hm_adol = 0; hm_adol < hc2DS; ++hm_adol) {
-	      i_hc.age15_artpop(hu, hm, s) += c_hc.hc2_artpop(hu, hm_adol, (hc2AG - 1), s)  * SS::hc2_to_ha_cd4_transition[hm][hm_adol];
-	    }
-	  }
-	}
+	      if (t > p_hc.hc_art_start) {
+	        for (int hu = 0; hu < hTS; ++hu) {
+	          i_hc.age15_artpop(hu, hm, s) = 0.0;
+	          for (int hm_adol = 0; hm_adol < hc2DS; ++hm_adol) {
+	            i_hc.age15_artpop(hu, hm, s) += c_hc.hc2_artpop(hu, hm_adol, (hc2AG - 1), s)  * SS::hc2_to_ha_cd4_transition[hm][hm_adol];
+	          }
+	        }
+	      }
       } // hm
     } // s
   };
-  
+
   void run_hiv_and_art_stratified_ageing() {
     const auto& c_ha = state_curr.ha;
     auto& n_ha = state_next.ha;
@@ -379,7 +411,7 @@ struct HivDemographicProjection<Config> {
 	  }
 	}
       }
-      
+
     // Entrants ageing into adult HIV population
     if constexpr (ModelVariant::run_child_model) {
       auto& i_hc = intermediate.hc;
@@ -403,7 +435,7 @@ struct HivDemographicProjection<Config> {
       }
     } // s
     // TODO: implement static entrants to adult HIV population here for case when child model not simulated
-    
+
   };
 
   void run_hiv_and_art_stratified_deaths_and_migration() {
@@ -472,22 +504,24 @@ struct HivDemographicProjection<Config> {
     auto& n_hc = state_next.hc;
     const auto& p_hc = pars.hc;
 
-    real_type deaths_migrate = 0.0;
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
+        real_type deaths_migrate = 0.0;
         deaths_migrate -= n_ha.p_deaths_background_hivpop(a, s);
         if (opts.proj_period_int == PROJPERIOD_MIDYEAR) {
           deaths_migrate += n_ha.p_net_migration_hivpop(a, s);
         }
-        if(n_ha.p_hivpop(a, s) > 0){
+        if (n_ha.p_hivpop(a, s) > 0) {
           deaths_migrate /= n_ha.p_hivpop(a, s);
         }
         if (a < hc2_agestart) {
-          for (int hd = 0; hd < hc1DS; ++hd) {
-            for (int cat = 0; cat < hcTT; ++cat) {
+          for (int cat = 0; cat < hcTT; ++cat) {
+            for (int hd = 0; hd < hc1DS; ++hd) {
               n_hc.hc1_hivpop(hd, cat, a, s) *= 1.0 + deaths_migrate;
             }
-            if (t > p_hc.hc_art_start) {
+          }
+          if (t > p_hc.hc_art_start) {
+            for (int hd = 0; hd < hc1DS; ++hd) {
               for (int dur = 0; dur < hTS; ++dur) {
                 n_hc.hc1_artpop(dur, hd, a, s) *= 1.0 + deaths_migrate;
               }
