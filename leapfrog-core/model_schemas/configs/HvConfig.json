@@ -241,12 +241,12 @@
       "dims": ["SS::nPOC"]
     },
 
-     "rn_adh_treat_cov": {
+    "rn_ahd_treat_cov": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
     },
 
-     "rn_adh_treat_reduc_mort": {
+    "rn_ahd_treat_reduc_mort": {
       "num_type": "real_type"
     },
 
@@ -441,7 +441,7 @@
       "dims": ["SS::nCD4","SS::nNS"]
     },
 
-    "ADH_Tx_Impact": {
+    "AHD_Tx_Impact": {
       "num_type": "real_type"
     },
 

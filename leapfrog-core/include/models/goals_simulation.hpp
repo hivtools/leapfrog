@@ -724,7 +724,7 @@ public:
     }
 
     // mort impact variables
-    i_hv.ADH_Tx_Impact = 1.0;
+    i_hv.AHD_Tx_Impact = 1.0;
     i_hv.alpha_mult = 1.0;
 
     // these behavioral parameters are adjusted by interventions via the impact
@@ -1283,7 +1283,7 @@ public:
 
         if (do_cd4_params_editor == true) {
           // direct from age categories, no averaging
-          i_hv.hiv_mu(hd, s) = i_hv.ADH_Tx_Impact
+          i_hv.hiv_mu(hd, s) = i_hv.AHD_Tx_Impact
               * p_ha.cd4_mortality(
                   hd_hds, a25_34, s
               );  // using age 25 for defaults
@@ -1386,16 +1386,16 @@ public:
     double AHD_cov = 0.0;
     int GoalsBaseYearIdx = p_hv.goals_base_year_idx;
 
-    i_hv.ADH_Tx_Impact = 1.0;
+    i_hv.AHD_Tx_Impact = 1.0;
     if (t > GoalsBaseYearIdx) {
-      AHD_cov = p_hv.rn_adh_treat_cov(t)
+      AHD_cov = p_hv.rn_ahd_treat_cov(t)
           * (1 + p_hv.rn_poc_cov(POC_CD4, t) * p_hv.rn_poc_effect(POC_CD4));
       AHD_cov = std::clamp(AHD_cov, 0.0, 1.0);
 
-      i_hv.ADH_Tx_Impact = 1
-          - (AHD_cov - p_hv.rn_adh_treat_cov(GoalsBaseYearIdx))
-              * p_hv.rn_adh_treat_reduc_mort;
-      i_hv.ADH_Tx_Impact = std::clamp(i_hv.ADH_Tx_Impact, 0.0, 1.0);
+      i_hv.AHD_Tx_Impact = 1
+          - (AHD_cov - p_hv.rn_ahd_treat_cov(GoalsBaseYearIdx))
+              * p_hv.rn_ahd_treat_reduc_mort;
+      i_hv.AHD_Tx_Impact = std::clamp(i_hv.AHD_Tx_Impact, 0.0, 1.0);
     }
 
     // Reduce mortality by ART by 50% as viral suppression increases to 95%
@@ -3708,7 +3708,7 @@ private:
 
         case RN_AHD_TX:  // treatment advanced HIV
         {
-          pop_reached = i_hv.total_pop_hivpos * p_hv.rn_adh_treat_cov(t);
+          pop_reached = i_hv.total_pop_hivpos * p_hv.rn_ahd_treat_cov(t);
           break;
         }
 
@@ -3716,7 +3716,7 @@ private:
         {
           pop_reached = (i_hv.total_pop_hivpos + i_hv.total_art_adults
                          + i_hv.total_art_children)
-              * p_hv.rn_adh_treat_cov(t);
+              * p_hv.rn_ahd_treat_cov(t);
           break;
         }
 
