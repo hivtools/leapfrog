@@ -329,6 +329,13 @@ public:
     // initialize annual variables
     init_vars_pre_hiv_loop(t);
 
+    // TODO: Turn this back on
+    // Set coverage chnage for impact adj
+    //if (t > p_hv.goals_base_year_idx) {
+    //  calc_adj_matrix(t);
+    //  calc_behav_matrix_impacts(t);
+    //}
+
     // set risk group sizes from inputs
     // CDP move to t==1 when new variable type than intermediate is available
     set_riskgroup_proportions();
@@ -425,6 +432,9 @@ public:
       calc_r_multiplier(t);
       // calc new infections
       calc_new_infections(t, hiv_step);
+      // TODO: enable this function again
+      // rescale new infections to the level of sex to match
+      //calc_rescale_infections(t);
     }
 
     // progress, hiv-neg, at risk (RG_LRH..RG_MSM)
