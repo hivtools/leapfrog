@@ -542,7 +542,7 @@ wheels = [
 
 [[package]]
 name = "leapfrog-goals"
-version = "0.0.6"
+version = "0.0.7"
 source = { editable = "." }
 dependencies = [
     { name = "h5py" },
