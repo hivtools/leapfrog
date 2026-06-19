@@ -232,11 +232,11 @@ struct HivDemographicProjection<Config> {
         if (t > p_hc.hc_art_start) {
           for (int hu = 0; hu < hTS; ++hu) {
             if (t > opts.ts_art_start) {
-              n_vg.h_artpop_virgin(hu, hm, 0, s) += i_hc.age15_artpop(hu, hm, s) * p_dp.survival_probability(a, s, t);;
+              n_vg.h_artpop_virgin(hu, hm, 0, s) += i_hc.age15_artpop(hu, hm, s) * p_dp.survival_probability(a, s, t);
             } else {
               // If child ART has started, but not yet adult ART has started, put
               // children on ART into the untreated adult HIV population
-              n_vg.h_hivpop_virgin(hm, 0, s) += i_hc.age15_artpop(hu, hm, s) * p_dp.survival_probability(a, s, t);;
+              n_vg.h_hivpop_virgin(hm, 0, s) += i_hc.age15_artpop(hu, hm, s) * p_dp.survival_probability(a, s, t);
             }
           }
         }
