@@ -222,7 +222,9 @@ Rcpp::List get_leapfrog_ss(
   } else if (configuration == "Spectrum") {
     return leapfrog::get_ss_r<leapfrog::Spectrum>();
   } else if (configuration == "GBD") {
-    return leapfrog::get_ss_r<leapfrog::GBD>();    
+    return leapfrog::get_ss_r<leapfrog::GBD>();
+  } else if (configuration == "GBDvirgin") {
+    return leapfrog::get_ss_r<leapfrog::GBD>();        
   } else {
     const auto available_variants = list_model_configurations();
     std::ostringstream oss;
