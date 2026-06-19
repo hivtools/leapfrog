@@ -19,7 +19,9 @@ std::vector<std::string> list_model_configurations() {
     "HivCoarseAgeStratification",
     "ChildModel",
     "CoarseChildModel",
-    "Spectrum"
+    "Spectrum",
+    "GBD",
+    "GBDvirgin"
   };
 }
 
@@ -143,6 +145,10 @@ auto sim_model(const std::string configuration, Args&&... args) {
     return simulate_model<leapfrog::CoarseChildModel>(std::forward<Args>(args)...);
   } else if (configuration == "Spectrum") {
     return simulate_model<leapfrog::Spectrum>(std::forward<Args>(args)...);
+  } else if (configuration == "GBD") {
+    return simulate_model<leapfrog::GBD>(std::forward<Args>(args)...);
+  } else if (configuration == "GBDvirgin") {
+    return simulate_model<leapfrog::GBDvirgin>(std::forward<Args>(args)...);
   } else {
     const auto available_variants = list_model_configurations();
     std::ostringstream oss;
@@ -215,6 +221,10 @@ Rcpp::List get_leapfrog_ss(
     return leapfrog::get_ss_r<leapfrog::CoarseChildModel>();
   } else if (configuration == "Spectrum") {
     return leapfrog::get_ss_r<leapfrog::Spectrum>();
+  } else if (configuration == "GBD") {
+    return leapfrog::get_ss_r<leapfrog::GBD>();
+  } else if (configuration == "GBDvirgin") {
+    return leapfrog::get_ss_r<leapfrog::GBDvirgin>();
   } else {
     const auto available_variants = list_model_configurations();
     std::ostringstream oss;

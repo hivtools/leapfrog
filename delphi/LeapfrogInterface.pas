@@ -756,6 +756,49 @@ end;
 
 {$ALIGN 8}
 type
+  LeapfrogVirginParamsView = record
+  private
+    sexdebutAnnualProb: PDouble;
+    sexdebutAnnualProbLength: Integer;
+end;
+
+type
+  LeapfrogVirginParams = class
+  public
+    sexdebutAnnualProb: TGBFixedArray<Double>;
+    function getView(): LeapfrogVirginParamsView;
+    procedure writeToDisk(dir: string);
+    Destructor Destroy; override;
+end;
+
+{$ALIGN 8}
+type
+  LeapfrogVirginStateView = record
+  private
+    pTotpopVirgin: PDouble;
+    pTotpopVirginLength: Integer;
+    pHivpopVirgin: PDouble;
+    pHivpopVirginLength: Integer;
+    hHivpopVirgin: PDouble;
+    hHivpopVirginLength: Integer;
+    hArtpopVirgin: PDouble;
+    hArtpopVirginLength: Integer;
+end;
+
+type
+  LeapfrogVirginState = class
+  public
+    pTotpopVirgin: TGBFixedArray<Double>;
+    pHivpopVirgin: TGBFixedArray<Double>;
+    hHivpopVirgin: TGBFixedArray<Double>;
+    hArtpopVirgin: TGBFixedArray<Double>;
+    function getView(): LeapfrogVirginStateView;
+    procedure writeToDisk(dir: string);
+    Destructor Destroy; override;
+end;
+
+{$ALIGN 8}
+type
   LeapfrogParams = record
   private
     demproj: ^LeapfrogDemProjParamsView;
@@ -763,12 +806,14 @@ type
     hivchild: ^LeapfrogHivChildParamsView;
     spectrum: ^LeapfrogSpectrumParamsView;
     goals: ^LeapfrogGoalsParamsView;
+    virgin: ^LeapfrogVirginParamsView;
   public
     procedure SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);
     procedure SetHivAdultParams(const hivadultParams: LeapfrogHivAdultParamsView);
     procedure SetHivChildParams(const hivchildParams: LeapfrogHivChildParamsView);
     procedure SetSpectrumParams(const spectrumParams: LeapfrogSpectrumParamsView);
     procedure SetGoalsParams(const goalsParams: LeapfrogGoalsParamsView);
+    procedure SetVirginParams(const virginParams: LeapfrogVirginParamsView);
 end;
 
 {$ALIGN 8}
@@ -780,12 +825,14 @@ type
     hivchild: ^LeapfrogHivChildStateView;
     spectrum: ^LeapfrogSpectrumStateView;
     goals: ^LeapfrogGoalsStateView;
+    virgin: ^LeapfrogVirginStateView;
   public
     procedure SetDemProjState(const demprojState: LeapfrogDemProjStateView);
     procedure SetHivAdultState(const hivadultState: LeapfrogHivAdultStateView);
     procedure SetHivChildState(const hivchildState: LeapfrogHivChildStateView);
     procedure SetSpectrumState(const spectrumState: LeapfrogSpectrumStateView);
     procedure SetGoalsState(const goalsState: LeapfrogGoalsStateView);
+    procedure SetVirginState(const virginState: LeapfrogVirginStateView);
 end;
 
 type TCallbackFunction = procedure(Msg: PAnsiChar); stdcall;
@@ -1449,6 +1496,39 @@ begin;
   Result.newInfScaleFactorLength := newInfScaleFactor.GetLength();
 end;
 
+destructor LeapfrogVirginParams.Destroy;
+begin;
+  sexdebutAnnualProb.Free;
+  inherited;
+end;
+
+destructor LeapfrogVirginState.Destroy;
+begin;
+  pTotpopVirgin.Free;
+  pHivpopVirgin.Free;
+  hHivpopVirgin.Free;
+  hArtpopVirgin.Free;
+  inherited;
+end;
+
+function LeapfrogVirginParams.getView(): LeapfrogVirginParamsView;
+begin;
+  Result.sexdebutAnnualProb := PDouble(sexdebutAnnualProb.data);
+  Result.sexdebutAnnualProbLength := sexdebutAnnualProb.GetLength();
+end;
+
+function LeapfrogVirginState.getView(): LeapfrogVirginStateView;
+begin;
+  Result.pTotpopVirgin := PDouble(pTotpopVirgin.data);
+  Result.pTotpopVirginLength := pTotpopVirgin.GetLength();
+  Result.pHivpopVirgin := PDouble(pHivpopVirgin.data);
+  Result.pHivpopVirginLength := pHivpopVirgin.GetLength();
+  Result.hHivpopVirgin := PDouble(hHivpopVirgin.data);
+  Result.hHivpopVirginLength := hHivpopVirgin.GetLength();
+  Result.hArtpopVirgin := PDouble(hArtpopVirgin.data);
+  Result.hArtpopVirginLength := hArtpopVirgin.GetLength();
+end;
+
 procedure LeapfrogDemProjParams.writeToDisk(dir: string);
 begin;
   if not DirectoryExists(dir) then
@@ -1665,6 +1745,23 @@ begin;
   newInfScaleFactor.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newInfScaleFactor');
 end;
 
+procedure LeapfrogVirginParams.writeToDisk(dir: string);
+begin;
+  if not DirectoryExists(dir) then
+    ForceDirectories(dir);
+  sexdebutAnnualProb.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'sexdebutAnnualProb');
+end;
+
+procedure LeapfrogVirginState.writeToDisk(dir: string);
+begin;
+  if not DirectoryExists(dir) then
+    ForceDirectories(dir);
+  pTotpopVirgin.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pTotpopVirgin');
+  pHivpopVirgin.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pHivpopVirgin');
+  hHivpopVirgin.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hHivpopVirgin');
+  hArtpopVirgin.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hArtpopVirgin');
+end;
+
 procedure LeapfrogParams.SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);
 begin
   demproj := @demprojParams;
@@ -1713,6 +1810,16 @@ end;
 procedure LeapfrogState.SetGoalsState(const goalsState: LeapfrogGoalsStateView);
 begin
   goals := @goalsState;
+end;
+
+procedure LeapfrogParams.SetVirginParams(const virginParams: LeapfrogVirginParamsView);
+begin
+  virgin := @virginParams;
+end;
+
+procedure LeapfrogState.SetVirginState(const virginState: LeapfrogVirginStateView);
+begin
+  virgin := @virginState;
 end;
 
 end.
