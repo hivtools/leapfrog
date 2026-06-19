@@ -228,7 +228,7 @@
 
     "rn_coverage": {
       "num_type": "real_type",
-      "dims": ["SS::nIntervnRN", "opts.proj_steps"] 
+      "dims": ["SS::nIntervnRN", "opts.proj_steps"]
     },
 
     "rn_poc_cov": {
@@ -241,12 +241,12 @@
       "dims": ["SS::nPOC"]
     },
 
-     "rn_adh_treat_cov": {
+    "rn_ahd_treat_cov": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
     },
 
-     "rn_adh_treat_reduc_mort": {
+    "rn_ahd_treat_reduc_mort": {
       "num_type": "real_type"
     },
 
@@ -381,16 +381,6 @@
       "dims": ["SS::nHIV", "SS::nCD4","SS::nNS"]
     },
 
-    "hiv_exit_rates": {
-      "num_type": "real_type",
-      "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
-    },
-
-     "art_exit_rates": {
-      "num_type": "real_type",
-      "dims": ["SS::nRG", "SS::nCD4a+1","SS::nNS"]
-    },
-
     "hiv_stage_exits": {
       "num_type": "real_type",
       "dims": ["SS::nVAC","SS::nRG","SS::nCD4p","SS::nNS"]
@@ -451,7 +441,7 @@
       "dims": ["SS::nCD4","SS::nNS"]
     },
 
-    "ADH_Tx_Impact": {
+    "AHD_Tx_Impact": {
       "num_type": "real_type"
     },
 
@@ -604,7 +594,7 @@
       "num_type": "real_type",
       "dims": ["SS::nVAC+1","SS::nRG+1","SS::nCD4+1","SS::nNS+1"]
     },
-    
+
     "total_deaths": {
       "num_type": "real_type"
     },
