@@ -218,39 +218,39 @@ struct HivDemographicProjection<Config> {
       }
 
       // Entrants into virgin population from total population age (p_idx_virginpop_first - 1)
-      int va = 0;
-      int a = SS::p_idx_virginpop_first;
-      n_vg.p_totpop_virgin(va, s) = c_dp.p_totpop(a - 1, s) * p_dp.survival_probability(a, s, t);
-      n_vg.p_hivpop_virgin(va, s) = c_ha.p_hivpop(a - 1, s) * p_dp.survival_probability(a, s, t);
+      const int va0 = 0;
+      const int a0 = SS::p_idx_virginpop_first;
+      n_vg.p_totpop_virgin(va0, s) = c_dp.p_totpop(a0 - 1, s) * p_dp.survival_probability(a0, s, t);
+      n_vg.p_hivpop_virgin(va0, s) = c_ha.p_hivpop(a0 - 1, s) * p_dp.survival_probability(a0, s, t);
 
       // Entrants into virgin HIV stratified population
       // Note: code relies on virgin HIV population being single-age stratified; needs
       // to be generalised if implementing coarse HIV population.
       for (int hm = 0; hm < hDS; ++hm) {
-	n_vg.h_hivpop_virgin(hm, va, s) += i_hc.age15_hivpop(hm, s) * p_dp.survival_probability(a, s, t);
+	n_vg.h_hivpop_virgin(hm, va0, s) += i_hc.age15_hivpop(hm, s) * p_dp.survival_probability(a0, s, t);
 	
 	if (t > p_hc.hc_art_start) {
 	  for (int hu = 0; hu < hTS; ++hu) {
 	    if (t > opts.ts_art_start) {
-	      n_vg.h_artpop_virgin(hu, hm, 0, s) += i_hc.age15_artpop(hu, hm, s) * p_dp.survival_probability(a, s, t);;
+	      n_vg.h_artpop_virgin(hu, hm, va0, s) += i_hc.age15_artpop(hu, hm, s) * p_dp.survival_probability(a0, s, t);;
 	    } else {
 	      // If child ART has started, but not yet adult ART has started, put
 	      // children on ART into the untreated adult HIV population
-	      n_vg.h_hivpop_virgin(hm, 0, s) += i_hc.age15_artpop(hu, hm, s) * p_dp.survival_probability(a, s, t);;
+	      n_vg.h_hivpop_virgin(hm, va0, s) += i_hc.age15_artpop(hu, hm, s) * p_dp.survival_probability(a0, s, t);;
 	    }
 	  }
 	}
       }
 
       if (opts.proj_period_int == PROJPERIOD_MIDYEAR) {
-	n_vg.p_totpop_virgin(va, s) *= 1.0 + i_dp.migration_rate(a, s);
-	n_vg.p_hivpop_virgin(va, s) *= 1.0 + i_dp.migration_rate(a, s);
+	n_vg.p_totpop_virgin(va0, s) *= 1.0 + i_dp.migration_rate(a0, s);
+	n_vg.p_hivpop_virgin(va0, s) *= 1.0 + i_dp.migration_rate(a0, s);
 
 	for (int hm = 0; hm < hDS; ++hm) {
-	  n_vg.h_hivpop_virgin(hm, va, s) *= 1.0 + i_dp.migration_rate(a, s);
+	  n_vg.h_hivpop_virgin(hm, va0, s) *= 1.0 + i_dp.migration_rate(a0, s);
 	  if (t > opts.ts_art_start) {	  
 	    for (int hu = 0; hu < hTS; ++hu) {
-	      n_vg.h_artpop_virgin(hu, hm, va, s) *= 1.0 + i_dp.migration_rate(a, s);	      
+	      n_vg.h_artpop_virgin(hu, hm, va0, s) *= 1.0 + i_dp.migration_rate(a0, s);
 	    }
 	  }
 	}
