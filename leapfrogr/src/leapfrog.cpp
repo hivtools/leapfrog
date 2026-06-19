@@ -148,7 +148,7 @@ auto sim_model(const std::string configuration, Args&&... args) {
   } else if (configuration == "GBD") {
     return simulate_model<leapfrog::GBD>(std::forward<Args>(args)...);
   } else if (configuration == "GBDvirgin") {
-    return simulate_model<leapfrog::GBDvirgin>(std::forward<Args>(args)...);     
+    return simulate_model<leapfrog::GBDvirgin>(std::forward<Args>(args)...);
   } else {
     const auto available_variants = list_model_configurations();
     std::ostringstream oss;
@@ -224,7 +224,7 @@ Rcpp::List get_leapfrog_ss(
   } else if (configuration == "GBD") {
     return leapfrog::get_ss_r<leapfrog::GBD>();
   } else if (configuration == "GBDvirgin") {
-    return leapfrog::get_ss_r<leapfrog::GBD>();        
+    return leapfrog::get_ss_r<leapfrog::GBDvirgin>();
   } else {
     const auto available_variants = list_model_configurations();
     std::ostringstream oss;
