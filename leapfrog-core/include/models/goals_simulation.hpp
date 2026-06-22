@@ -378,12 +378,19 @@ public:
       calc_HIV_cure(t);
       calc_HIV_mort_adjustments(t);
     }
+
   }
 
   void run_goals_hiv_loop(int hiv_step) {
     const auto& p_hv = pars.hv;
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
+
+    if(hiv_step==0){
+    std::cout << "males, migration rate: t " << t  << " " << i_hv.migration_rate(0) << std::endl;
+    std::cout << "females, migration rate: t " << t  << " " << i_hv.migration_rate(1) << std::endl;
+    std::cout << "migration rates " << std::endl;
+    }
 
     // initialize inner loop varaibles
     init_vars_hiv_loop();
@@ -1059,6 +1066,7 @@ public:
     const auto& n_ha = state_next.ha;
     const auto& p_ha = pars.ha;
 
+  
     // goals
     auto& i_hv = intermediate.hv;
 
@@ -1093,11 +1101,6 @@ public:
     nda::fill(
         i_hv.dp_aging_denom_1549, 0.0
     );  // denominator for aging rate in goals
-
-    nda::fill(i_hv.dp_migration_num, 0.0);  // numerator for avg migration rate
-    nda::fill(
-        i_hv.dp_migration_denom, 0.0
-    );  // denominaor for avg migration rate
 
     i_hv.total_art_adults = 0.0;  // denominator for resource needs
     i_hv.total_art_children = 0.0;  // denominator for resource needs
@@ -1147,10 +1150,6 @@ public:
         i_hv.dp_totpop_deaths_background(s) +=
             n_dp.p_deaths_background_totpop(a, s);
         i_hv.dp_totpop_1549(s) += n_dp.p_totpop(a - 1, s);
-
-        i_hv.dp_migration_num(s) +=
-            n_dp.p_totpop(a, s) * i_dp.migration_rate(a, s);
-        i_hv.dp_migration_denom(s) += n_dp.p_totpop(a, s);
 
         i_hv.dp_pop_1549(s) += n_dp.p_totpop(a, s);
         i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) +=
@@ -1232,7 +1231,7 @@ public:
       nda::fill(i_hv.rate_aging_50, 0.0);  // mort rate, hiv on ART
     }
 
-    nda::fill(i_hv.migration_rate, 0.0);  // migration rate
+    //nda::fill(i_hv.migration_rate, 0.0);  // migration rate
 
     // rates for HIV dynamics
     nda::fill(i_hv.hiv_mu, 0.0);  // mort rate, hiv not on ART
@@ -1248,6 +1247,8 @@ public:
 
     real_type years_in_primary = p_hv.epi_months_in_primary / 12.0;
 
+    //using this switch to control if HIV parameters come from dp/aim's editor, or if 
+    //it is average from dp/aim population numbers. for now, forcing it as direct input
     bool do_cd4_params_editor = true;
 
     const int hOnArt = 7;
@@ -1260,12 +1261,6 @@ public:
             : 0.0;
       }
 
-      // migration rate
-      if (hiv_step == 0) {
-        i_hv.migration_rate(s) = (i_hv.dp_migration_denom(s) != 0.0)
-            ? i_hv.dp_migration_num(s) / i_hv.dp_migration_denom(s)
-            : 0.0;
-      }
 
       // set aging rates, out of 15-49 year old population
       i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s) =
@@ -1373,6 +1368,11 @@ public:
             (denominator != 0.0) ? numerator / denominator : 0.0;
       }
     }
+
+  //auto dbg_model = capture_model(state_next, intermediate, pars);
+  //nda_print_info(dbg_model.hv.migration_rate);
+
+
   }
 
   void calc_HIV_mort_adjustments(int t
@@ -1804,8 +1804,8 @@ public:
     real_type dt = opts.dt;
     real_type value = 0.0;
 
-    real_type temp1 = 0.0;
-    real_type temp2 = 0.0;
+    //real_type temp1 = 0.0;
+    //real_type temp2 = 0.0;
 
     // unvaccinated
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
@@ -1825,8 +1825,8 @@ public:
             continue;
           }
 
-          temp1 = n_hv.adults(VAC_UNV, rg, hd, s);
-          temp2 = n_hv.adults(VAC_UNV, rg, CD4_ALL, s);
+          //temp1 = n_hv.adults(VAC_UNV, rg, hd, s);
+          //temp2 = n_hv.adults(VAC_UNV, rg, CD4_ALL, s);
 
           // Mortality
           // hiv-pos or hiv-art mortality rate
@@ -2758,44 +2758,6 @@ public:
 
     n_hv.incidence_goals(S_ALL) = num_s_both / denom_s_both;
     n_hv.new_infections_goals(S_ALL) = num_s_both;
-  }
-
-  void add_new_infections2() {
-    const auto& p_ha = pars.ha;
-
-    // calculated new infections
-    auto& n_hv = state_next.hv;
-
-    for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) {
-      for (int rg = RG_LRH; rg <= RG_MSMIDU; ++rg) {
-        for (int s = S_MALE; s <= S_FEMALE; ++s) {
-          if (!((s == S_FEMALE) && (rg >= RG_MSM))) {
-            // Remove new infections from HIV‑negative category
-            n_hv.adults(v, rg, CD4_NEG, s) -=
-                opts.dt * n_hv.new_inf_vrs(v, rg, s);
-            n_hv.new_inf_s(s) += opts.dt * n_hv.new_inf_vrs(v, rg, s);
-            n_hv.total_new_infections += opts.dt * n_hv.new_inf_vrs(v, rg, s);
-            ;
-
-            // Add new infections to each HIV‑positive stage
-            for (int hd = CD4_PRIM; hd <= CD4_LT50; ++hd) {
-              int hd_hds = 0;  // set prim
-
-              if (hd == CD4_GT500) {
-                continue;  // see goals
-              }
-
-              if (hd >= CD4_350_500) {
-                hd_hds = hd - CD4_GT500;  // CD4_350_500 and higher indices
-              }
-
-              n_hv.adults(v, rg, hd, s) += opts.dt * n_hv.new_inf_vrs(v, rg, s)
-                  * p_ha.cd4_initial_distribution(hd_hds, pIDX_15to49 + 10, s);
-            }
-          }
-        }  // s
-      }  // r
-    }  // v
   }
 
   void allocate_art(int t) {

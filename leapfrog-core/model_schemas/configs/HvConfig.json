@@ -339,15 +339,6 @@
       "dims": ["SS::nNS"]
     },
 
-    "dp_migration_num": {
-      "num_type": "real_type",
-      "dims": ["SS::nNS"]
-    },
-
-    "dp_migration_denom": {
-      "num_type": "real_type",
-      "dims": ["SS::nNS"]
-    },
 
      "migration_rate": {
       "num_type": "real_type",

@@ -77,6 +77,31 @@ struct GeneralDemographicProjection<Config> {
     }
   };
 
+    void run_end_year_migration_goals() {
+    const auto& p_dp = pars.dp;
+    auto& i_dp = intermediate.dp;
+    auto& n_dp = state_next.dp;
+
+    auto& i_hv = intermediate.hv;
+
+    real_type migration_num=0;
+    real_type migration_denom=0;
+    
+    for (int s = 0; s < NS; ++s) {
+
+        // Migration for ages 15-49, by sex
+        migration_num=0;
+        migration_denom=0;
+        for (int a = SS::pIDX_15to49; a < SS::pIDX_15to49 + SS::pAG_15to49; ++a) {
+          migration_num += p_dp.net_migration(a, s, t);
+          migration_denom += n_dp.p_totpop(a, s);
+        }
+
+        i_hv.migration_rate(s) = (migration_denom != 0.0) ? migration_num / migration_denom : 0.0;
+    }
+    
+  };
+
 
   // private methods that we don't want people to call
   private:
