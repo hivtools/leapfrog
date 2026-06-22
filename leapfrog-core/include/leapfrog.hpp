@@ -130,7 +130,6 @@ struct Leapfrog {
 
         if constexpr (ModelVariant::run_goals) {
           goals_sim.run_goals_pre_hiv_loop();
-          general_dp.run_end_year_migration_goals();
         }
 
         hiv_sim.run_hiv_adult_pre_hiv_loop();

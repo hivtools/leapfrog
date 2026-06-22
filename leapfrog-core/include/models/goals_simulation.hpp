@@ -386,12 +386,6 @@ public:
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
 
-    if(hiv_step==0){
-    std::cout << "males, migration rate: t " << t  << " " << i_hv.migration_rate(0) << std::endl;
-    std::cout << "females, migration rate: t " << t  << " " << i_hv.migration_rate(1) << std::endl;
-    std::cout << "migration rates " << std::endl;
-    }
-
     // initialize inner loop varaibles
     init_vars_hiv_loop();
 
@@ -403,6 +397,14 @@ public:
 
     // collect info from dp/aim to set demographical and HIV rates
     set_goals_vars_from_dp(t, hiv_step);
+
+    //migration rate for goals calculated seperately
+    if(hiv_step==0){
+      calc_migration_rate(t);
+      //std::cout << "males, migration rate: t " << t  << " " << i_hv.migration_rate(0) << std::endl;
+      //std::cout << "females, migration rate: t " << t  << " " << i_hv.migration_rate(1) << std::endl;
+      //std::cout << "migration rates " << std::endl;
+    }
 
     // set the rates to vars in goals, including progression, aging and
     // mortality
@@ -1166,7 +1168,7 @@ public:
           i_hv.dp_pop_1549_hiv(hd, s) += n_ha.h_hivpop(hd_hds, a_hv, s);
 
           real_type hivpop_h = n_ha.h_hivpop(hd_hds, a_hv, s);
-          real_type hivpop_h1 = n_ha.h_hivpop(hd_hds, a_hv, s);
+          real_type hivpop_h1 =0.0;
 
           i_hv.dp_pop_sex_age_hiv(POP_H_NoART, s) += hivpop_h;
           i_hv.dp_aging_denom_1549(POP_H_NoART, hd, s) += hivpop_h;
@@ -1181,8 +1183,9 @@ public:
           i_hv.dp_hiv_cd4_mort_no_art(hd, s) +=
               n_ha.h_hiv_deaths_no_art(hd_hds, a_hv, s);
           if (hd > CD4_GT500) {
+            hivpop_h1 = n_ha.h_hivpop(hd_hds-1, a_hv, s);
             i_hv.dp_hiv_cd4_progression(hd - 1, s) +=
-                p_ha.cd4_progression(hd_hds, a_hv, s) * hivpop_h1;
+                p_ha.cd4_progression(hd_hds-1, a_hv, s) * hivpop_h1;
           }
 
           for (int ht = 0; ht < nART; ++ht) {
@@ -1216,6 +1219,33 @@ public:
     }  // s
   }
 
+   void calc_migration_rate(int t) {
+    const auto& p_dp = pars.dp;
+    auto& i_dp = intermediate.dp;
+    auto& n_dp = state_next.dp;
+
+    auto& i_hv = intermediate.hv;
+
+    real_type migration_num=0;
+    real_type migration_denom=0;
+    
+    for (int s = S_MALE; s <= S_FEMALE; ++s) {
+
+      // Migration for ages 15-49, by sex
+      migration_num = 0.0;
+      migration_denom = 0.0;
+      i_hv.migration_rate(s) = 0.0;
+
+      for (int a = SS::pIDX_15to49; a < SS::pIDX_15to49 + SS::pAG_15to49; ++a) {
+        migration_num += p_dp.net_migration(a, s, t);
+        migration_denom += n_dp.p_totpop(a, s);
+      }
+
+      i_hv.migration_rate(s) = (migration_denom != 0.0) ? migration_num / migration_denom : 0.0;
+    }
+    
+  };
+
   void calc_goals_rates(int t, int hiv_step) {
     const auto& p_ha = pars.ha;
 
@@ -1230,8 +1260,6 @@ public:
       nda::fill(i_hv.background_death_rate, 0.0);  // dp total pop 1549
       nda::fill(i_hv.rate_aging_50, 0.0);  // mort rate, hiv on ART
     }
-
-    //nda::fill(i_hv.migration_rate, 0.0);  // migration rate
 
     // rates for HIV dynamics
     nda::fill(i_hv.hiv_mu, 0.0);  // mort rate, hiv not on ART
@@ -1368,10 +1396,6 @@ public:
             (denominator != 0.0) ? numerator / denominator : 0.0;
       }
     }
-
-  //auto dbg_model = capture_model(state_next, intermediate, pars);
-  //nda_print_info(dbg_model.hv.migration_rate);
-
 
   }
 
