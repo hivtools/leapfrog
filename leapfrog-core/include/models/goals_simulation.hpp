@@ -2824,12 +2824,11 @@ public:
     real_type new_art_cap;
     real_type sum1;
 
-    int rg_eligible_treat_year[DP_EligTreatPopsMax] = {};
-    bool rg_eligible_treat[DP_EligTreatPopsMax] = {};
+    const int FSW_ELIG=0;
+    const int MSM_ELIG=0;
+    const int IDU_ELIG=0;
 
     for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
-      rg_eligible_treat_year[rg] = 2010;
-
       for (int s = S_MALE; s <= S_FEMALE; ++s) {
         kp_cd4_elig[rg][s] = true;
       }
@@ -2891,20 +2890,20 @@ public:
     }
 
     // set rg eligibility and year
-    if (rg_eligible_treat[DP_EligTreatSexWorkers] == true) {
-      if (rg_eligible_treat_year[DP_EligTreatSexWorkers] <= t) {
+    if (p_hv.pop_elig_treat(FSW_ELIG) == 1) {
+      if (p_hv.pop_elig_year(FSW_ELIG)-opts.proj_start_year+1 <= t) {
         kp_cd4_elig[RG_HRH][S_FEMALE] = false;
       }
     }
 
-    if (rg_eligible_treat[DP_EligTreatMSM] == true) {
-      if (rg_eligible_treat_year[DP_EligTreatMSM] <= t) {
+    if (p_hv.pop_elig_treat(MSM_ELIG) == 1) {
+      if (p_hv.pop_elig_year(MSM_ELIG)-opts.proj_start_year+1 <= t) {
         kp_cd4_elig[RG_MSM][S_MALE] = false;
       }
     }
 
-    if (rg_eligible_treat[DP_EligTreatIDU] == true) {
-      if (rg_eligible_treat_year[DP_EligTreatIDU] <= t) {
+    if (p_hv.pop_elig_treat(IDU_ELIG) == true) {
+      if (p_hv.pop_elig_year(IDU_ELIG)-opts.proj_start_year+1 <= t) {
         kp_cd4_elig[RG_IDU][S_MALE] = false;
         kp_cd4_elig[RG_IDU][S_FEMALE] = false;
       }
@@ -3713,7 +3712,7 @@ private:
           if (p_hv.rn_cure_coverage_type == CURE_COV_ALLRISK) {
             pop_reached = (i_hv.total_pop_hivpos + i_hv.total_art_adults
                            + i_hv.total_art_children)
-                * p_hv.rn_cure_coverage_all(t);
+                          * p_hv.rn_cure_coverage_all(t);
           } else {
             for (int rg = RG_LRH; rg <= RG_MSMIDU; ++rg) {
               pop_reached += (n_hv.adults(VAC_ALL, rg, CD4_ALL, S_MALE)
@@ -3735,8 +3734,7 @@ private:
         {
           // adjust hiv births to get those reached
           pop_reached = n_ha.hiv_births
-              / (1
-                 - p_hv.rn_cure_coverage_neonates(t)
+              / (1 - p_hv.rn_cure_coverage_neonates(t)
                      * p_hv.rn_cure_effect_neonates);
           pop_reached *= p_hv.rn_cure_coverage_neonates(t);
 

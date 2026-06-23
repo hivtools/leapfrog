@@ -43,7 +43,8 @@
       "nMAX_BEHAV_IMPACTS" : 23,
       "nART_NUM_PERC" : 4,
       "nRNPopSizes":35,
-      "nRG_VMM":4
+      "nRG_VMM":4,
+      "nEligART":3
 
     }
   },
@@ -297,6 +298,20 @@
     "art_cov_num_percent": {
       "num_type": "int",
       "dims": ["SS::nART_NUM_PERC+1"]
+    },
+
+     "pop_elig_treat": {
+      "num_type": "int",
+      "dims": ["SS::nEligART"]
+    },
+
+    "pop_elig_year": {
+      "num_type": "int",
+      "dims": ["SS::nEligART"]
+    },
+
+     "program_support_markup": {
+      "num_type": "real_type"
     }
 
   },
