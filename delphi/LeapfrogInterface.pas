@@ -594,6 +594,12 @@ type
     artCoverageRgLength: Integer;
     artCovNumPercent: PInteger;
     artCovNumPercentLength: Integer;
+    popEligTreat: PInteger;
+    popEligTreatLength: Integer;
+    popEligYear: PInteger;
+    popEligYearLength: Integer;
+    programSupportMarkup: Double;
+    programSupportMarkupLength: Integer;
 end;
 
 type
@@ -651,6 +657,9 @@ type
     hvImpactMatrix: TGBFixedArray<Double>;
     artCoverageRg: TGBFixedArray<Double>;
     artCovNumPercent: TGBFixedArray<Integer>;
+    popEligTreat: TGBFixedArray<Integer>;
+    popEligYear: TGBFixedArray<Integer>;
+    programSupportMarkup: Double;
     function getView(): LeapfrogGoalsParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -1245,6 +1254,8 @@ begin;
   hvImpactMatrix.Free;
   artCoverageRg.Free;
   artCovNumPercent.Free;
+  popEligTreat.Free;
+  popEligYear.Free;
   inherited;
 end;
 
@@ -1387,6 +1398,12 @@ begin;
   Result.artCoverageRgLength := artCoverageRg.GetLength();
   Result.artCovNumPercent := PInteger(artCovNumPercent.data);
   Result.artCovNumPercentLength := artCovNumPercent.GetLength();
+  Result.popEligTreat := PInteger(popEligTreat.data);
+  Result.popEligTreatLength := popEligTreat.GetLength();
+  Result.popEligYear := PInteger(popEligYear.data);
+  Result.popEligYearLength := popEligYear.GetLength();
+  Result.programSupportMarkup := programSupportMarkup;
+  Result.programSupportMarkupLength := 1;
 end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
@@ -1638,6 +1655,8 @@ begin;
   hvImpactMatrix.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hvImpactMatrix');
   artCoverageRg.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCoverageRg');
   artCovNumPercent.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCovNumPercent');
+  popEligTreat.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'popEligTreat');
+  popEligYear.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'popEligYear');
 end;
 
 procedure LeapfrogGoalsState.writeToDisk(dir: string);

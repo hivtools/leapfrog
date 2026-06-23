@@ -528,15 +528,35 @@
     },
 
 
-    "total_art_adults": {
+    "pop_art_adults": {
       "num_type": "real_type"
     },
 
-    "total_art_children": {
+    "pop_art_children": {
       "num_type": "real_type"
     },
 
-    "total_pop_hivpos": {
+    "pop_hivpos_adults": {
+      "num_type": "real_type"
+    },
+
+    "pop_hivpos_children": {
+      "num_type": "real_type"
+    },
+
+    "pop_art_adults_ahd": {
+      "num_type": "real_type"
+    },
+
+    "pop_art_children_ahd": {
+      "num_type": "real_type"
+    },
+
+    "pop_hivpos_adults_ahd": {
+      "num_type": "real_type"
+    },
+
+    "pop_hivpos_children_ahd": {
       "num_type": "real_type"
     },
 

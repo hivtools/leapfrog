@@ -37,13 +37,13 @@ dev = [
     "docopt>=0.6.2",
     "pytest>=8.3.5",
     "avenir-spectrum-import-pjnz>=0.1.8",
-    "avenir-spectrum-common>=0.1.12"
+    #"avenir-spectrum-common>=0.1.13"
 ]
 
 # Uncomment and set file path to use local development versions
-# [tool.uv.sources]
-# avenir-spectrum-common = { path = "C:\\work\\LeapFrog\\V3\\SpectrumEngine\\SpectrumCommon", editable = true }
-# avenir-spectrum-import-pjnz = { path = "C:\\work\\LeapFrog\\V3\\leapfrog\\goals\\tests\\resources", editable = true }
+[tool.uv.sources]
+ avenir-spectrum-common = { path = "C:\\work\\LeapFrog\\V3\\SpectrumEngine2\\SpectrumCommon", editable = true }
+ #avenir-spectrum-import-pjnz = { path = "C:\\work\\LeapFrog\\V3\\leapfrog\\goals\\tests\\resources", editable = true }
 
 # Needed for full C++17 support on macOS
 [tool.cibuildwheel.macos.environment]

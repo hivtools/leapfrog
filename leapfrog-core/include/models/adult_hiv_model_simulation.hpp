@@ -163,6 +163,13 @@ struct AdultHivModelSimulation<Config> {
           }
 
           auto deaths_hiv  = i_ha.cd4mx_scale * p_ha.cd4_mortality(hm, ha, s) * n_ha.h_hivpop(hm, ha, s);
+          //capture the impact of AHD treament on hiv mortality 
+          if constexpr (ModelVariant::run_goals) {
+            if ( (t > pars.hv.goals_base_year_idx) && (hm>=4) ) { // index 4 is CD4_100_199 
+              deaths_hiv *= intermediate.hv.AHD_Tx_Impact;
+            }
+          }                   
+          
           i_ha.h_hiv_deaths_age_sex(ha, s) += opts.dt * deaths_hiv;
           n_ha.h_hiv_deaths_no_art(hm, ha, s) += opts.dt * deaths_hiv;
 
@@ -395,6 +402,7 @@ struct AdultHivModelSimulation<Config> {
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
 
+  
     for (int s = 0; s < NS; ++s) {
       for (int ha = 0; ha < hAG; ++ha) {
         for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
@@ -402,6 +410,13 @@ struct AdultHivModelSimulation<Config> {
             i_ha.deaths_art = p_ha.art_mortality(hu, hm, ha, s) *
                               p_ha.art_mortality_time_rate_ratio(hu, t) *
                               n_ha.h_artpop(hu, hm, ha, s);
+
+           //capture the impact of AHD treament on art mortality 
+           if constexpr (ModelVariant::run_goals) {
+              if ( (t > pars.hv.goals_base_year_idx) && (hm>=4) ) { // index 4 is CD4_100_199 
+                i_ha.deaths_art *= intermediate.hv.AHD_Tx_Impact;
+              }
+            }                   
 
             const auto new_hiv_deaths_art = opts.dt * i_ha.deaths_art;
             i_ha.h_hiv_deaths_age_sex(ha, s) += new_hiv_deaths_art;
@@ -722,7 +737,9 @@ struct AdultHivModelSimulation<Config> {
     } // end ha
 
     if constexpr (ModelVariant::run_goals) {
-      n_ha.hiv_births *= (1-pars.hv.rn_cure_coverage_neonates(t)*pars.hv.rn_cure_effect_neonates);
+      if (t > pars.hv.goals_base_year_idx) {
+        n_ha.hiv_births *= (1-pars.hv.rn_cure_coverage_neonates(t)*pars.hv.rn_cure_effect_neonates);
+      }
     }
   };
 
