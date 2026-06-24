@@ -56,6 +56,11 @@ private:
   static constexpr int hCD4_LT50 = SS::hCD4_LT50;
   static constexpr int hHIV_Cats = SS::hHIV_Cats;
 
+  static constexpr int hc2_agestart = SS::hc2_agestart;
+  static constexpr int hcTT = SS::hcTT;
+  static constexpr int hc1DS = SS::hc1DS;
+  static constexpr int hc2DS = SS::hc2DS;
+
   enum Index {
     // Sexes
     S_MALE = 0,
@@ -1109,41 +1114,76 @@ public:
     );  // denominator for aging rate in goals
 
 
-    i_hv.pop_hivpos_adults = 0.0;   // denominator for resource need
-    i_hv.pop_hivpos_children = 0.0; // denominator for resource need
-    i_hv.pop_art_adults = 0.0;      // denominator for resource needs
-    i_hv.pop_art_children = 0.0;    // denominator for resource needs
+    // denominators for resource need
+    i_hv.pop_hivpos_adults = 0.0;   
+    i_hv.pop_hivpos_children = 0.0; 
+    i_hv.pop_art_adults = 0.0;      
+    i_hv.pop_art_children = 0.0;   
 
-    i_hv.pop_hivpos_adults_ahd = 0.0;    // denominator for resource need
-    i_hv.pop_hivpos_children_ahd = 0.0;  // denominator for resource need
-    i_hv.pop_art_adults_ahd = 0.0;       // denominator for resource needs
-    i_hv.pop_art_children_ahd = 0.0;     // denominator for resource needs
+    i_hv.pop_hivpos_adults_ahd = 0.0;    
+    i_hv.pop_hivpos_children_ahd = 0.0;  
+    i_hv.pop_art_adults_ahd = 0.0;    
+    i_hv.pop_art_children_ahd = 0.0;
+
 
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
-      for (int a = 0; a < pAG; ++a) {
-        const int a_hv = a - 15;  // for adult structure age 15 starts at 0
-        for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
-          const int hd_hds = hd - CD4_GT500;
-          for (int ht = 0; ht < nART; ++ht) {
-            if (a >= 15) {
+        for (int a = 0; a < pAG; ++a) {
+          
+          //adults
+          const int a_hv = a - 15;  // for adult structure age 15 starts at 0
+          if (a >= 15) {
+            
+            for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
+              const int hd_hds = hd - CD4_GT500;  
               i_hv.pop_hivpos_adults += n_ha.h_hivpop(hd_hds, a_hv, s);
-              i_hv.pop_art_adults += n_ha.h_artpop(ht, hd_hds, a_hv, s);
               if(hd>=CD4_100_199){
                 i_hv.pop_hivpos_adults_ahd += n_ha.h_hivpop(hd_hds, a_hv, s);
-                i_hv.pop_art_adults_ahd += n_ha.h_artpop(ht, hd_hds, a_hv, s);
               }
-            } else {
-              i_hv.pop_hivpos_children += n_hc.hc1_hivpop(ht, hd_hds, a, s);
-              i_hv.pop_art_children += n_hc.hc1_artpop(ht, hd_hds, a, s);
-              if(hd>=CD4_100_199){
-                i_hv.pop_hivpos_children_ahd += n_hc.hc1_hivpop(ht, hd_hds, a, s);
-                i_hv.pop_art_children_ahd += n_hc.hc1_artpop(ht, hd_hds, a, s);
+
+              for (int ht = 0; ht < nART; ++ht) {
+                i_hv.pop_art_adults += n_ha.h_artpop(ht, hd_hds, a_hv, s);
+                if(hd>=CD4_100_199){
+                  i_hv.pop_art_adults_ahd += n_ha.h_artpop(ht, hd_hds, a_hv, s);
+                }
               }
+            }//hd
+         } 
+        else { 
+
+            if (a < hc2_agestart){
+              for (int hd = 0; hd < hc1DS; ++hd) {
+                 for (int cat = 0; cat < hcTT; ++cat) {
+                    i_hv.pop_hivpos_children += n_hc.hc1_hivpop(hd, cat, a, s);
+                  }
+                  for (int dur = 0; dur < hTS; ++dur) {
+                    i_hv.pop_art_children += n_hc.hc1_artpop(dur, hd, a, s);
+                  }
+              }    
             }
-          }
+            else{ 
+              for (int hd = 0; hd < hc2DS; ++hd) {
+                for (int cat = 0; cat < hcTT; ++cat) {
+                  i_hv.pop_hivpos_children +=  n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
+                }
+
+                for (int dur = 0; dur < hTS; ++dur) {
+                    i_hv.pop_art_children += n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
+                }
+
+              }
+            } 
         }
       }
     }
+
+    //set ahd in children to same ratio as in adults
+    i_hv.pop_hivpos_children_ahd = (i_hv.pop_hivpos_adults>0) ? (i_hv.pop_hivpos_adults_ahd/i_hv.pop_hivpos_adults)*
+                                                                i_hv.pop_hivpos_children : 0;
+
+    i_hv.pop_art_children_ahd = (i_hv.pop_art_adults>0) ? (i_hv.pop_art_adults_ahd/i_hv.pop_art_adults)*
+                                                           i_hv.pop_art_children : 0;                                                       
+
+           
 
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
       int a50 = SS::pIDX_15to49 + SS::pAG_15to49;
@@ -1641,7 +1681,7 @@ public:
                   // assumption
                   i_hv.dp_entrants_age_15(POP_H_HIVNeg, CD4_NEG, s) -
 
-                  // exits and migration
+                  // exits
                   n_hv.adults_ts(VAC_UNV, RG_NONE, CD4_NEG, s)
                       * (((std::max(i_hv.i_age_first_sex(s) - 15.0, 1.0) != 0.0)
                               ? 1
@@ -1650,10 +1690,12 @@ public:
                                   )
                               : 0.0)
                          + i_hv.background_death_rate(s)
-                         + i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s)
-                         - i_hv.migration_rate(s))
-                  -  // net migration rate
-
+                         + i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s)) +
+                
+                  // net migration
+                  n_hv.adults_ts(VAC_UNV, RG_NONE, CD4_NEG, s)
+                      * i_hv.migration_rate(s) -
+             
                   // new vaccinations, out
                   i_hv.new_vaccinations(RG_NONE, CD4_NEG, s) +
 
@@ -1685,13 +1727,14 @@ public:
         value = n_hv.adults(v, RG_NONE, CD4_NEG, s)
             + opts.dt
                 * (-
-                       // exits and migration
-                       n_hv.adults_ts(v, RG_NONE, CD4_NEG, s)
-                       * (i_hv.background_death_rate(s)
-                          + i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s)
-                          -  // aging out at age 50
-                          i_hv.migration_rate(s))
-                   +  // net migration
+                    // exits
+                    n_hv.adults_ts(v, RG_NONE, CD4_NEG, s)
+                    * (i_hv.background_death_rate(s)
+                      + i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s)) +
+
+                    // net migration
+                      n_hv.adults_ts(v, RG_NONE, CD4_NEG, s)
+                          * i_hv.migration_rate(s) +
 
                    // new vaccinations, in
                    i_hv.new_vaccinations(RG_NONE, CD4_NEG, s)
@@ -1751,17 +1794,18 @@ public:
                         * i_hv.b_riskgroup_proportions(rg, s)
                     -
 
-                    // exits and migration
+                    // exits
                     n_hv.adults_ts(VAC_UNV, rg, CD4_NEG, s)
                         * (i_hv.background_death_rate(s)
                            + i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s)
                            +  // aging out at age 50
                            ((RG_MRH <= rg && rg <= RG_IDU)
                                 ? i_hv.b_behave_change_rate(rg, s)
-                                : 0.0)
-                           -  // behavior chnage
-                           i_hv.migration_rate(s))
-                    -  // net migration
+                                : 0.0)) +
+                
+                    // net migration
+                    n_hv.adults_ts(VAC_UNV, rg, CD4_NEG, s)
+                        * i_hv.migration_rate(s) -
 
                     // new vaccinations
                     i_hv.new_vaccinations(rg, CD4_NEG, s) +
@@ -1800,17 +1844,18 @@ public:
           value = n_hv.adults(v, rg, CD4_NEG, s)
               + opts.dt
                   * (-
-                         // exits and migration
-                         n_hv.adults_ts(v, rg, CD4_NEG, s)
-                         * (i_hv.background_death_rate(s)
-                            + i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s)
-                            -  // aging out at age 50
-                            ((RG_MRH <= rg && rg <= RG_IDU)
-                                 ? i_hv.b_behave_change_rate(rg, s)
-                                 : 0.0)
-                            -  // behavior chnage
-                            i_hv.migration_rate(s))
-                     +  // net migration
+                    // exits and migration
+                    n_hv.adults_ts(v, rg, CD4_NEG, s)
+                    * (i_hv.background_death_rate(s)
+                      + i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s)
+                      -  // aging out at age 50
+                      ((RG_MRH <= rg && rg <= RG_IDU)
+                            ? i_hv.b_behave_change_rate(rg, s)
+                            : 0.0)) +
+  
+                    // net migration
+                    n_hv.adults_ts(v, rg, CD4_NEG, s)
+                        * i_hv.migration_rate(s) +
 
                      // new vaccinations
                      i_hv.new_vaccinations(rg, CD4_NEG, s)
@@ -1939,18 +1984,18 @@ public:
                           * i_hv.b_riskgroup_proportions(rg, s)
                       -
 
-                      // exits and migration
+                      // exits
                       n_hv.adults_ts(VAC_UNV, rg, hd, s)
                           * (i_hv.background_death_rate(s) + mort_hiv
                              +  // hiv mortality rate
                              progress_out +  // hiv progrssion rate
                              rate_aging_out +  // aging out at age 50
                              ((RG_MRH <= rg && rg <= RG_IDU)
-                                  ? i_hv.b_behave_change_rate(rg, s)
-                                  : 0.0)
-                             -  // behavior chnage
-                             i_hv.migration_rate(s))
-                      -  // net migration
+                                  ? i_hv.b_behave_change_rate(rg, s) : 0)) +
+                
+                      // net migration
+                      n_hv.adults_ts(VAC_UNV, rg, hd, s)
+                          * i_hv.migration_rate(s) - 
 
                       // new vaccinations
                       i_hv.new_vaccinations(rg, hd, s) +
@@ -1996,14 +2041,16 @@ public:
             value = n_hv.adults_ts(v, rg, hd, s)
                 + opts.dt
                     * (-
-                           // exits and migration
-                           n_hv.adults_ts(v, rg, hd, s)
-                           * (i_hv.background_death_rate(s) + mort_hiv
-                              +  // hiv mortality rate
-                              progress_out +  // hiv progrssion rate
-                              rate_aging_out -  // aging out at age 50
-                              i_hv.migration_rate(s))
-                       +  // net migration
+                        // exits
+                        n_hv.adults_ts(v, rg, hd, s)
+                        * (i_hv.background_death_rate(s) + mort_hiv
+                          +  // hiv mortality rate
+                          progress_out +  // hiv progrssion rate
+                          rate_aging_out) +
+                    
+                       // net migration
+                       n_hv.adults_ts(v, rg, hd, s)
+                          * i_hv.migration_rate(s) + 
 
                        // new vaccinations
                        i_hv.new_vaccinations(rg, hd, s)
@@ -3487,22 +3534,24 @@ private:
     real_type total_direct_costs = 0.0;
 
     real_type vmm_coverage = 0.0;
-    real_type ha_total_plhiv = i_hv.pop_hivpos_adults +
-                               i_hv.pop_hivpos_children +
-                               i_hv.pop_art_adults +
-                               i_hv.pop_art_children;
+    real_type hahc_total_plhiv = i_hv.pop_hivpos_adults +
+                                 i_hv.pop_hivpos_children +
+                                 i_hv.pop_art_adults +
+                                 i_hv.pop_art_children;
 
-    real_type ha_total_plhiv_ahd = i_hv.pop_hivpos_adults_ahd +
-                                   i_hv.pop_hivpos_children_ahd +
-                                   i_hv.pop_art_adults_ahd +
-                                   i_hv.pop_art_children_ahd; 
+    real_type hahc_total_art = i_hv.pop_art_adults +
+                               i_hv.pop_art_children;                            
+
+    real_type hahc_total_plhiv_ahd = i_hv.pop_hivpos_adults_ahd +
+                                     i_hv.pop_hivpos_children_ahd +
+                                     i_hv.pop_art_adults_ahd +
+                                     i_hv.pop_art_children_ahd; 
                                 
     real_type hv_plhiv =   n_hv.adults(VAC_ALL, RG_ALL, CD4_ALL, S_ALL) -
                            n_hv.adults(VAC_ALL, RG_ALL, CD4_NEG, S_ALL);  
                            
     real_type plhiv_rg = 0.0; 
     int nr =0;                      
-
 
     for (int i = 1; i <= RN_MAX_INTERVN; ++i) {
       // a few interventions are now excluded from the editors and RN calcs
@@ -3727,20 +3776,20 @@ private:
 
         case RN_AHD_TX:  // treatment advanced HIV
         {
-          pop_reached = p_hv.rn_ahd_treat_cov(t) * ha_total_plhiv_ahd; 
+          pop_reached = p_hv.rn_ahd_treat_cov(t) * hahc_total_plhiv_ahd; 
           break;
         }
 
         case RN_POC_CD4_INT:  // POC testing CD4
         {
           
-          pop_reached = p_hv.rn_poc_cov(POC_CD4, t) * ha_total_plhiv;  
+          pop_reached = p_hv.rn_poc_cov(POC_CD4, t) * hahc_total_plhiv;  
           break;
         }
 
         case RN_POC_VL_INT:  // POC testing VL
         {
-          pop_reached = p_hv.rn_poc_cov(POC_VL, t) *  (i_hv.pop_art_adults + i_hv.pop_art_children);
+          pop_reached = p_hv.rn_poc_cov(POC_VL, t) * hahc_total_art;
 
           break;
         }
@@ -3754,7 +3803,7 @@ private:
         case RN_CURE_Adults:  // HIV cure
         {
           if (p_hv.rn_cure_coverage_type == CURE_COV_ALLRISK) {
-            pop_reached = p_hv.rn_cure_coverage_all(t) * ha_total_plhiv; 
+            pop_reached = p_hv.rn_cure_coverage_all(t) * hahc_total_plhiv; 
   
           } else {
             
@@ -3765,7 +3814,7 @@ private:
 
               pop_reached +=  (hv_plhiv>0) ? (plhiv_rg/hv_plhiv) : 0.0 * 
                                p_hv.rn_cure_coverage_rg(rg, t) *
-                               ha_total_plhiv;
+                               hahc_total_plhiv;
             }
 
             //females, cov weighted by RG size
@@ -3776,7 +3825,7 @@ private:
 
               pop_reached +=  (hv_plhiv>0) ? (plhiv_rg/hv_plhiv) : 0.0 * 
                                p_hv.rn_cure_coverage_rg(nr, t) *
-                               ha_total_plhiv;  
+                               hahc_total_plhiv;  
             }
           }
 
@@ -3785,7 +3834,7 @@ private:
 
         case RN_CURE_NEO:  // HIV cure
         {
-          // adjust hiv births to get those reached
+          // adjust hiv births to get those wh could be reached
           pop_reached = n_ha.hiv_births / (1 - p_hv.rn_cure_coverage_neonates(t) * p_hv.rn_cure_effect_neonates);
           pop_reached *= p_hv.rn_cure_coverage_neonates(t);
 
@@ -3822,10 +3871,9 @@ private:
 
     }  // for i
 
-    real_type program_support_markup = 0.36;
     n_hv.resources_required(RN_DIRECT_COSTS) = total_direct_costs;
     n_hv.resources_required(RN_PROGRAM_COSTS) =
-        total_direct_costs * (1 + program_support_markup);
+        total_direct_costs * (1 +  p_hv.program_support_markup(t));
     n_hv.resources_required(RN_TOTAL_COSTS) =
         n_hv.resources_required(RN_DIRECT_COSTS)
         + n_hv.resources_required(RN_PROGRAM_COSTS);
