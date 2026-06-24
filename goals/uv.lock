@@ -551,6 +551,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "avenir-spectrum-common" },
     { name = "avenir-spectrum-import-pjnz" },
     { name = "deepdiff" },
     { name = "docopt" },
@@ -565,6 +566,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "avenir-spectrum-common", specifier = ">=0.1.13" },
     { name = "avenir-spectrum-import-pjnz", specifier = ">=0.1.8" },
     { name = "deepdiff", specifier = ">=8.4.2" },
     { name = "docopt", specifier = ">=0.6.2" },
