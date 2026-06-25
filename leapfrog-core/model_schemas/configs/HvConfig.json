@@ -574,8 +574,12 @@
      "adj_coverage_prod": {
       "num_type": "real_type",
       "dims": ["SS::nMAX_BEHAV_IMPACTS"]
-    }
+    },
 
+    "cure_effect": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
+    }
 
   },
 

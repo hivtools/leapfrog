@@ -120,7 +120,7 @@ struct AdultHivModelSimulation<Config> {
     run_wlhiv_births();
 
    if constexpr (ModelVariant::run_goals) {
-      if (t > pars.hv.goals_base_year_idx) {
+      if ( (t > pars.hv.goals_base_year_idx) && (hiv_step == opts.hts_per_year - 1)) {
         apply_goals_cure(t);
       }
     }
@@ -752,79 +752,35 @@ struct AdultHivModelSimulation<Config> {
 
   void apply_goals_cure(int t){
 
-    static constexpr int hc2_agestart = SS::hc2_agestart;
-    static constexpr int hcTT = SS::hcTT;
-    static constexpr int hc1DS = SS::hc1DS;
-    static constexpr int hc2DS = SS::hc2DS;
-
     auto& n_dp = state_next.dp;
     auto& n_ha = state_next.ha;
-    auto& n_hc = state_next.hc;
-
+ 
     auto& i_ha = intermediate.ha;
 
-    real_type cured_proportion=0.1;
+    real_type cured_proportion=0.0;
     real_type cured = 0.0;
 
      for (int s = 0; s < NS; ++s) {
-      for (int a = 0; a < pAG; ++a) {
-          const int a_hv = a - 15;  // for adult structure age 15 starts at 0
-          if (a >= 15) {
+      cured_proportion =  intermediate.hv.cure_effect(s);
+      for (int ha = SS::p_idx_hiv_first_adult; ha < hAG; ++ha) {
+          
+          const int a = ha + p_idx_hiv_first_adult;
           //adults, plhiv not on art
           for (int hm = 0; hm < hDS; ++hm) {
-              cured = cured_proportion * n_ha.h_hivpop(hm, a_hv, s); 
-              n_ha.h_hivpop(hm, a_hv, s) -= cured;
+              cured = cured_proportion * n_ha.h_hivpop(hm, ha, s); 
+              n_ha.h_hivpop(hm, ha, s) -= cured;
               n_ha.p_hivpop(a, s) -= cured;
             }
           
           //adults, plhiv on art
           for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
             for (int hu = 0; hu < hTS; ++hu) {
-              cured = cured_proportion * n_ha.h_artpop(hu, hm, a_hv, s);
-              n_ha.h_artpop(hu, hm, a_hv, s) -= cured; 
+              cured = cured_proportion * n_ha.h_artpop(hu, hm, ha, s);
+              n_ha.h_artpop(hu, hm, ha, s) -= cured; 
               n_ha.p_hivpop(a, s) -= cured;
             }
           }
-        }
-        else{
-            //clhiv 0-4, not on art
-            if (a < hc2_agestart){
-              //clhiv 0-4, not on art
-              for (int cat = 0; cat < hcTT; ++cat) {
-                for (int hd = 0; hd < hc1DS; ++hd) {
-                  cured = cured_proportion * n_hc.hc1_hivpop(hd, cat, a, s); 
-                  n_hc.hc1_hivpop(hd, cat, a, s) -= cured;
-                  n_ha.p_hivpop(a, s) -= cured;
-                }
-              }
-              //clhiv 0-4, on art
-              for (int hd = 0; hd < hc1DS; ++hd) {
-                  for (int dur = 0; dur < hTS; ++dur) {
-                     cured = cured_proportion * n_hc.hc1_artpop(dur, hd, a, s); 
-                     n_hc.hc1_artpop(dur, hd, a, s) -= cured;
-                     n_ha.p_hivpop(a, s) -= cured;
-                  }
-              }    
-          }
-          else{
-             //clhiv 5+, not on art
-              for (int hd = 0; hd < hc2DS; ++hd) {
-                  for (int cat = 0; cat < hcTT; ++cat) {
-                    cured = cured_proportion * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s); 
-                    n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) -= cured;
-                    n_ha.p_hivpop(a, s) -= cured;
-                  }
-              }
-              //clhiv 5+, on art
-              for (int hd = 0; hd < hc2DS; ++hd) {
-               for (int dur = 0; dur < hTS; ++dur) {
-                  cured = cured_proportion * n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s); 
-                  n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s) -= cured;
-                  n_ha.p_hivpop(a, s) -= cured;
-                }
-              }
-          }
-        }
+
       }//a
     }//s
    
