@@ -122,61 +122,31 @@ struct Leapfrog {
     internal::SpectrumPostHocCalculations<Cfg> spectrum(args);
     internal::GoalsSimulation<Cfg> goals_sim(args);
 
-    if constexpr (ModelVariant::run_demographic_projection) {
-      general_dp.run_general_pop_demographic_projection();
+    general_dp.run_general_pop_demographic_projection();
 
-      if constexpr (ModelVariant::run_hiv_simulation) {
-        hiv_dp.run_hivpop_demographic_projection();
+    hiv_dp.run_hivpop_demographic_projection();
+    hiv_dp.run_virginpop_demographic_projection();    // no-op if !run_virgin
 
-	      if constexpr (ModelVariant::run_virgin) {
-	        hiv_dp.run_virginpop_demographic_projection();
-	      }
+    goals_sim.run_goals_pre_hiv_loop();               // no-op if !run_goals
+    hiv_sim.run_hiv_adult_pre_hiv_loop();
 
-        if constexpr (ModelVariant::run_goals) {
-          goals_sim.run_goals_pre_hiv_loop();
-        }
-
-        hiv_sim.run_hiv_adult_pre_hiv_loop();
-       
-        for (int hiv_step = 0; hiv_step < args.opts.hts_per_year; ++hiv_step) {
-
-          //CDP: confirm order of innner calcs/ DP should be first to complete ART allocation
-          //which is then used by goals
-          //hiv_sim.run_hiv_adult_hiv_loop(hiv_step);
-
-          if constexpr (ModelVariant::run_goals) {
-            goals_sim.run_goals_hiv_loop(hiv_step);
-          }
-
-          hiv_sim.run_hiv_adult_hiv_loop(hiv_step);
-
-        }
-
-        if constexpr (ModelVariant::run_goals) {
-          goals_sim.run_goals_post_hiv_loop();
-        }
-
-      }
-
-      if constexpr (ModelVariant::run_child_model) {
-        child_sim.run_child_model_simulation();
-      }
-
-      if (args.opts.proj_period_int == SS::PROJPERIOD_CALENDAR) {
-        general_dp.run_end_year_migration();
-
-        if constexpr (ModelVariant::run_hiv_simulation) {
-          hiv_dp.run_hivpop_end_year_migration();
-        }
-      }
-      if constexpr (ModelVariant::run_child_model) {
-        hiv_dp.run_hc_hivpop_end_year_migration();
-      }
-
-      if constexpr (ModelVariant::run_spectrum_model) {
-        spectrum.run_spectrum_post_hoc_calulations();
-      }
+    for (int hiv_step = 0; hiv_step < args.opts.hts_per_year; ++hiv_step) {
+      // Goals must precede hiv_sim each step: computes infections consumed by hiv_sim
+      goals_sim.run_goals_hiv_loop(hiv_step);         // no-op if !run_goals
+      hiv_sim.run_hiv_adult_hiv_loop(hiv_step);
     }
+
+    goals_sim.run_goals_post_hiv_loop();              // no-op if !run_goals
+
+    child_sim.run_child_model_simulation();           // no-op if !run_child_model
+
+    if (args.opts.proj_period_int == SS::PROJPERIOD_CALENDAR) {
+      general_dp.run_end_year_migration();
+      hiv_dp.run_hivpop_end_year_migration();         // no-op if !run_hiv_simulation
+    }
+    hiv_dp.run_hc_hivpop_end_year_migration();        // no-op if !run_child_model
+
+    spectrum.run_spectrum_post_hoc_calulations();     // no-op if !run_spectrum_model
   };
 };
 

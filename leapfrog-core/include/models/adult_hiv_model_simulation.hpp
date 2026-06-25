@@ -11,7 +11,9 @@ concept AdultHivModelSimulationEnabled = RunDemographicProjection<Config> && Run
 
 template<typename Config>
 struct AdultHivModelSimulation {
-  AdultHivModelSimulation(...) {};
+  AdultHivModelSimulation(...) {}
+  void run_hiv_adult_pre_hiv_loop() {}
+  void run_hiv_adult_hiv_loop(int) {}
 };
 
 template<AdultHivModelSimulationEnabled Config>

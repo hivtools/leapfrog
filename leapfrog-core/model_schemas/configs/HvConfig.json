@@ -300,7 +300,7 @@
       "dims": ["SS::nART_NUM_PERC+1"]
     },
 
-     "pop_elig_treat": {
+    "pop_elig_treat": {
       "num_type": "int",
       "dims": ["SS::nEligART"]
     },
@@ -310,7 +310,7 @@
       "dims": ["SS::nEligART"]
     },
 
-     "program_support_markup": {
+    "program_support_markup": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
     }

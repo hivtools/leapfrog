@@ -11,7 +11,8 @@ concept ChildModelSimulationEnabled = RunDemographicProjection<Config> && RunHiv
 
 template<typename Config>
 struct ChildModelSimulation {
-  ChildModelSimulation(...) {};
+  ChildModelSimulation(...) {}
+  void run_child_model_simulation() {}
 };
 
 template<ChildModelSimulationEnabled Config>

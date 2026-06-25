@@ -11,7 +11,9 @@ concept GeneralDemographicProjectionEnabled = RunDemographicProjection<Config>;
 
 template<typename Config>
 struct GeneralDemographicProjection {
-  GeneralDemographicProjection(...) {};
+  GeneralDemographicProjection(...) {}
+  void run_general_pop_demographic_projection() {}
+  void run_end_year_migration() {}
 };
 
 template<GeneralDemographicProjectionEnabled Config>

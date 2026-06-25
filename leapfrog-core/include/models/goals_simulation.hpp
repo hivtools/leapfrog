@@ -15,7 +15,10 @@ concept GoalsSimulationEnabled = RunDemographicProjection<Config>
 
 template<typename Config>
 struct GoalsSimulation {
-  GoalsSimulation(...) {};
+  GoalsSimulation(...) {}
+  void run_goals_pre_hiv_loop() {}
+  void run_goals_hiv_loop(int) {}
+  void run_goals_post_hiv_loop() {}
 };
 
 template<GoalsSimulationEnabled Config>

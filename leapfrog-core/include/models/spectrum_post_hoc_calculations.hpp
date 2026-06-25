@@ -11,7 +11,8 @@ concept SpectrumPostHocCalculationsEnabled = RunDemographicProjection<Config> &&
 
 template<typename Config>
 struct SpectrumPostHocCalculations {
-  SpectrumPostHocCalculations(...) {};
+  SpectrumPostHocCalculations(...) {}
+  void run_spectrum_post_hoc_calulations() {}
 };
 
 template<SpectrumPostHocCalculationsEnabled Config>
