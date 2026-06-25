@@ -128,12 +128,16 @@ struct Leapfrog {
       if constexpr (ModelVariant::run_hiv_simulation) {
         hiv_dp.run_hivpop_demographic_projection();
 
+	      if constexpr (ModelVariant::run_virgin) {
+	        hiv_dp.run_virginpop_demographic_projection();
+	      }
+
         if constexpr (ModelVariant::run_goals) {
           goals_sim.run_goals_pre_hiv_loop();
         }
 
         hiv_sim.run_hiv_adult_pre_hiv_loop();
-       
+
         for (int hiv_step = 0; hiv_step < args.opts.hts_per_year; ++hiv_step) {
 
           //CDP: confirm order of innner calcs/ DP should be first to complete ART allocation

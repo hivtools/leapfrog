@@ -25,6 +25,15 @@ void run_initial_year_calculations(
       is_dp.p_totpop(a, s) = p_dp.base_pop(a, s);
     }
   }
+  
+  // initialise virgin population
+  if constexpr (ModelVariant::run_virgin) {
+    for (int g = 0; g < SS::NS; ++g) {
+      for (int a = 0; a < SS::vAG; ++a) {
+	      initial_state.vg.p_totpop_virgin(a, g) = p_dp.base_pop(a + SS::p_idx_virginpop_first, g);
+      }
+    }
+  }
 
   // Initialise births and deaths in initial year. This involves some
   // approximations because the model does not conduct a full
