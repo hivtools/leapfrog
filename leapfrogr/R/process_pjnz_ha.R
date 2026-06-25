@@ -220,8 +220,8 @@ process_pjnz_ha <- function(dat, pars, dim_vars, use_coarse_age_groups = FALSE) 
     # it copies Spectrum which is assuming the the first subpop
     # will be PWID.
     pwid_hivpos_nonaids_mortality <- pars$pwid_hivpos_nonaids_mortality[1]
-    if (length(pars$pwid_sex_ratio) < proj_years) {
-      pwid_sex_ratio <- rep(pars$pwid_sex_ratio, proj_years)
+    if (length(pars$pwid_sex_ratio) < proj_years_count) {
+      pwid_sex_ratio <- rep(pars$pwid_sex_ratio, proj_years_count)
     } else {
       pwid_sex_ratio <- pars$pwid_sex_ratio
     }

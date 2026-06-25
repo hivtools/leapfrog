@@ -26,7 +26,16 @@
           "hAG_fertility": 8,
           "hAG_15to49": 8
         }
-      }
+      },
+      {
+        "applies_if": "age10_adult",
+        "vars": {	      
+          "hAG": 96,
+          "p_idx_hiv_first_adult": 10,
+          "hAG_span": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+          "hAG_fertility": 40
+        }
+      }      
     ]
   },
   "pars": {
@@ -214,7 +223,7 @@
   "intermediate": {
     "hiv_negative_pop": {
       "num_type": "real_type",
-      "dims": ["SS::pAG"]
+      "dims": ["SS::pAG", "SS::NS"]
     },
     "incidence_rate_sex": {
       "num_type": "real_type",
@@ -245,6 +254,10 @@
       "dims": ["SS::hAG", "SS::NS"]
     },
     "grad": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS", "SS::hAG", "SS::NS"]
+    },
+    "grad_infections": {
       "num_type": "real_type",
       "dims": ["SS::hDS", "SS::hAG", "SS::NS"]
     },
@@ -315,8 +328,9 @@
     "hivqx_ha": {
       "num_type": "real_type"
     },
-    "hivdeaths_a": {
-      "num_type": "real_type"
+    "deaths_hivpop_hts": {
+      "num_type": "real_type",
+      "dims": ["SS::pAG", "SS::NS"]
     },
     "Xhivn_incagerr": {
       "num_type": "real_type"
@@ -420,3 +434,4 @@
     }
   }
 }
+
