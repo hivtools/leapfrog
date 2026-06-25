@@ -1089,7 +1089,6 @@ public:
     i_hv.pop_art_adults_ahd = 0.0;    
     i_hv.pop_art_children_ahd = 0.0;
 
-
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
         for (int a = 0; a < pAG; ++a) {
           
