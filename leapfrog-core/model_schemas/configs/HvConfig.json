@@ -313,6 +313,21 @@
      "program_support_markup": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
+    },
+
+    "long_act_treat_cov": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+
+    "long_act_treat_eff": {
+      "num_type": "real_type"
+    },
+
+    
+    "art_interupt_rate": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
     }
 
   },

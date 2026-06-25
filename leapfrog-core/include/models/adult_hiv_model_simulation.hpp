@@ -445,7 +445,19 @@ struct AdultHivModelSimulation<Config> {
           // ART dropout
           if (p_ha.dropout_rate(t) > 0) {
             for (int hu = 0; hu < hTS; ++hu) {
-              const auto art_adult_dropout = p_ha.dropout_rate(t) * n_ha.h_artpop(hu, hm, ha, s);
+
+               real_type temp_art_adult_dropout = 0.0;
+               if constexpr (ModelVariant::run_goals) {
+                  temp_art_adult_dropout = -std::log(1.0 - pars.hv.art_interupt_rate(t) *
+                                                    (1.0 - pars.hv.long_act_treat_eff * pars.hv.long_act_treat_cov(t)) *
+                                                     n_ha.h_artpop(hu, hm, ha, s));
+               }
+               else{
+                  temp_art_adult_dropout = p_ha.dropout_rate(t) * n_ha.h_artpop(hu, hm, ha, s);
+              }
+              
+              const auto art_adult_dropout = temp_art_adult_dropout;
+
               if (p_ha.dropout_recover_cd4 && hu >= 2 && hm >= 1) {
                 // recover people on ART >1 year to one higher CD4 category
                 i_ha.grad(hm - 1, ha, s) += art_adult_dropout;
