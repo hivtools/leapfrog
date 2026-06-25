@@ -2780,7 +2780,10 @@ public:
 
     // do LTFU dynamics, before achieving a CD4 coverage
     // convert the LTFU % to a per-capita annual rate
-    ltfu = -std::log(1.0 - p_ha.dropout_rate(t)*(1.0-p_hv.long_act_treat_eff * p_hv.long_act_treat_cov(t)));
+    ltfu = -std::log(1.0 - p_ha.dropout_rate(t));
+    if(t > p_hv.goals_base_year_idx){
+      ltfu = -std::log(1.0 - p_ha.dropout_rate(t)*(1.0-p_hv.long_act_treat_eff * p_hv.long_act_treat_cov(t)));
+    }
 
     new_art_cap = 0.99;
 
