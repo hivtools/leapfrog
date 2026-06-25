@@ -600,6 +600,12 @@ type
     popEligYearLength: Integer;
     programSupportMarkup: PDouble;
     programSupportMarkupLength: Integer;
+    longActTreatCov: PDouble;
+    longActTreatCovLength: Integer;
+    longActTreatEff: Double;
+    longActTreatEffLength: Integer;
+    artInteruptRate: PDouble;
+    artInteruptRateLength: Integer;
 end;
 
 type
@@ -660,6 +666,9 @@ type
     popEligTreat: TGBFixedArray<Integer>;
     popEligYear: TGBFixedArray<Integer>;
     programSupportMarkup: TGBFixedArray<Double>;
+    longActTreatCov: TGBFixedArray<Double>;
+    longActTreatEff: Double;
+    artInteruptRate: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -1257,6 +1266,8 @@ begin;
   popEligTreat.Free;
   popEligYear.Free;
   programSupportMarkup.Free;
+  longActTreatCov.Free;
+  artInteruptRate.Free;
   inherited;
 end;
 
@@ -1405,6 +1416,12 @@ begin;
   Result.popEligYearLength := popEligYear.GetLength();
   Result.programSupportMarkup := PDouble(programSupportMarkup.data);
   Result.programSupportMarkupLength := programSupportMarkup.GetLength();
+  Result.longActTreatCov := PDouble(longActTreatCov.data);
+  Result.longActTreatCovLength := longActTreatCov.GetLength();
+  Result.longActTreatEff := longActTreatEff;
+  Result.longActTreatEffLength := 1;
+  Result.artInteruptRate := PDouble(artInteruptRate.data);
+  Result.artInteruptRateLength := artInteruptRate.GetLength();
 end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
@@ -1659,6 +1676,8 @@ begin;
   popEligTreat.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'popEligTreat');
   popEligYear.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'popEligYear');
   programSupportMarkup.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'programSupportMarkup');
+  longActTreatCov.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'longActTreatCov');
+  artInteruptRate.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artInteruptRate');
 end;
 
 procedure LeapfrogGoalsState.writeToDisk(dir: string);
