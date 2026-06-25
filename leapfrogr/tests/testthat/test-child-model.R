@@ -16,7 +16,7 @@ test_that("Child model can be run for all years", {
       "hc1_artpop", "hc2_artpop",
       "hc1_noart_aids_deaths", "hc2_noart_aids_deaths",
       "hc1_art_aids_deaths", "hc2_art_aids_deaths",
-      "hc_art_init", "hc_art_need_init", "ctx_need", "infection_by_type",
+      "hc_art_init", "hc_art_init_total", "hc_art_need_init", "ctx_need", "infection_by_type",
       "mtct_by_source_tr", "mtct_by_source_women",
       "mtct_by_source_hc_infections", "pmtct_coverage_at_delivery",
       "prevalence_15to49_hts", "incidence_15to49_hts", "artcoverage_15to49_hts")
@@ -62,7 +62,7 @@ test_that("Coarse child model can be run for all years", {
       "hc1_artpop", "hc2_artpop",
       "hc1_noart_aids_deaths", "hc2_noart_aids_deaths",
       "hc1_art_aids_deaths", "hc2_art_aids_deaths",
-      "hc_art_init", "hc_art_need_init", "ctx_need", "infection_by_type",
+      "hc_art_init", "hc_art_init_total", "hc_art_need_init", "ctx_need", "infection_by_type",
       "mtct_by_source_tr", "mtct_by_source_women",
       "mtct_by_source_hc_infections", "pmtct_coverage_at_delivery",
       "prevalence_15to49_hts", "incidence_15to49_hts", "artcoverage_15to49_hts")
@@ -195,7 +195,7 @@ test_that("Nosocomial infections map to the correct child age bands", {
   
   ## VT/BF only contribute to p_infections at ages 0-2, so ages 3-14 (R indices
   ## 4:15) are zero in the baseline and only receive nosocomial infections.
-  ## This lets us use exact equality to verify the hc_age_coarse[a]-1 routing.
+  ## This lets us use exact equality to verify the hc_age_coarse[a] routing.
   
   pars1 <- parameters; pars1$hc_nosocomial_infections_by_age[1, ] <- 100
   pars2 <- parameters; pars2$hc_nosocomial_infections_by_age[2, ] <- 100
