@@ -143,7 +143,7 @@ template <class HcState, class IntermediateHc, class ParsHc>
   requires requires (const HcState& hc, const IntermediateHc& i_hc, const ParsHc& p_hc) {
     hc.hc1_hivpop;
     i_hc.hc_posthivmort;
-    p_hc.hc_nosocomial;
+    //p_hc.hc_nosocomial;
   }
 inline HcDebugInfo capture_hc(const HcState& hc, const IntermediateHc& i_hc,
   const ParsHc& p_hc);
@@ -464,7 +464,7 @@ struct HcDebugInfo {
   NdaInfo ctx_mean;
 
   // Pars (selected)
-  NdaInfo hc_nosocomial;
+  //NdaInfo hc_nosocomial;
   NdaInfo hc1_cd4_dist;
   NdaInfo hc1_cd4_mort;
   NdaInfo hc2_cd4_mort;
@@ -823,7 +823,7 @@ template <class HcState, class IntermediateHc, class ParsHc>
   requires requires (const HcState& hc, const IntermediateHc& i_hc, const ParsHc& p_hc) {
     hc.hc1_hivpop;
     i_hc.hc_posthivmort;
-    p_hc.hc_nosocomial;
+    //p_hc.hc_nosocomial;
   }
 inline HcDebugInfo capture_hc(const HcState& hc, const IntermediateHc& i_hc,
     const ParsHc& p_hc) {
@@ -872,7 +872,7 @@ inline HcDebugInfo capture_hc(const HcState& hc, const IntermediateHc& i_hc,
   out.hc_death_rate = static_cast<double>(i_hc.hc_death_rate);
   out.ctx_mean = nda_capture(i_hc.ctx_mean);
 
-  out.hc_nosocomial = nda_capture(p_hc.hc_nosocomial);
+  //out.hc_nosocomial = nda_capture(p_hc.hc_nosocomial);
   out.hc1_cd4_dist = nda_capture(p_hc.hc1_cd4_dist);
   out.hc1_cd4_mort = nda_capture(p_hc.hc1_cd4_mort);
   out.hc2_cd4_mort = nda_capture(p_hc.hc2_cd4_mort);

@@ -1,6 +1,6 @@
 [project]
 name = "leapfrog-goals"
-version = "0.0.7"
+version = "0.0.8"
 description = "Python interface for Leapfrog Goals model"
 readme = "README.md"
 authors = [
@@ -34,8 +34,8 @@ dev = [
     "deepdiff>=8.4.2",
     "docopt>=0.6.2",
     "pytest>=8.3.5",
-    "avenir-spectrum-import-pjnz>=0.1.8",
-    "avenir-spectrum-common>=0.1.12"
+    "avenir-spectrum-import-pjnz>=0.1.9",
+    "avenir-spectrum-common>=0.1.15"
 ]
 
 # Uncomment and set file path to use local development versions

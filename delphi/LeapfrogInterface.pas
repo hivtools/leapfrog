@@ -594,6 +594,18 @@ type
     artCoverageRgLength: Integer;
     artCovNumPercent: PInteger;
     artCovNumPercentLength: Integer;
+    popEligTreat: PInteger;
+    popEligTreatLength: Integer;
+    popEligYear: PInteger;
+    popEligYearLength: Integer;
+    programSupportMarkup: PDouble;
+    programSupportMarkupLength: Integer;
+    longActTreatCov: PDouble;
+    longActTreatCovLength: Integer;
+    longActTreatEff: Double;
+    longActTreatEffLength: Integer;
+    artInteruptRate: PDouble;
+    artInteruptRateLength: Integer;
 end;
 
 type
@@ -651,6 +663,12 @@ type
     hvImpactMatrix: TGBFixedArray<Double>;
     artCoverageRg: TGBFixedArray<Double>;
     artCovNumPercent: TGBFixedArray<Integer>;
+    popEligTreat: TGBFixedArray<Integer>;
+    popEligYear: TGBFixedArray<Integer>;
+    programSupportMarkup: TGBFixedArray<Double>;
+    longActTreatCov: TGBFixedArray<Double>;
+    longActTreatEff: Double;
+    artInteruptRate: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -1292,6 +1310,11 @@ begin;
   hvImpactMatrix.Free;
   artCoverageRg.Free;
   artCovNumPercent.Free;
+  popEligTreat.Free;
+  popEligYear.Free;
+  programSupportMarkup.Free;
+  longActTreatCov.Free;
+  artInteruptRate.Free;
   inherited;
 end;
 
@@ -1434,6 +1457,18 @@ begin;
   Result.artCoverageRgLength := artCoverageRg.GetLength();
   Result.artCovNumPercent := PInteger(artCovNumPercent.data);
   Result.artCovNumPercentLength := artCovNumPercent.GetLength();
+  Result.popEligTreat := PInteger(popEligTreat.data);
+  Result.popEligTreatLength := popEligTreat.GetLength();
+  Result.popEligYear := PInteger(popEligYear.data);
+  Result.popEligYearLength := popEligYear.GetLength();
+  Result.programSupportMarkup := PDouble(programSupportMarkup.data);
+  Result.programSupportMarkupLength := programSupportMarkup.GetLength();
+  Result.longActTreatCov := PDouble(longActTreatCov.data);
+  Result.longActTreatCovLength := longActTreatCov.GetLength();
+  Result.longActTreatEff := longActTreatEff;
+  Result.longActTreatEffLength := 1;
+  Result.artInteruptRate := PDouble(artInteruptRate.data);
+  Result.artInteruptRateLength := artInteruptRate.GetLength();
 end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
@@ -1718,6 +1753,11 @@ begin;
   hvImpactMatrix.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hvImpactMatrix');
   artCoverageRg.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCoverageRg');
   artCovNumPercent.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCovNumPercent');
+  popEligTreat.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'popEligTreat');
+  popEligYear.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'popEligYear');
+  programSupportMarkup.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'programSupportMarkup');
+  longActTreatCov.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'longActTreatCov');
+  artInteruptRate.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artInteruptRate');
 end;
 
 procedure LeapfrogGoalsState.writeToDisk(dir: string);
