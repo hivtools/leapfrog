@@ -1256,13 +1256,13 @@ struct ChildModelSimulation<Config> {
       }
 
       real_type last_year_on_art_total = 0.0;
-      for (int hca = 0; hca < hcAG_c; ++hca) {
-        last_year_on_art_total += i_hc.art_last_year(hca);
+      for (int ag = 0; ag < hcAG_c; ++ag) {
+        last_year_on_art_total += i_hc.art_last_year(ag);
       }
 
       real_type total_need_sum = 0.0;
-      for (int hca = 0; hca < hcAG_c; ++hca) {
-        total_need_sum += i_hc.total_need(hca);
+      for (int ag = 0; ag < hcAG_c; ++ag) {
+        total_need_sum += i_hc.total_need(ag);
       }
 
       for (int ag = 0; ag < hcAG_c; ++ag) {
@@ -1294,18 +1294,18 @@ struct ChildModelSimulation<Config> {
       if (p_hc.hc_art_isperc(t - 1)) {
         // ART entered as percent last year so convert to number
         real_type total_need_sum = 0.0;
-        for (int hca = 0; hca < hcAG_c; ++hca) {
-          total_need_sum += i_hc.total_need(hca);
+        for (int ag = 0; ag < hcAG_c; ++ag) {
+          total_need_sum += i_hc.total_need(ag);
         }
         i_hc.art_last_year_total = p_hc.hc_art_val_total(t - 1) * total_need_sum;
       } else if (p_hc.hc_art_is_age_spec(t - 1)) {
-        // ART entered as number last year but this year isn't then aggregate ages
+        // ART entered as number in t-1 and dis-aggregated by age.
         i_hc.art_last_year_total = 0.0;
-        for (int hca = 0; hca < hcAG_c; ++hca) {
-          i_hc.art_last_year_total += p_hc.hc_art_val(hca, t - 1);
+        for (int ag = 0; ag < hcAG_c; ++ag) {
+          i_hc.art_last_year_total += p_hc.hc_art_val(ag, t - 1);
         }
       } else {
-        // Last year was age aggregated and a number so use previous value
+        // ART entered as number in t-1 and aggregated across ages.
         i_hc.art_last_year_total = p_hc.hc_art_val_total(t - 1);
       }
     }
@@ -1326,8 +1326,8 @@ struct ChildModelSimulation<Config> {
       i_hc.art_this_year_total = p_hc.hc_art_val_total(t);
       if (p_hc.hc_art_isperc(t)) {
         real_type total_need_sum = 0.0;
-        for (int hca = 0; hca < hcAG_c; ++hca) {
-          total_need_sum += i_hc.total_need(hca);
+        for (int ag = 0; ag < hcAG_c; ++ag) {
+          total_need_sum += i_hc.total_need(ag);
         }
         i_hc.art_this_year_total *= total_need_sum;
       }
@@ -1493,9 +1493,9 @@ struct ChildModelSimulation<Config> {
 
       auto hc_art_val_sum = 0.0;
       auto hc_art_val_sum_last = 0.0;
-      for (int hca = 0; hca < hcAG_c; ++hca) {
-        hc_art_val_sum += p_hc.hc_art_val(hca, t);
-        hc_art_val_sum_last += p_hc.hc_art_val(hca, t - 1);
+      for (int ag = 0; ag < hcAG_c; ++ag) {
+        hc_art_val_sum += p_hc.hc_art_val(ag, t);
+        hc_art_val_sum_last += p_hc.hc_art_val(ag, t - 1);
       }
 
       for (int s = 0; s < NS; ++s) {

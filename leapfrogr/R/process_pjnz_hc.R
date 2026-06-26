@@ -400,8 +400,8 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
   breastfeeding_duration_no_art <- pars$infant_feeding_options[, "no art", ] / 100
 
   ## Nosocomial infections by child age group (0-4, 5-9, 10-14); absent in older PJNZ files
-  if (!is.null(pars$hc_nosocomial_infections_by_age)) {
-    hc_nosocomial_infections_by_age <- pars$hc_nosocomial_infections_by_age
+  if (!is.null(pars$nosocomial_infections_by_age)) {
+    hc_nosocomial_infections_by_age <- pars$nosocomial_infections_by_age
   } else {
     hc_nosocomial_infections_by_age <- matrix(0, nrow = 3L, ncol = length(proj_years))
   }
