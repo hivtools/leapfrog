@@ -248,18 +248,18 @@
       "num_type": "real_type",
       "dims": ["SS::hcAG_c"]
     },
-    "art_last_year": {
+    "art_previous": {
       "num_type": "real_type",
       "dims": ["SS::hcAG_c"]
     },
-    "art_last_year_total": {
+    "art_previous_total": {
       "num_type": "real_type"
     },
-    "art_this_year": {
+    "art_current": {
       "num_type": "real_type",
       "dims": ["SS::hcAG_c"]
     },
-    "art_this_year_total": {
+    "art_current_total": {
       "num_type": "real_type"
     },
     "hc_art_grad": {

@@ -1231,14 +1231,14 @@ struct ChildModelSimulation<Config> {
     } // end ag
   };
 
-  void age_specific_art_last_year() {
+  void age_specific_art_previous() {
     const auto& p_hc = pars.hc;
     const auto& c_hc = state_curr.hc;
     auto& i_hc = intermediate.hc;
 
     if (p_hc.hc_art_is_age_spec(t - 1)) {
       for (int ag = 0; ag < hcAG_c; ++ag) {
-        i_hc.art_last_year(ag) = p_hc.hc_art_val(ag, t - 1);
+        i_hc.art_previous(ag) = p_hc.hc_art_val(ag, t - 1);
       } // end ag
     } else {
       for (int s = 0; s < NS; ++s) {
@@ -1246,41 +1246,41 @@ struct ChildModelSimulation<Config> {
           for (int hd = 0; hd < hc1DS; ++hd) {
             for (int dur = 0; dur < hTS; ++dur) {
               if (a < hc2_agestart) {
-                i_hc.art_last_year(hc_age_coarse[a]) += c_hc.hc1_artpop(dur, hd, a, s);
+                i_hc.art_previous(hc_age_coarse[a]) += c_hc.hc1_artpop(dur, hd, a, s);
               } else if (hd < hc2DS) {
-                i_hc.art_last_year(hc_age_coarse[a]) += c_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
+                i_hc.art_previous(hc_age_coarse[a]) += c_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
               }
             }
           }
         }
       }
 
-      real_type last_year_on_art_total = 0.0;
+      real_type on_art_previous_total = 0.0;
       for (int ag = 0; ag < hcAG_c; ++ag) {
-        last_year_on_art_total += i_hc.art_last_year(ag);
+        on_art_previous_total += i_hc.art_previous(ag);
       }
 
-      real_type total_need_sum = 0.0;
+      real_type total_need_all_children = 0.0;
       for (int ag = 0; ag < hcAG_c; ++ag) {
-        total_need_sum += i_hc.total_need(ag);
+        total_need_all_children += i_hc.total_need(ag);
       }
 
       for (int ag = 0; ag < hcAG_c; ++ag) {
-        if (last_year_on_art_total > 0.0) {
-          i_hc.art_last_year(ag) = p_hc.hc_art_val_total(t - 1) *
-                                      i_hc.art_last_year(ag) / last_year_on_art_total;
+        if (on_art_previous_total > 0.0) {
+          i_hc.art_previous(ag) = p_hc.hc_art_val_total(t - 1) *
+                                      i_hc.art_previous(ag) / on_art_previous_total;
         } else {
-          i_hc.art_last_year(ag) = 0.0;
+          i_hc.art_previous(ag) = 0.0;
         }
 
         if (p_hc.hc_art_isperc(t - 1)) {
-          i_hc.art_last_year(ag) *= total_need_sum + i_hc.hc_art_deaths(ag);
+          i_hc.art_previous(ag) *= total_need_all_children + i_hc.hc_art_deaths(ag);
         }
       } // end ag
     }
   };
 
-  void art_last_year() {
+  void art_previous() {
     const auto& p_hc = pars.hc;
     auto& i_hc = intermediate.hc;
 
@@ -1289,47 +1289,47 @@ struct ChildModelSimulation<Config> {
       // breakdown would have been
 
       // Age specific ART will always be entered as a number
-      age_specific_art_last_year();
+      age_specific_art_previous();
     } else {
       if (p_hc.hc_art_isperc(t - 1)) {
         // ART entered as percent last year so convert to number
-        real_type total_need_sum = 0.0;
+        real_type total_need_all_children = 0.0;
         for (int ag = 0; ag < hcAG_c; ++ag) {
-          total_need_sum += i_hc.total_need(ag);
+          total_need_all_children += i_hc.total_need(ag);
         }
-        i_hc.art_last_year_total = p_hc.hc_art_val_total(t - 1) * total_need_sum;
+        i_hc.art_previous_total = p_hc.hc_art_val_total(t - 1) * total_need_all_children;
       } else if (p_hc.hc_art_is_age_spec(t - 1)) {
         // ART entered as number in t-1 and dis-aggregated by age.
-        i_hc.art_last_year_total = 0.0;
+        i_hc.art_previous_total = 0.0;
         for (int ag = 0; ag < hcAG_c; ++ag) {
-          i_hc.art_last_year_total += p_hc.hc_art_val(ag, t - 1);
+          i_hc.art_previous_total += p_hc.hc_art_val(ag, t - 1);
         }
       } else {
         // ART entered as number in t-1 and aggregated across ages.
-        i_hc.art_last_year_total = p_hc.hc_art_val_total(t - 1);
+        i_hc.art_previous_total = p_hc.hc_art_val_total(t - 1);
       }
     }
   };
 
-  void art_this_year() {
+  void art_current() {
     const auto& p_hc = pars.hc;
     auto& i_hc = intermediate.hc;
 
     if (p_hc.hc_art_is_age_spec(t)) {
       for (int ag = 0; ag < hcAG_c; ++ag) {
-        i_hc.art_this_year(ag) = p_hc.hc_art_val(ag, t);
+        i_hc.art_current(ag) = p_hc.hc_art_val(ag, t);
         if (p_hc.hc_art_isperc(t)) {
-          i_hc.art_this_year(ag) *= i_hc.total_need(ag);
+          i_hc.art_current(ag) *= i_hc.total_need(ag);
         }
       } // end ag
     } else {
-      i_hc.art_this_year_total = p_hc.hc_art_val_total(t);
+      i_hc.art_current_total = p_hc.hc_art_val_total(t);
       if (p_hc.hc_art_isperc(t)) {
-        real_type total_need_sum = 0.0;
+        real_type total_need_all_children = 0.0;
         for (int ag = 0; ag < hcAG_c; ++ag) {
-          total_need_sum += i_hc.total_need(ag);
+          total_need_all_children += i_hc.total_need(ag);
         }
-        i_hc.art_this_year_total *= total_need_sum;
+        i_hc.art_current_total *= total_need_all_children;
       }
     }
   };
@@ -1342,13 +1342,13 @@ struct ChildModelSimulation<Config> {
     calc_on_art();
     deaths_this_year();
     calc_total_and_unmet_art_need();
-    art_last_year();
-    art_this_year();
+    art_previous();
+    art_current();
 
     i_hc.retained = 1 - p_hc.hc_art_ltfu(t);
     if (p_hc.hc_art_is_age_spec(t)) {
       for (int ag = 0; ag < hcAG_c; ++ag) {
-        auto average_art_by_year = (i_hc.art_last_year(ag) + i_hc.art_this_year(ag)) / 2.0;
+        auto average_art_by_year = (i_hc.art_previous(ag) + i_hc.art_current(ag)) / 2.0;
         n_hc.hc_art_init(ag) = std::max(i_hc.hc_art_deaths(ag) + average_art_by_year - i_hc.on_art(ag) * i_hc.retained, 0.0);
         n_hc.hc_art_init(ag) = std::min(n_hc.hc_art_init(ag),
                                         i_hc.unmet_need(ag) + i_hc.on_art(ag) * p_hc.hc_art_ltfu(t));
@@ -1360,7 +1360,7 @@ struct ChildModelSimulation<Config> {
         on_art_total += i_hc.on_art(ag);
         unmet_need_total += i_hc.unmet_need(ag);
       }
-      auto average_art_by_year = (i_hc.art_last_year_total + i_hc.art_this_year_total) / 2.0;
+      auto average_art_by_year = (i_hc.art_previous_total + i_hc.art_current_total) / 2.0;
       n_hc.hc_art_init_total = std::max(art_deaths_total + average_art_by_year - on_art_total * i_hc.retained, 0.0);
       n_hc.hc_art_init_total = std::min(n_hc.hc_art_init_total,
                                         unmet_need_total + on_art_total * p_hc.hc_art_ltfu(t));
