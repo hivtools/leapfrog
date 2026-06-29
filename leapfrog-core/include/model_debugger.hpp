@@ -58,8 +58,6 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
     i_hv.background_death_rate;
     i_hv.migration_rate;
-    i_hv.dp_migration_num;
-    i_hv.dp_migration_denom;
     i_hv.rate_aging_50;
 
     i_hv.b_riskgroup_proportions;
@@ -77,6 +75,8 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
     i_hv.adj_coverage;
     i_hv.adj_coverage_prod;
+
+    i_hv. vac_effect;
 
   
     //i_hv.totpop_1549;
@@ -292,8 +292,6 @@ struct HvDebugInfo {
 
   // Intermediate
   NdaInfo dp_totpop_1549;
-  NdaInfo dp_migration_num;
-  NdaInfo dp_migration_denom;
   NdaInfo migration_rate;
   NdaInfo dp_totpop_deaths_background;
   NdaInfo background_death_rate;
@@ -556,8 +554,6 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
     i_hv.background_death_rate;
     i_hv.migration_rate;
-    i_hv.dp_migration_num;
-    i_hv.dp_migration_denom;
     i_hv.rate_aging_50;
 
     i_hv.b_riskgroup_proportions;
@@ -577,6 +573,8 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
     i_hv.adj_coverage;
     i_hv.adj_coverage_prod;
+
+    i_hv.vac_effect;
 
 
 
@@ -660,8 +658,6 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
 
   out.background_death_rate = nda_capture(i_hv.background_death_rate);
   out.migration_rate = nda_capture(i_hv.migration_rate);
-  out.dp_migration_num = nda_capture(i_hv.dp_migration_num);
-  out.dp_migration_denom = nda_capture(i_hv.dp_migration_denom);
   out.rate_aging_50 = nda_capture(i_hv.rate_aging_50);
 
   out.b_riskgroup_proportions = nda_capture(i_hv.b_riskgroup_proportions);
@@ -683,6 +679,8 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
   out.hv_impact_matrix = nda_capture(p_hv.hv_impact_matrix);
   out.adj_coverage_prod = nda_capture(i_hv.adj_coverage_prod);
   out.rn_unit_costs = nda_capture(p_hv.rn_unit_costs);
+
+   out.vac_effect = nda_capture(i_hv.vac_effect);
 
 
 

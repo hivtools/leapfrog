@@ -584,6 +584,8 @@ type
     rnVacCovTypeLength: Integer;
     rnVacTargetting: Integer;
     rnVacTargettingLength: Integer;
+    rnVacType: Integer;
+    rnVacTypeLength: Integer;
     rnUnitCosts: PDouble;
     rnUnitCostsLength: Integer;
     rnPopSizes: PDouble;
@@ -602,8 +604,10 @@ type
     programSupportMarkupLength: Integer;
     longActTreatCov: PDouble;
     longActTreatCovLength: Integer;
-    longActTreatEff: Double;
-    longActTreatEffLength: Integer;
+    longActTreatEffVls: Double;
+    longActTreatEffVlsLength: Integer;
+    longActTreatEffLtfu: Double;
+    longActTreatEffLtfuLength: Integer;
     artInteruptRate: PDouble;
     artInteruptRateLength: Integer;
 end;
@@ -658,6 +662,7 @@ type
     rnVacCoverageAll: TGBFixedArray<Double>;
     rnVacCovType: Integer;
     rnVacTargetting: Integer;
+    rnVacType: Integer;
     rnUnitCosts: TGBFixedArray<Double>;
     rnPopSizes: TGBFixedArray<Double>;
     hvImpactMatrix: TGBFixedArray<Double>;
@@ -667,7 +672,8 @@ type
     popEligYear: TGBFixedArray<Integer>;
     programSupportMarkup: TGBFixedArray<Double>;
     longActTreatCov: TGBFixedArray<Double>;
-    longActTreatEff: Double;
+    longActTreatEffVls: Double;
+    longActTreatEffLtfu: Double;
     artInteruptRate: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsParamsView;
     procedure writeToDisk(dir: string);
@@ -734,6 +740,10 @@ type
     resourcesRequiredLength: Integer;
     newInfScaleFactor: PDouble;
     newInfScaleFactorLength: Integer;
+    totalNewVaccinations: PDouble;
+    totalNewVaccinationsLength: Integer;
+    totalVaccinated: PDouble;
+    totalVaccinatedLength: Integer;
 end;
 
 type
@@ -767,6 +777,8 @@ type
     numPeopleReached: TGBFixedArray<Double>;
     resourcesRequired: TGBFixedArray<Double>;
     newInfScaleFactor: TGBFixedArray<Double>;
+    totalNewVaccinations: TGBFixedArray<Double>;
+    totalVaccinated: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsStateView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -1348,6 +1360,8 @@ begin;
   numPeopleReached.Free;
   resourcesRequired.Free;
   newInfScaleFactor.Free;
+  totalNewVaccinations.Free;
+  totalVaccinated.Free;
   inherited;
 end;
 
@@ -1447,6 +1461,8 @@ begin;
   Result.rnVacCovTypeLength := 1;
   Result.rnVacTargetting := rnVacTargetting;
   Result.rnVacTargettingLength := 1;
+  Result.rnVacType := rnVacType;
+  Result.rnVacTypeLength := 1;
   Result.rnUnitCosts := PDouble(rnUnitCosts.data);
   Result.rnUnitCostsLength := rnUnitCosts.GetLength();
   Result.rnPopSizes := PDouble(rnPopSizes.data);
@@ -1465,8 +1481,10 @@ begin;
   Result.programSupportMarkupLength := programSupportMarkup.GetLength();
   Result.longActTreatCov := PDouble(longActTreatCov.data);
   Result.longActTreatCovLength := longActTreatCov.GetLength();
-  Result.longActTreatEff := longActTreatEff;
-  Result.longActTreatEffLength := 1;
+  Result.longActTreatEffVls := longActTreatEffVls;
+  Result.longActTreatEffVlsLength := 1;
+  Result.longActTreatEffLtfu := longActTreatEffLtfu;
+  Result.longActTreatEffLtfuLength := 1;
   Result.artInteruptRate := PDouble(artInteruptRate.data);
   Result.artInteruptRateLength := artInteruptRate.GetLength();
 end;
@@ -1529,6 +1547,10 @@ begin;
   Result.resourcesRequiredLength := resourcesRequired.GetLength();
   Result.newInfScaleFactor := PDouble(newInfScaleFactor.data);
   Result.newInfScaleFactorLength := newInfScaleFactor.GetLength();
+  Result.totalNewVaccinations := PDouble(totalNewVaccinations.data);
+  Result.totalNewVaccinationsLength := totalNewVaccinations.GetLength();
+  Result.totalVaccinated := PDouble(totalVaccinated.data);
+  Result.totalVaccinatedLength := totalVaccinated.GetLength();
 end;
 
 destructor LeapfrogVirginParams.Destroy;
