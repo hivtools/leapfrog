@@ -274,6 +274,10 @@
       "num_type": "int"
     },
 
+    "rn_vac_type": {
+      "num_type": "int"
+    },
+
 
     "rn_unit_costs": {
       "num_type": "real_type",
@@ -320,11 +324,14 @@
       "dims": ["opts.proj_steps"]
     },
 
-    "long_act_treat_eff": {
+    "long_act_treat_eff_vls": {
       "num_type": "real_type"
     },
 
-    
+   "long_act_treat_eff_ltfu": {
+      "num_type": "real_type"
+    },
+   
     "art_interupt_rate": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
@@ -433,10 +440,6 @@
       "dims": ["SS::nRG","SS::nCD4","SS::nNS"]
     },
 
-
-    "new_vaccinations_total": {
-      "num_type": "real_type"
-    },
 
     "hiv_mu": {
       "num_type": "real_type",
@@ -737,6 +740,14 @@
     "new_inf_scale_factor" :{
       "num_type": "real_type",
        "dims": ["SS::nNS+1"]
+    },
+
+    "total_new_vaccinations": {
+      "num_type": "real_type"
+    },
+
+     "total_vaccinated": {
+      "num_type": "real_type"
     }
 
   }

@@ -522,7 +522,7 @@ struct AdultHivModelSimulation<Config> {
                if constexpr (ModelVariant::run_goals) {
                    if(t > pars.hv.goals_base_year_idx){ 
                     temp_art_adult_dropout = -std::log(1.0 - pars.hv.art_interupt_rate(t) *
-                                                      (1.0 - pars.hv.long_act_treat_eff * pars.hv.long_act_treat_cov(t)) *
+                                                      (1.0 - pars.hv.long_act_treat_cov(t) * pars.hv.long_act_treat_eff_ltfu) *
                                                       n_ha.h_artpop(hu, hm, ha, s));
                    }
                }
