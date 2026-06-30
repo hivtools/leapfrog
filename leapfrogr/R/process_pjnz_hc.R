@@ -401,9 +401,16 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
 
   ## Nosocomial infections by child age group (0-4, 5-9, 10-14); absent in older PJNZ files
   if (!is.null(pars$nosocomial_infections_by_age)) {
-    hc_nosocomial_infections_by_age <- pars$nosocomial_infections_by_age
+    # Input by single ages, so repeat each row 5 times, we're hardcoding here
+    # the knowledge that this has 3 rows
+    hc_nosocomial_infections_by_age <- pars$nosocomial_infections_by_age[rep(seq_len(3), each = 5), ]
+  } else if (!is.null(pars$nosocomial_infections)) {
+    # Prior to and including Spectrum v6.08 users input a non age disaggregatted nosocomial infections
+    # this was then applied entirely to the age 0 group.
+    hc_nosocomial_infections_by_age <- matrix(0, nrow = 15L, ncol = length(proj_years))
+    hc_nosocomial_infections_by_age[1, ] <- pars$nosocomial_infections
   } else {
-    hc_nosocomial_infections_by_age <- matrix(0, nrow = 3L, ncol = length(proj_years))
+    hc_nosocomial_infections_by_age <- matrix(0, nrow = 15L, ncol = length(proj_years))
   }
   hc1_cd4_dist <- pars$child_dist_new_infections_cd4 / 100
 

@@ -664,9 +664,8 @@ struct ChildModelSimulation<Config> {
 
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
-        const int ag = hc_age_coarse[a];
-        if (p_hc.hc_nosocomial_infections_by_age(ag, t) > 0) {
-          auto infections = p_hc.hc_nosocomial_infections_by_age(ag, t) / (5.0 * NS);
+        if (const auto infections_raw = p_hc.hc_nosocomial_infections_by_age(a, t); infections_raw > 0) {
+          const auto infections = infections_raw / NS;
           n_ha.p_infections(a, s) += infections;
           if (a < hc2_agestart) {
             n_hc.hc1_hivpop(0, 0, a, s) += infections;
