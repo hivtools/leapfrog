@@ -43,7 +43,8 @@
       "nMAX_BEHAV_IMPACTS" : 23,
       "nART_NUM_PERC" : 4,
       "nRNPopSizes":35,
-      "nRG_VMM":4
+      "nRG_VMM":4,
+      "nEligART":3
 
     }
   },
@@ -273,6 +274,10 @@
       "num_type": "int"
     },
 
+    "rn_vac_type": {
+      "num_type": "int"
+    },
+
 
     "rn_unit_costs": {
       "num_type": "real_type",
@@ -297,6 +302,39 @@
     "art_cov_num_percent": {
       "num_type": "int",
       "dims": ["SS::nART_NUM_PERC+1"]
+    },
+
+     "pop_elig_treat": {
+      "num_type": "int",
+      "dims": ["SS::nEligART"]
+    },
+
+    "pop_elig_year": {
+      "num_type": "int",
+      "dims": ["SS::nEligART"]
+    },
+
+     "program_support_markup": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+
+    "long_act_treat_cov": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+
+    "long_act_treat_eff_vls": {
+      "num_type": "real_type"
+    },
+
+   "long_act_treat_eff_ltfu": {
+      "num_type": "real_type"
+    },
+   
+    "art_interupt_rate": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
     }
 
   },
@@ -339,15 +377,6 @@
       "dims": ["SS::nNS"]
     },
 
-    "dp_migration_num": {
-      "num_type": "real_type",
-      "dims": ["SS::nNS"]
-    },
-
-    "dp_migration_denom": {
-      "num_type": "real_type",
-      "dims": ["SS::nNS"]
-    },
 
      "migration_rate": {
       "num_type": "real_type",
@@ -411,10 +440,6 @@
       "dims": ["SS::nRG","SS::nCD4","SS::nNS"]
     },
 
-
-    "new_vaccinations_total": {
-      "num_type": "real_type"
-    },
 
     "hiv_mu": {
       "num_type": "real_type",
@@ -522,15 +547,35 @@
     },
 
 
-    "total_art_adults": {
+    "pop_art_adults": {
       "num_type": "real_type"
     },
 
-    "total_art_children": {
+    "pop_art_children": {
       "num_type": "real_type"
     },
 
-    "total_pop_hivpos": {
+    "pop_hivpos_adults": {
+      "num_type": "real_type"
+    },
+
+    "pop_hivpos_children": {
+      "num_type": "real_type"
+    },
+
+    "pop_art_adults_ahd": {
+      "num_type": "real_type"
+    },
+
+    "pop_art_children_ahd": {
+      "num_type": "real_type"
+    },
+
+    "pop_hivpos_adults_ahd": {
+      "num_type": "real_type"
+    },
+
+    "pop_hivpos_children_ahd": {
       "num_type": "real_type"
     },
 
@@ -547,8 +592,12 @@
      "adj_coverage_prod": {
       "num_type": "real_type",
       "dims": ["SS::nMAX_BEHAV_IMPACTS"]
-    }
+    },
 
+    "cure_effect": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
+    }
 
   },
 
@@ -691,6 +740,14 @@
     "new_inf_scale_factor" :{
       "num_type": "real_type",
        "dims": ["SS::nNS+1"]
+    },
+
+    "total_new_vaccinations": {
+      "num_type": "real_type"
+    },
+
+     "total_vaccinated": {
+      "num_type": "real_type"
     }
 
   }
