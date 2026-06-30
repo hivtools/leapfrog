@@ -5,7 +5,6 @@
 
 #include "../generated/config_mixer.hpp"
 #include "../options.hpp"
-//#include "../model_debugger.hpp"
 
 namespace leapfrog {
 namespace internal {
@@ -554,9 +553,7 @@ public:
                             n_hv.adults(VAC_UNV, RG_ALL, CD4_ALL, S_ALL);
 
 
-    // toggle continue here:
-
-    // if(t<65)
+    // toggle return here:
     return;
 
     real_type total_pop = n_hv.total_population;
@@ -1055,10 +1052,6 @@ public:
       }  // rg
 
     }  // s
-
-     //auto dbg_model = capture_model(state_next, intermediate, pars);
-     //nda_print_info(dbg_model.hv.vac_effect);
-
 
   }
 
@@ -1724,7 +1717,6 @@ public:
           * n_hv.adults_ts(VAC_UNV, RG_NONE, CD4_NEG, s)
           * i_hv.background_death_rate(s);
 
-      //continue;
       // vaccinated
       for (int v = VAC_TAKE; v <= VAC_NO_PROT; ++v) {
         value = n_hv.adults(v, RG_NONE, CD4_NEG, s)
@@ -1828,7 +1820,6 @@ public:
         n_hv.total_deaths += opts.dt * n_hv.adults_ts(VAC_UNV, rg, CD4_NEG, s)
             * i_hv.background_death_rate(s);
 
-        //continue;
         // vaccinated
         for (int v = VAC_TAKE; v <= VAC_NO_PROT; ++v) {
           value = n_hv.adults(v, rg, CD4_NEG, s)
@@ -2003,7 +1994,6 @@ public:
           n_hv.total_deaths_hiv +=
               opts.dt * n_hv.adults_ts(VAC_UNV, rg, hd, s) * (mort_hiv);
 
-          //continue;
           // vaccinated
           for (int v = VAC_TAKE; v <= VAC_NO_PROT; ++v) {
             value = n_hv.adults_ts(v, rg, hd, s)
@@ -3376,7 +3366,6 @@ private:
           impact = std::max(impact, 0.0);
           i_hv.i_idu_share_prop *= impact;
 
-          // continue;
           break;
         }
 
