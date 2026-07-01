@@ -400,10 +400,17 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
   breastfeeding_duration_no_art <- pars$infant_feeding_options[, "no art", ] / 100
 
   ## Nosocomial infections by child age group (0-4, 5-9, 10-14); absent in older PJNZ files
-  if (!is.null(pars$hc_nosocomial_infections_by_age)) {
-    hc_nosocomial_infections_by_age <- pars$hc_nosocomial_infections_by_age
+  if (!is.null(pars$nosocomial_infections_by_age)) {
+    # Input by single ages, so repeat each row 5 times, we're hardcoding here
+    # the knowledge that this has 3 rows
+    hc_nosocomial_infections_by_age <- pars$nosocomial_infections_by_age[rep(seq_len(3), each = 5), ]
+  } else if (!is.null(pars$nosocomial_infections)) {
+    # Prior to and including Spectrum v6.08 users input a non age disaggregatted nosocomial infections
+    # this was then applied entirely to the age 0 group.
+    hc_nosocomial_infections_by_age <- matrix(0, nrow = 15L, ncol = length(proj_years))
+    hc_nosocomial_infections_by_age[1, ] <- pars$nosocomial_infections
   } else {
-    hc_nosocomial_infections_by_age <- matrix(0, nrow = 3, ncol = length(proj_years))
+    hc_nosocomial_infections_by_age <- matrix(0, nrow = 15L, ncol = length(proj_years))
   }
   hc1_cd4_dist <- pars$child_dist_new_infections_cd4 / 100
 
@@ -441,8 +448,9 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
   art[which(art == -9999)] <- 0
   hc_art_isperc <- as.integer(pars$child_art_by_age_group_pernum["ART: 0-14y", ])
   art["ART: 0-14y", which(hc_art_isperc == 1)] <- art["ART: 0-14y", which(hc_art_isperc == 1)] / 100
-  hc_art_val <- art[c("ART: 0-14y", "ART: 0-4y", "ART: 5-9y", "ART: 10-14y"), ]
-  hc_art_start <- as.integer(unname(which(colSums(hc_art_val) > 0)[1]) - 1)
+  hc_art_val_total <- art["ART: 0-14y", ]
+  hc_art_val <- art[c("ART: 0-4y", "ART: 5-9y", "ART: 10-14y"), ]
+  hc_art_start <- as.integer(unname(which(pmax(colSums(hc_art_val), hc_art_val_total) > 0)[1]) - 1)
 
   hc_art_ltfu <- pars$perc_lost_follow_up_child / 100
 
@@ -469,6 +477,7 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
     hc2_art_mort = hc2_art_mort,
     hc_art_isperc = hc_art_isperc,
     hc_art_val = hc_art_val,
+    hc_art_val_total = hc_art_val_total,
     hc_art_init_dist = hc_art_init_dist,
     PMTCT = PMTCT,
     vertical_transmission_rate = vertical_transmission_rate,

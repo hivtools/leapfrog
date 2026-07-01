@@ -22,11 +22,10 @@
       "hVT": 2,
       "hBF": 18,
       "hBF_coarse": 4,
-      "hcAG_coarse": 4,
       "hAB_ind": 2,
       "hAG_fert": 7,
       "mtct_source": 11,
-      "hc_age_coarse": [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3],
+      "hc_age_coarse": [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
       "hc_age_coarse_cd4": [0, 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
       "hc1_to_hc2_cd4_transition": [
         [0.608439, 0.33873387, 0.2004, 0.0950, 0.03880388, 0.01861570, 0.00000000],
@@ -49,11 +48,11 @@
     "overrides": [
       {
         "applies_if": "age10_adult",
-        "vars": {	      
+        "vars": {
           "hcAG_end": 10,
           "hc2AG": 5,
-          "hcAG_coarse": 3,
-          "hc_age_coarse": [1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
+          "hcAG_c": 2,
+          "hc_age_coarse": [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
           "hc_age_coarse_cd4": [0, 0, 0, 1, 1, 2, 2, 2, 2, 2]
         }
       }
@@ -62,7 +61,7 @@
   "pars": {
       "hc_nosocomial_infections_by_age": {
         "num_type": "real_type",
-        "dims": ["SS::hcAG_c", "opts.proj_steps"]
+        "dims": ["SS::hcAG_end", "opts.proj_steps"]
       },
       "hc1_cd4_dist": {
         "num_type": "real_type",
@@ -114,7 +113,11 @@
       },
       "hc_art_val": {
         "num_type": "real_type",
-        "dims": ["SS::hcAG_coarse", "opts.proj_steps"]
+        "dims": ["SS::hcAG_c", "opts.proj_steps"]
+      },
+      "hc_art_val_total": {
+        "num_type": "real_type",
+        "dims": ["opts.proj_steps"]
       },
       "hc_art_init_dist": {
         "num_type": "real_type",
@@ -235,23 +238,29 @@
     },
     "unmet_need": {
       "num_type": "real_type",
-      "dims": ["SS::hcAG_coarse"]
+      "dims": ["SS::hcAG_c"]
     },
     "total_need": {
       "num_type": "real_type",
-      "dims": ["SS::hcAG_coarse"]
+      "dims": ["SS::hcAG_c"]
     },
     "on_art": {
       "num_type": "real_type",
-      "dims": ["SS::hcAG_coarse"]
+      "dims": ["SS::hcAG_c"]
     },
-    "total_art_last_year": {
+    "art_previous": {
       "num_type": "real_type",
-      "dims": ["SS::hcAG_coarse"]
+      "dims": ["SS::hcAG_c"]
     },
-    "total_art_this_year": {
+    "art_previous_total": {
+      "num_type": "real_type"
+    },
+    "art_current": {
       "num_type": "real_type",
-      "dims": ["SS::hcAG_coarse"]
+      "dims": ["SS::hcAG_c"]
+    },
+    "art_current_total": {
+      "num_type": "real_type"
     },
     "hc_art_grad": {
       "num_type": "real_type",
@@ -259,19 +268,19 @@
     },
     "hc_art_scalar": {
       "num_type": "real_type",
-      "dims": ["SS::hcAG_coarse"]
+      "dims": ["SS::hcAG_c"]
     },
     "hc_initByAge": {
       "num_type": "real_type",
-      "dims": ["SS::hcAG_coarse"]
+      "dims": ["SS::hcAG_c"]
     },
     "hc_adj": {
       "num_type": "real_type",
-      "dims": ["SS::hcAG_coarse"]
+      "dims": ["SS::hcAG_c"]
     },
     "hc_art_deaths": {
       "num_type": "real_type",
-      "dims": ["SS::hcAG_coarse"]
+      "dims": ["SS::hcAG_c"]
     },
     "hc_hiv_dist": {
       "num_type": "real_type",
@@ -455,7 +464,10 @@
     },
     "hc_art_init": {
       "num_type": "real_type",
-      "dims": ["SS::hcAG_coarse"]
+      "dims": ["SS::hcAG_c"]
+    },
+    "hc_art_init_total": {
+      "num_type": "real_type"
     },
     "hc_art_need_init": {
       "num_type": "real_type",
