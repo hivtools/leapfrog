@@ -1498,7 +1498,9 @@ struct ChildModelSimulation<Config> {
       }
 
       auto hc_art_val_sum = 0.0;
-      auto hc_art_val_sum_last = 0.0;
+      // hc_art_val_total is 0 for age-spec years, so this adds the non-age-spec total when t-1 is not age-spec
+      // and is 0 when t-1 is age-spec (age-disagg loop below handles that case).
+      auto hc_art_val_sum_last = p_hc.hc_art_val_total(t - 1);
       for (int ag = 0; ag < hcAG_c; ++ag) {
         hc_art_val_sum += p_hc.hc_art_val(ag, t);
         hc_art_val_sum_last += p_hc.hc_art_val(ag, t - 1);
