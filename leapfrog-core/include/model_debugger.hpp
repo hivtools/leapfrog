@@ -443,8 +443,8 @@ struct HcDebugInfo {
   NdaInfo unmet_need;
   NdaInfo total_need;
   NdaInfo on_art;
-  NdaInfo total_art_last_year;
-  NdaInfo total_art_this_year;
+  NdaInfo total_art_previous;
+  NdaInfo total_art_current;
   NdaInfo hc_art_grad;
   NdaInfo hc_art_scalar;
   NdaInfo hc_initByAge;
@@ -852,8 +852,8 @@ inline HcDebugInfo capture_hc(const HcState& hc, const IntermediateHc& i_hc,
   out.unmet_need = nda_capture(i_hc.unmet_need);
   out.total_need = nda_capture(i_hc.total_need);
   out.on_art = nda_capture(i_hc.on_art);
-  out.total_art_last_year = nda_capture(i_hc.total_art_last_year);
-  out.total_art_this_year = nda_capture(i_hc.total_art_this_year);
+  out.total_art_previous = nda_capture(i_hc.total_art_previous);
+  out.total_art_current = nda_capture(i_hc.total_art_current);
   out.hc_art_grad = nda_capture(i_hc.hc_art_grad);
   out.hc_art_scalar = nda_capture(i_hc.hc_art_scalar);
   out.hc_initByAge = nda_capture(i_hc.hc_initByAge);

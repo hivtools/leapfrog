@@ -69,11 +69,30 @@ test_that("process_pjnz extract_child_params adds child-specific parameters", {
   pars_adult <- process_pjnz(bwa_pmtct_pjnz)
   pars_child <- process_pjnz(bwa_pmtct_pjnz, extract_child_params = TRUE)
 
-  child_pars <- c("hc_nosocomial_infections_by_age", "hc1_cd4_dist", "hc1_cd4_mort",                  "hc2_cd4_mort", "hc1_cd4_prog", "hc2_cd4_prog",
+  child_pars <- c("hc_nosocomial_infections_by_age", "hc1_cd4_dist", "hc1_cd4_mort", 
+                  "hc2_cd4_mort", "hc1_cd4_prog", "hc2_cd4_prog",
                   "ctx_val", "PMTCT", "vertical_transmission_rate")
   expect_true(all(child_pars %in% names(pars_child)))
   expect_false(any(child_pars %in% names(pars_adult)))
 
   # Adult parameters still present
   expect_true(all(c("basepop", "Sx", "cd4_mort") %in% names(pars_child)))
+})
+
+test_that("process_pjnz converts non-age stratified nosocomial infections to age stratified", {
+  raw_dp <- pjnz::read_dp(bwa_pmtct_pjnz, include_raw = TRUE)
+  raw_dp$data$nosocomial_infections <- list(
+    data = rep(1, dim(raw_dp$data$nosocomial_infections_by_age$data)[2]),
+    tag = "NoscomialInfections MV"
+  )
+  raw_dp$data$nosocomial_infections_by_age <- NULL
+
+  with_mocked_bindings(
+    pars_child <- process_pjnz(bwa_pmtct_pjnz, extract_child_params = TRUE),
+    read_dp = function(...) raw_dp,
+    .package = "pjnz"
+  )
+
+  expect_true(all(pars_child$hc_nosocomial_infections_by_age[1, ] == 1))
+  expect_true(all(pars_child$hc_nosocomial_infections_by_age[2:15, ] == 0))
 })

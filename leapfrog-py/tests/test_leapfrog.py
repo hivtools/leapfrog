@@ -86,6 +86,7 @@ def test_child_model():
         "hc1_art_aids_deaths",
         "hc2_art_aids_deaths",
         "hc_art_init",
+        "hc_art_init_total",
         "hc_art_need_init",
         "ctx_need",
         "infection_by_type",
