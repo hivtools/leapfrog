@@ -332,7 +332,7 @@
       "num_type": "real_type"
     },
    
-    "art_interupt_rate": {
+    "art_interrupt_rate": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
     }

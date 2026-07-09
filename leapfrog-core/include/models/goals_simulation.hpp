@@ -167,6 +167,7 @@ private:
     ART_CD4_NUMBER = 2,
     ART_NEW_PATS = 3,
     ART_RG_PERCENT = 4,
+    ART_INIT_RATE = 5,
 
     POC_CD4 = 0,
     POC_VL = 1,
@@ -2754,6 +2755,7 @@ public:
 
     // from goals
     auto& n_hv = state_next.hv;
+    const auto& c_hv = state_curr.hv;
     auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
 
@@ -2951,10 +2953,25 @@ public:
         }
 
         for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) {
-          start_art[v][rg][s] =
-              (not_receiving_art_vrs[v][rg][s] + receiving_art_vrs[v][rg][s])
-                  * art_cov[rg][s]
-              - receiving_art_vrs[v][rg][s];
+          
+          if( pars.hv.art_cov_num_percent[0] == ART_INIT_RATE ){
+
+            real_type NewInf = c_hv.new_inf_vrs(v, rg, s); 
+            real_type PLHIV = 0.0;
+            real_type OnART = 0.0;
+            for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
+              PLHIV += c_hv.adults(v, rg, hd, s);
+              OnART += c_hv.adults(v, rg, hd + hOnArt, s);
+            }
+
+            start_art[v][rg][s] = std::max( opts.dt * pars.ha.art_initiation_rate(s,t) * (NewInf + PLHIV - OnART), 0.0);
+          }
+          else{
+            start_art[v][rg][s] =
+                (not_receiving_art_vrs[v][rg][s] + receiving_art_vrs[v][rg][s])
+                    * art_cov[rg][s]
+                - receiving_art_vrs[v][rg][s];
+          }
 
           // allocate new ART according to eligibility (Prop1) and mortality
           // (Prop2)

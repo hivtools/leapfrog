@@ -521,7 +521,7 @@ struct AdultHivModelSimulation<Config> {
                real_type temp_art_adult_dropout = 0.0;
                if constexpr (ModelVariant::run_goals) {
                    if(t > pars.hv.goals_base_year_idx){ 
-                    temp_art_adult_dropout = -std::log(1.0 - pars.hv.art_interupt_rate(t) *
+                    temp_art_adult_dropout = -std::log(1.0 - pars.hv.art_interrupt_rate(t) *
                                                       (1.0 - pars.hv.long_act_treat_cov(t) * pars.hv.long_act_treat_eff_ltfu) *
                                                       n_ha.h_artpop(hu, hm, ha, s));
                    }
@@ -548,99 +548,122 @@ struct AdultHivModelSimulation<Config> {
 
   void run_h_art_initiation(int hiv_step) {
     const auto& p_ha = pars.ha;
+    const auto& c_ha = state_curr.ha;
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
 
     for (int s = 0; s < NS; ++s) {
-      i_ha.Xart_15plus = 0.0;
-
-      nda::fill(i_ha.artelig_hm, 0.0);
-      i_ha.Xartelig_15plus = 0.0;
-
-      nda::fill(i_ha.expect_mort_artelig_hm, 0.0);
-      i_ha.expect_mort_artelig15plus = 0.0;
-
-      for (int ha = hIDX_15PLUS; ha < hAG; ++ha) {
+      
+      int ART_INIT_RATE = 5; 
+      if (pars.hv.art_cov_num_percent[0] == ART_INIT_RATE) {
+      real_type NewInf = 0.0;
+      real_type PLHIV = 0.0;
+      real_type OnART = 0.0;
+      for (int ha = 0; ha < hAG; ++ha) {
+        const int a = ha + SS::p_idx_hiv_first_adult;
+        NewInf +=  c_ha.p_infections(a, s);       
+        PLHIV += c_ha.p_hivpop(a, s);             
         for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
-          if (hm >= i_ha.anyelig_idx) {
-            // TODO: Implement special population ART eligibility
-            real_type prop_elig = 1.0;
-            real_type tmp_artelig = prop_elig * n_ha.h_hivpop(hm, ha, s);
-            i_ha.artelig_hahm(hm, ha - hIDX_15PLUS) = tmp_artelig;
-            i_ha.artelig_hm(hm) += tmp_artelig;
-            i_ha.Xartelig_15plus += tmp_artelig;
-
-            real_type tmp_expect_mort = p_ha.cd4_mortality(hm, ha, s) * i_ha.artelig_hahm(hm, ha - hIDX_15PLUS);
-            i_ha.expect_mort_artelig_hm(hm) += tmp_expect_mort;
-            i_ha.expect_mort_artelig15plus += tmp_expect_mort;
-          }
-
-          for (int hu = 0; hu < hTS; ++hu) {
-            i_ha.Xart_15plus += n_ha.h_artpop(hu, hm, ha, s) +
-                                opts.dt * i_ha.gradART(hu, hm, ha, s);
-          }
+            for (int hu = 0; hu < hTS; ++hu) {
+              OnART += c_ha.h_artpop(hu, hm, ha, s);
+            }
         }
       }
+      
+      i_ha.artinit_hts = std::max( opts.dt * pars.ha.art_initiation_rate(s,t) * (NewInf + PLHIV - OnART), 0.0);
+    }
+    else{
 
-      // calculate number on ART at end of ts, based on number or percent
-      real_type art_interp_w = opts.dt * (hiv_step + 1.0);
-      if (opts.proj_period_int == PROJPERIOD_MIDYEAR && art_interp_w < 0.5) {
-        if (!p_ha.adults_on_art_is_percent(s, t - 2) && !p_ha.adults_on_art_is_percent(s, t - 1)) {
-          // case: both values are numbers
-          i_ha.artnum_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2) +
-                            (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
-        } else if (p_ha.adults_on_art_is_percent(s, t - 2) && p_ha.adults_on_art_is_percent(s, t - 1)) {
-          // case: both values are percentages
-          i_ha.artcov_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2) +
-                            (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
-          i_ha.artnum_hts = i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
-        } else if (!p_ha.adults_on_art_is_percent(s, t - 2) && p_ha.adults_on_art_is_percent(s, t - 1)) {
-          // case: value is percentage only at time t - 1
-          // transition from number to percentage
-          i_ha.curr_coverage = i_ha.Xart_15plus / (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
-          i_ha.artcov_hts = i_ha.curr_coverage +
-                            (p_ha.adults_on_art(s, t - 1) - i_ha.curr_coverage) *
-                            opts.dt / (0.5 - opts.dt * hiv_step);
-          // back to number
-          i_ha.artnum_hts = i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+        i_ha.Xart_15plus = 0.0;
+
+        nda::fill(i_ha.artelig_hm, 0.0);
+        i_ha.Xartelig_15plus = 0.0;
+
+        nda::fill(i_ha.expect_mort_artelig_hm, 0.0);
+        i_ha.expect_mort_artelig15plus = 0.0;
+
+        for (int ha = hIDX_15PLUS; ha < hAG; ++ha) {
+          for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
+            if (hm >= i_ha.anyelig_idx) {
+              // TODO: Implement special population ART eligibility
+              real_type prop_elig = 1.0;
+              real_type tmp_artelig = prop_elig * n_ha.h_hivpop(hm, ha, s);
+              i_ha.artelig_hahm(hm, ha - hIDX_15PLUS) = tmp_artelig;
+              i_ha.artelig_hm(hm) += tmp_artelig;
+              i_ha.Xartelig_15plus += tmp_artelig;
+
+              real_type tmp_expect_mort = p_ha.cd4_mortality(hm, ha, s) * i_ha.artelig_hahm(hm, ha - hIDX_15PLUS);
+              i_ha.expect_mort_artelig_hm(hm) += tmp_expect_mort;
+              i_ha.expect_mort_artelig15plus += tmp_expect_mort;
+            }
+
+            for (int hu = 0; hu < hTS; ++hu) {
+              i_ha.Xart_15plus += n_ha.h_artpop(hu, hm, ha, s) +
+                                  opts.dt * i_ha.gradART(hu, hm, ha, s);
+            }
+          }
         }
-      } else {
-        // If the projection period is calendar year (>= Spectrum v6.2),
-        // this condition is always followed, and it interpolates between
-        // end of last year and current year (+ 1.0).
-        // If projection period was mid-year (<= Spectrum v6.19), the second
-        // half of the projection year interpolates the first half of the
-        // calendar year (e.g. hts 7/10 for 2019 interpolates December 2018
-        // to December 2019)
 
-        if (opts.proj_period_int == PROJPERIOD_MIDYEAR) {
-          art_interp_w -= 0.5;
+        // calculate number on ART at end of ts, based on number or percent
+        real_type art_interp_w = opts.dt * (hiv_step + 1.0);
+        if (opts.proj_period_int == PROJPERIOD_MIDYEAR && art_interp_w < 0.5) {
+          if (!p_ha.adults_on_art_is_percent(s, t - 2) && !p_ha.adults_on_art_is_percent(s, t - 1)) {
+            // case: both values are numbers
+            i_ha.artnum_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2) +
+                              (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
+          } else if (p_ha.adults_on_art_is_percent(s, t - 2) && p_ha.adults_on_art_is_percent(s, t - 1)) {
+            // case: both values are percentages
+            i_ha.artcov_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2) +
+                              (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
+            i_ha.artnum_hts = i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+          } else if (!p_ha.adults_on_art_is_percent(s, t - 2) && p_ha.adults_on_art_is_percent(s, t - 1)) {
+            // case: value is percentage only at time t - 1
+            // transition from number to percentage
+            i_ha.curr_coverage = i_ha.Xart_15plus / (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+            i_ha.artcov_hts = i_ha.curr_coverage +
+                              (p_ha.adults_on_art(s, t - 1) - i_ha.curr_coverage) *
+                              opts.dt / (0.5 - opts.dt * hiv_step);
+            // back to number
+            i_ha.artnum_hts = i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+          }
+        } else {
+          // If the projection period is calendar year (>= Spectrum v6.2),
+          // this condition is always followed, and it interpolates between
+          // end of last year and current year (+ 1.0).
+          // If projection period was mid-year (<= Spectrum v6.19), the second
+          // half of the projection year interpolates the first half of the
+          // calendar year (e.g. hts 7/10 for 2019 interpolates December 2018
+          // to December 2019)
+
+          if (opts.proj_period_int == PROJPERIOD_MIDYEAR) {
+            art_interp_w -= 0.5;
+          }
+
+          if (!p_ha.adults_on_art_is_percent(s, t - 1) && !p_ha.adults_on_art_is_percent(s, t)) {
+            // case: both values are numbers
+            i_ha.artnum_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1) +
+                              art_interp_w * p_ha.adults_on_art(s, t);
+          } else if (p_ha.adults_on_art_is_percent(s, t - 1) && p_ha.adults_on_art_is_percent(s, t)) {
+            // case: both values are percentages
+            i_ha.artcov_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1) +
+                              art_interp_w * p_ha.adults_on_art(s, t);
+            // transition to number
+            i_ha.artnum_hts = i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+          } else if (!p_ha.adults_on_art_is_percent(s, t - 1) && p_ha.adults_on_art_is_percent(s, t)) {
+            // case: value is percentage only at time t
+            // transition from number to percentage
+            i_ha.curr_coverage = i_ha.Xart_15plus / (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+            i_ha.artcov_hts = i_ha.curr_coverage +
+                              (p_ha.adults_on_art(s, t) - i_ha.curr_coverage) *
+                              opts.dt / (1.0 - art_interp_w + opts.dt);
+            // back to number
+            i_ha.artnum_hts = i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+          }
         }
 
-        if (!p_ha.adults_on_art_is_percent(s, t - 1) && !p_ha.adults_on_art_is_percent(s, t)) {
-          // case: both values are numbers
-          i_ha.artnum_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1) +
-                            art_interp_w * p_ha.adults_on_art(s, t);
-        } else if (p_ha.adults_on_art_is_percent(s, t - 1) && p_ha.adults_on_art_is_percent(s, t)) {
-          // case: both values are percentages
-          i_ha.artcov_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1) +
-                            art_interp_w * p_ha.adults_on_art(s, t);
-          // transition to number
-          i_ha.artnum_hts = i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
-        } else if (!p_ha.adults_on_art_is_percent(s, t - 1) && p_ha.adults_on_art_is_percent(s, t)) {
-          // case: value is percentage only at time t
-          // transition from number to percentage
-          i_ha.curr_coverage = i_ha.Xart_15plus / (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
-          i_ha.artcov_hts = i_ha.curr_coverage +
-                            (p_ha.adults_on_art(s, t) - i_ha.curr_coverage) *
-                            opts.dt / (1.0 - art_interp_w + opts.dt);
-          // back to number
-          i_ha.artnum_hts = i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
-        }
-      }
-
-      // Desired number to initiate on ART
-      i_ha.artinit_hts = std::max(i_ha.artnum_hts - i_ha.Xart_15plus, 0.0);
+        // Desired number to initiate on ART
+        i_ha.artinit_hts = std::max(i_ha.artnum_hts - i_ha.Xart_15plus, 0.0);
+    }
 
       // Use mixture of eligibility and expected mortality for initiation distribution
       // Spectrum ART allocation is 2-step process
@@ -919,9 +942,9 @@ struct AdultHivModelSimulation<Config> {
 
      for (int s = 0; s < NS; ++s) {
       cured_proportion =  intermediate.hv.cure_effect(s);
-      for (int ha = SS::p_idx_hiv_first_adult; ha < hAG; ++ha) {
+      for (int ha = 0; ha < hAG; ++ha) {
           
-          const int a = ha + p_idx_hiv_first_adult;
+          const int a = ha + SS::p_idx_hiv_first_adult;
           //adults, plhiv not on art
           for (int hm = 0; hm < hDS; ++hm) {
               cured = cured_proportion * n_ha.h_hivpop(hm, ha, s); 
