@@ -199,13 +199,13 @@ struct AdultHivModelSimulation<Config> {
           }
 
           auto deaths_hiv  = i_ha.cd4mx_scale * p_ha.cd4_mortality(hm, ha, s) * n_ha.h_hivpop(hm, ha, s);
-          //capture the impact of AHD treament on hiv mortality 
+          //capture the impact of AHD treament on hiv mortality
           if constexpr (ModelVariant::run_goals) {
-            if ( (t > pars.hv.goals_base_year_idx) && (hm>=4) ) { // index 4 is CD4_100_199 
+            if ( (t > pars.hv.goals_base_year_idx) && (hm>=4) ) { // index 4 is CD4_100_199
               deaths_hiv *= intermediate.hv.AHD_Tx_Impact;
             }
-          }                   
-          
+          }
+
           i_ha.h_hiv_deaths_age_sex(ha, s) += opts.dt * deaths_hiv;
           n_ha.h_hiv_deaths_no_art(hm, ha, s) += opts.dt * deaths_hiv;
 
@@ -481,7 +481,7 @@ struct AdultHivModelSimulation<Config> {
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
 
-  
+
     for (int s = 0; s < NS; ++s) {
       for (int ha = 0; ha < hAG; ++ha) {
         for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
@@ -490,12 +490,12 @@ struct AdultHivModelSimulation<Config> {
                               p_ha.art_mortality_time_rate_ratio(hu, t) *
                               n_ha.h_artpop(hu, hm, ha, s);
 
-           //capture the impact of AHD treament on art mortality 
+           //capture the impact of AHD treament on art mortality
            if constexpr (ModelVariant::run_goals) {
-              if ( (t > pars.hv.goals_base_year_idx) && (hm>=4) ) { // index 4 is CD4_100_199 
+              if ( (t > pars.hv.goals_base_year_idx) && (hm>=4) ) { // index 4 is CD4_100_199
                 i_ha.deaths_art *= intermediate.hv.AHD_Tx_Impact;
               }
-            }                   
+            }
 
             const auto new_hiv_deaths_art = opts.dt * i_ha.deaths_art;
             i_ha.h_hiv_deaths_age_sex(ha, s) += new_hiv_deaths_art;
@@ -520,7 +520,7 @@ struct AdultHivModelSimulation<Config> {
 
                real_type temp_art_adult_dropout = 0.0;
                if constexpr (ModelVariant::run_goals) {
-                   if(t > pars.hv.goals_base_year_idx){ 
+                   if(t > pars.hv.goals_base_year_idx){
                     temp_art_adult_dropout = -std::log(1.0 - pars.hv.art_interrupt_rate(t) *
                                                       (1.0 - pars.hv.long_act_treat_cov(t) * pars.hv.long_act_treat_eff_ltfu) *
                                                       n_ha.h_artpop(hu, hm, ha, s));
@@ -529,7 +529,7 @@ struct AdultHivModelSimulation<Config> {
                else{
                   temp_art_adult_dropout = p_ha.dropout_rate(t) * n_ha.h_artpop(hu, hm, ha, s);
               }
-              
+
               const auto art_adult_dropout = temp_art_adult_dropout;
 
               if (p_ha.dropout_recover_cd4 && hu >= 2 && hm >= 1) {
@@ -553,9 +553,12 @@ struct AdultHivModelSimulation<Config> {
     for (int s = 0; s < NS; ++s) {
       calc_art_eligibility(s);
 
-      // How many people we aim to put on ART this time step. The two ART entry
-      // options differ only here; allocating those initiations across CD4 stage
-      // and age is common to both.
+      // How many people we aim to put on ART this time step.
+      // There are 3 ART entry options at the moment
+      // 1. Number or percent
+      // 2. Initiation rate
+      // 3. % by risk group - this is not implemented in AIM at the moment
+      //   so we fallback to number or %.
       if (p_ha.art_entry_option == SS::ART_ENTRY_INITIATION_RATE) {
         i_ha.artinit_hts = calc_artinit_from_initiation_rate(s);
       } else {
@@ -571,7 +574,7 @@ struct AdultHivModelSimulation<Config> {
   };
 
   // Number eligible to start ART, their expected mortality, and the number
-  // already on ART at the end of this time step. Both ART entry options need
+  // already on ART at the end of this time step. All ART entry options need
   // these to distribute initiations, and the number/percent option also needs
   // them to size the treatment gap.
   void calc_art_eligibility(int s) {
@@ -637,9 +640,7 @@ struct AdultHivModelSimulation<Config> {
     return std::max(opts.dt * p_ha.art_initiation_rate(s, t) * treatment_gap, 0.0);
   };
 
-  // ART entry option ART_ENTRY_NUMBER_OR_PERCENT: the input gives the number (or
-  // percent) on ART at year end, so initiations are whatever closes the gap
-  // between that interpolated target and the number currently on ART.
+  // ART entry option ART_ENTRY_NUMBER_OR_PERCENT
   real_type calc_artinit_from_number_or_percent(int s, int hiv_step) {
     const auto& p_ha = pars.ha;
     auto& i_ha = intermediate.ha;
