@@ -230,11 +230,16 @@ process_pjnz_ha <- function(dat, pars, dim_vars, use_coarse_age_groups = FALSE) 
     pwid_hivpos_nonaids_mortality <- -1
   }
 
+  art_initiation_rate <- pars$art_initiation_rate
+  if (is.null(pars$art_initiation_rate)) {
+    art_initiation_rate <- array(0.0, c(2L, proj_years_count))
+  }
+
   list(
     incidence_model_choice = incidence_model_choice,
     incidinput = incidinput,
     art_entry_option = art_entry_option(pars$art_coverage_selection),
-    art_initiation_rate = pars$art_initiation_rate,
+    art_initiation_rate = art_initiation_rate,
     transmission_rate_hts = transmission_rate_hts,
     initial_incidence = initial_incidence,
     epidemic_start_hts = epidemic_start_hts,
