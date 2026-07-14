@@ -230,9 +230,18 @@ process_pjnz_ha <- function(dat, pars, dim_vars, use_coarse_age_groups = FALSE) 
     pwid_hivpos_nonaids_mortality <- -1
   }
 
+  ## How adults enter ART. 0 = ART_ENTRY_NUMBER_OR_PERCENT, driven by the
+  ## number/percent on ART; 1 = ART_ENTRY_INITIATION_RATE, driven by a rate
+  ## applied to the treatment gap. A PJNZ only carries the number/percent input,
+  ## so the initiation rate is unused here and left at zero.
+  art_entry_option <- 0L
+  art_initiation_rate <- array(0.0, c(2L, proj_years_count))
+
   list(
     incidence_model_choice = incidence_model_choice,
     incidinput = incidinput,
+    art_entry_option = art_entry_option,
+    art_initiation_rate = art_initiation_rate,
     transmission_rate_hts = transmission_rate_hts,
     initial_incidence = initial_incidence,
     epidemic_start_hts = epidemic_start_hts,

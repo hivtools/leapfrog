@@ -162,13 +162,6 @@ private:
     VMM_COV_ALLRISK = 0,
     VMM_COV_SINGLE = 1,
 
-    ART_NUM_PERCENT = 0,
-    ART_CD4_PERCENT = 1,
-    ART_CD4_NUMBER = 2,
-    ART_NEW_PATS = 3,
-    ART_RG_PERCENT = 4,
-    ART_INIT_RATE = 5,
-
     POC_CD4 = 0,
     POC_VL = 1,
 
@@ -2899,8 +2892,12 @@ public:
       }
     }
 
-    // KP coverage from AIM input editor
-    if (p_hv.art_cov_num_percent[0] == ART_RG_PERCENT) {
+    // KP coverage from AIM input editor.
+    // Note this is not a third way of computing initiations: it overrides the
+    // coverage of the key population risk groups and then still takes the
+    // coverage branch below, so it behaves as ART_ENTRY_NUMBER_OR_PERCENT with
+    // the KP groups' coverage read from the input rather than derived.
+    if (p_ha.art_entry_option == SS::ART_ENTRY_PERCENT_BY_RISK_GROUP) {
       // Coverage for males, risk groups HV_IDU … HV_MSM
       for (int rg = RG_IDU; rg <= RG_MSM; ++rg) {
         art_cov[rg][S_MALE] = p_hv.art_coverage_rg(S_MALE, rg, t);  // CDP check /100
@@ -2953,20 +2950,23 @@ public:
         }
 
         for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) {
-          
-          if( pars.hv.art_cov_num_percent[0] == ART_INIT_RATE ){
-
-            real_type NewInf = c_hv.new_inf_vrs(v, rg, s); 
-            real_type PLHIV = 0.0;
-            real_type OnART = 0.0;
+          if (pars.ha.art_entry_option == SS::ART_ENTRY_INITIATION_RATE) {
+            // Initiations are a rate applied to the treatment gap: PLHIV, plus
+            // this year's new infections, minus those already on ART.
+            const real_type new_infections = c_hv.new_inf_vrs(v, rg, s);
+            real_type plhiv = 0.0;
+            real_type on_art = 0.0;
             for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
-              PLHIV += c_hv.adults(v, rg, hd, s);
-              OnART += c_hv.adults(v, rg, hd + hOnArt, s);
+              plhiv += c_hv.adults(v, rg, hd, s);
+              on_art += c_hv.adults(v, rg, hd + hOnArt, s);
             }
 
-            start_art[v][rg][s] = std::max( opts.dt * pars.ha.art_initiation_rate(s,t) * (NewInf + PLHIV - OnART), 0.0);
-          }
-          else{
+            const real_type treatment_gap = new_infections + plhiv - on_art;
+            start_art[v][rg][s] = std::max(
+                opts.dt * pars.ha.art_initiation_rate(s, t) * treatment_gap, 0.0);
+          } else {
+            // Coverage target: initiate however many are needed to reach the
+            // input number/percent on ART.
             start_art[v][rg][s] =
                 (not_receiving_art_vrs[v][rg][s] + receiving_art_vrs[v][rg][s])
                     * art_cov[rg][s]
