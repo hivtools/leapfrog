@@ -522,8 +522,8 @@ struct AdultHivModelSimulation<Config> {
                if constexpr (ModelVariant::run_goals) {
                    if(t > pars.hv.goals_base_year_idx){
                     temp_art_adult_dropout = -std::log(1.0 - pars.hv.art_interrupt_rate(t) *
-                                                      (1.0 - pars.hv.long_act_treat_cov(t) * pars.hv.long_act_treat_eff_ltfu) *
-                                                      n_ha.h_artpop(hu, hm, ha, s));
+                                                      (1.0 - pars.hv.long_act_treat_cov(t) * pars.hv.long_act_treat_eff_ltfu)) *
+                                                      n_ha.h_artpop(hu, hm, ha, s);
                    }
                }
                else{
@@ -622,21 +622,13 @@ struct AdultHivModelSimulation<Config> {
 
     real_type new_infections = 0.0;
     real_type plhiv = 0.0;
-    real_type on_art = 0.0;
-
     for (int ha = 0; ha < hAG; ++ha) {
       const int a = ha + p_idx_hiv_first_adult;
       new_infections += c_ha.p_infections(a, s);
       plhiv += c_ha.p_hivpop(a, s);
-
-      for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
-        for (int hu = 0; hu < hTS; ++hu) {
-          on_art += c_ha.h_artpop(hu, hm, ha, s);
-        }
-      }
     }
 
-    const real_type treatment_gap = new_infections + plhiv - on_art;
+    const real_type treatment_gap = new_infections + plhiv;
     return std::max(opts.dt * p_ha.art_initiation_rate(s, t) * treatment_gap, 0.0);
   };
 
