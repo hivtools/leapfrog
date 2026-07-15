@@ -230,9 +230,16 @@ process_pjnz_ha <- function(dat, pars, dim_vars, use_coarse_age_groups = FALSE) 
     pwid_hivpos_nonaids_mortality <- -1
   }
 
+  art_initiation_rate <- pars$art_initiation_rate
+  if (is.null(pars$art_initiation_rate)) {
+    art_initiation_rate <- array(0.0, c(2L, proj_years_count))
+  }
+
   list(
     incidence_model_choice = incidence_model_choice,
     incidinput = incidinput,
+    art_entry_option = art_entry_option(pars$art_coverage_selection),
+    art_initiation_rate = art_initiation_rate,
     transmission_rate_hts = transmission_rate_hts,
     initial_incidence = initial_incidence,
     epidemic_start_hts = epidemic_start_hts,
@@ -264,4 +271,40 @@ process_pjnz_ha <- function(dat, pars, dim_vars, use_coarse_age_groups = FALSE) 
     pwid_sex_ratio = pwid_sex_ratio,
     t_ART_start = t_ART_start
   )
+}
+
+## Spectrum's <ARTCoverageSelection MV> -> leapfrog's art_entry_option.
+## Leapfrog defines its own codes (SS::ART_ENTRY_*) rather than inheriting
+## Spectrum's, so unsupported selections fail loudly here instead of silently
+## degrading to number/percent inside the model.
+SPECTRUM_ART_SELECTION_TO_ENTRY_OPTION <- c(
+  "0" = 0L,  # DP_NumOrPercent      number/percent on ART  -> ART_ENTRY_NUMBER_OR_PERCENT
+  "5" = 1L,  # DP_ARTInitiationRate ART initiation rate    -> ART_ENTRY_INITIATION_RATE
+  "4" = 2L   # DP_PcntByRiskGrp     percent by risk group  -> ART_ENTRY_PERCENT_BY_RISK_GROUP
+)
+
+UNSUPPORTED_ART_SELECTIONS <- c(
+  "1" = "percent by CD4",         # DP_CD4Percent
+  "2" = "number by CD4",          # DP_CD4Number
+  "3" = "number of new patients"  # DP_NumNewARTPats
+)
+
+art_entry_option <- function(selection) {
+  if (is.null(selection)) {
+    return(0L) ## Default to number or percent
+  }
+  selection <- as.character(as.integer(selection))
+
+  if (selection %in% names(UNSUPPORTED_ART_SELECTIONS)) {
+    stop(sprintf(
+      "ART coverage selection '%s' (%s) is not implemented in leapfrog.",
+      UNSUPPORTED_ART_SELECTIONS[[selection]], selection
+    ))
+  }
+
+  if (!(selection %in% names(SPECTRUM_ART_SELECTION_TO_ENTRY_OPTION))) {
+    stop(sprintf("Unrecognised ART coverage selection: %s", selection))
+  }
+
+  SPECTRUM_ART_SELECTION_TO_ENTRY_OPTION[[selection]]
 }

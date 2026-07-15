@@ -29,13 +29,13 @@
       },
       {
         "applies_if": "age10_adult",
-        "vars": {	      
+        "vars": {
           "hAG": 96,
           "p_idx_hiv_first_adult": 10,
           "hAG_span": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
           "hAG_fertility": 40
         }
-      }      
+      }
     ]
   },
   "pars": {
@@ -218,6 +218,13 @@
     "pwid_sex_ratio": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
+    },
+    "art_entry_option": {
+      "num_type": "int"
+    },
+    "art_initiation_rate": {
+      "num_type": "real_type",
+      "dims": ["SS::NS", "opts.proj_steps"]
     }
   },
   "intermediate": {

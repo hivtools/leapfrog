@@ -146,6 +146,10 @@ type
     pwidPropHivpopLength: Integer;
     pwidSexRatio: PDouble;
     pwidSexRatioLength: Integer;
+    artEntryOption: Integer;
+    artEntryOptionLength: Integer;
+    artInitiationRate: PDouble;
+    artInitiationRateLength: Integer;
 end;
 
 type
@@ -183,6 +187,8 @@ type
     pwidHivposNonaidsMortality: Double;
     pwidPropHivpop: TGBFixedArray<Double>;
     pwidSexRatio: TGBFixedArray<Double>;
+    artEntryOption: Integer;
+    artInitiationRate: TGBFixedArray<Double>;
     function getView(): LeapfrogHivAdultParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -600,8 +606,6 @@ type
     hvImpactMatrixLength: Integer;
     artCoverageRg: PDouble;
     artCoverageRgLength: Integer;
-    artCovNumPercent: PInteger;
-    artCovNumPercentLength: Integer;
     popEligTreat: PInteger;
     popEligTreatLength: Integer;
     popEligYear: PInteger;
@@ -614,8 +618,8 @@ type
     longActTreatEffVlsLength: Integer;
     longActTreatEffLtfu: Double;
     longActTreatEffLtfuLength: Integer;
-    artInteruptRate: PDouble;
-    artInteruptRateLength: Integer;
+    artInterruptRate: PDouble;
+    artInterruptRateLength: Integer;
 end;
 
 type
@@ -673,14 +677,13 @@ type
     rnPopSizes: TGBFixedArray<Double>;
     hvImpactMatrix: TGBFixedArray<Double>;
     artCoverageRg: TGBFixedArray<Double>;
-    artCovNumPercent: TGBFixedArray<Integer>;
     popEligTreat: TGBFixedArray<Integer>;
     popEligYear: TGBFixedArray<Integer>;
     programSupportMarkup: TGBFixedArray<Double>;
     longActTreatCov: TGBFixedArray<Double>;
     longActTreatEffVls: Double;
     longActTreatEffLtfu: Double;
-    artInteruptRate: TGBFixedArray<Double>;
+    artInterruptRate: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -948,6 +951,7 @@ begin;
   fertMultOnArt.Free;
   pwidPropHivpop.Free;
   pwidSexRatio.Free;
+  artInitiationRate.Free;
   inherited;
 end;
 
@@ -1040,6 +1044,10 @@ begin;
   Result.pwidPropHivpopLength := pwidPropHivpop.GetLength();
   Result.pwidSexRatio := PDouble(pwidSexRatio.data);
   Result.pwidSexRatioLength := pwidSexRatio.GetLength();
+  Result.artEntryOption := artEntryOption;
+  Result.artEntryOptionLength := 1;
+  Result.artInitiationRate := PDouble(artInitiationRate.data);
+  Result.artInitiationRateLength := artInitiationRate.GetLength();
 end;
 
 function LeapfrogHivAdultState.getView(): LeapfrogHivAdultStateView;
@@ -1333,12 +1341,11 @@ begin;
   rnPopSizes.Free;
   hvImpactMatrix.Free;
   artCoverageRg.Free;
-  artCovNumPercent.Free;
   popEligTreat.Free;
   popEligYear.Free;
   programSupportMarkup.Free;
   longActTreatCov.Free;
-  artInteruptRate.Free;
+  artInterruptRate.Free;
   inherited;
 end;
 
@@ -1483,8 +1490,6 @@ begin;
   Result.hvImpactMatrixLength := hvImpactMatrix.GetLength();
   Result.artCoverageRg := PDouble(artCoverageRg.data);
   Result.artCoverageRgLength := artCoverageRg.GetLength();
-  Result.artCovNumPercent := PInteger(artCovNumPercent.data);
-  Result.artCovNumPercentLength := artCovNumPercent.GetLength();
   Result.popEligTreat := PInteger(popEligTreat.data);
   Result.popEligTreatLength := popEligTreat.GetLength();
   Result.popEligYear := PInteger(popEligYear.data);
@@ -1497,8 +1502,8 @@ begin;
   Result.longActTreatEffVlsLength := 1;
   Result.longActTreatEffLtfu := longActTreatEffLtfu;
   Result.longActTreatEffLtfuLength := 1;
-  Result.artInteruptRate := PDouble(artInteruptRate.data);
-  Result.artInteruptRateLength := artInteruptRate.GetLength();
+  Result.artInterruptRate := PDouble(artInterruptRate.data);
+  Result.artInterruptRateLength := artInterruptRate.GetLength();
 end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
@@ -1643,6 +1648,7 @@ begin;
   fertMultOnArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOnArt');
   pwidPropHivpop.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pwidPropHivpop');
   pwidSexRatio.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pwidSexRatio');
+  artInitiationRate.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artInitiationRate');
 end;
 
 procedure LeapfrogHivAdultState.writeToDisk(dir: string);
@@ -1787,12 +1793,11 @@ begin;
   rnPopSizes.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnPopSizes');
   hvImpactMatrix.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hvImpactMatrix');
   artCoverageRg.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCoverageRg');
-  artCovNumPercent.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCovNumPercent');
   popEligTreat.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'popEligTreat');
   popEligYear.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'popEligYear');
   programSupportMarkup.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'programSupportMarkup');
   longActTreatCov.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'longActTreatCov');
-  artInteruptRate.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artInteruptRate');
+  artInterruptRate.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artInterruptRate');
 end;
 
 procedure LeapfrogGoalsState.writeToDisk(dir: string);
