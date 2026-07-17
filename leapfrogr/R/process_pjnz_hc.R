@@ -403,7 +403,7 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
   if (!is.null(pars$nosocomial_infections_by_age)) {
     # Input by single ages, so repeat each row 5 times, we're hardcoding here
     # the knowledge that this has 3 rows
-    hc_nosocomial_infections_by_age <- pars$nosocomial_infections_by_age[rep(seq_len(3), each = 5), ]
+    hc_nosocomial_infections_by_age <- pars$nosocomial_infections_by_age[rep(seq_len(3), each = 5), ] / 5
   } else if (!is.null(pars$nosocomial_infections)) {
     # Prior to and including Spectrum v6.08 users input a non age disaggregatted nosocomial infections
     # this was then applied entirely to the age 0 group.
