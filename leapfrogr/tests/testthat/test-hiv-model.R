@@ -1,3 +1,5 @@
+skip_if_no_test_data()
+
 test_that("stratified HIV population equals single-age HIV population", {
 
   parameters <- read_parameters(test_path("testdata/child_parms_full.h5"))

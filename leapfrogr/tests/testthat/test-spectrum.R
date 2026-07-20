@@ -1,3 +1,5 @@
+skip_if_no_test_data()
+
 test_that("spectrum post-hoc indicators can be output", {
   parameters <- read_parameters(test_path("testdata/spectrum_params.h5"))
   out <- run_model(parameters, "Spectrum")
