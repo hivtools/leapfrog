@@ -488,7 +488,7 @@ public:
     }
 
    if( (t > p_hv.goals_base_year_idx) && (hiv_step == opts.hts_per_year - 1) ){
-      calc_HIV_cure_coverage(t);
+      calc_HIV_cure_effect(t);
       calc_HIV_cure(t); 
    }
   }
@@ -1431,8 +1431,7 @@ public:
           numerator += i_hv.dp_aging_50(POP_H_ARTlt6m + ht, hd, s);
           denominator += i_hv.dp_aging_denom_1549(POP_H_ARTlt6m + ht, hd, s);
         }
-        i_hv.rate_aging_50(POP_H_OnART, hd, s) =
-            (denominator != 0.0) ? numerator / denominator : 0.0;
+        i_hv.rate_aging_50(POP_H_OnART, hd, s) = (denominator != 0.0) ? numerator / denominator : 0.0;
       }
     }
 
@@ -1476,7 +1475,7 @@ public:
     i_hv.alpha_mult = std::clamp(i_hv.alpha_mult, 0.0, 1.0);
   }
 
-   void calc_HIV_cure_coverage(int t){
+   void calc_HIV_cure_effect(int t){
   
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
@@ -1494,13 +1493,13 @@ public:
         hv_plhiv =   n_hv.adults(VAC_ALL, RG_ALL, CD4_ALL, S_MALE) -
                      n_hv.adults(VAC_ALL, RG_ALL, CD4_NEG, S_MALE);
 
-        for (int r = RG_NONE; r <= RG_MSM; ++r) { 
-            hv_plhiv_rg = n_hv.adults(VAC_ALL, r, CD4_ALL, S_MALE) -
-                          n_hv.adults(VAC_ALL, r, CD4_NEG, S_MALE);
+        for (int rg = RG_NONE; rg <= RG_MSM; ++rg) { 
+            hv_plhiv_rg = n_hv.adults(VAC_ALL, rg, CD4_ALL, S_MALE) -
+                          n_hv.adults(VAC_ALL, rg, CD4_NEG, S_MALE);
 
-            i_hv.cure_effect(S_MALE) += (hv_plhiv > 0.0) ? (hv_plhiv_rg / hv_plhiv_rg) : 0.0 *
-                                    p_hv.rn_cure_coverage_rg(r, t) *
-                                    p_hv.rn_cure_effect(VAC_EFF);
+            i_hv.cure_effect(S_MALE) += ((hv_plhiv > 0.0) ? (hv_plhiv_rg / hv_plhiv) : 0.0) *
+                                         p_hv.rn_cure_coverage_rg(rg, t) *
+                                         p_hv.rn_cure_effect(VAC_EFF);
         }
 
         i_hv.cure_effect(S_MALE) = std::clamp(i_hv.cure_effect(S_MALE), 0.0, 1.0);
@@ -1509,15 +1508,15 @@ public:
         hv_plhiv =   n_hv.adults(VAC_ALL, RG_ALL, CD4_ALL, S_FEMALE) -
                      n_hv.adults(VAC_ALL, RG_ALL, CD4_NEG, S_FEMALE);
 
-        for (int r = RG_NONE; r <= RG_MSM; ++r) { 
-           nr = r + RG_NONE_F3;
+        for (int rg = RG_NONE; rg <= RG_MSM; ++rg) { 
+           nr = rg + RG_NONE_F3;
 
-           hv_plhiv_rg = n_hv.adults(VAC_ALL, r, CD4_ALL, S_FEMALE) -
-                         n_hv.adults(VAC_ALL, r, CD4_NEG, S_FEMALE);
+           hv_plhiv_rg = n_hv.adults(VAC_ALL, rg, CD4_ALL, S_FEMALE) -
+                         n_hv.adults(VAC_ALL, rg, CD4_NEG, S_FEMALE);
 
-           i_hv.cure_effect(S_FEMALE) += (hv_plhiv > 0.0) ? (hv_plhiv_rg / hv_plhiv) : 0.0 *
-                                    p_hv.rn_cure_coverage_rg(nr, t) *
-                                    p_hv.rn_cure_effect(VAC_EFF);
+           i_hv.cure_effect(S_FEMALE) += ((hv_plhiv > 0.0) ? (hv_plhiv_rg / hv_plhiv) : 0.0) *
+                                          p_hv.rn_cure_coverage_rg(nr, t) *
+                                          p_hv.rn_cure_effect(VAC_EFF);
         }
 
         i_hv.cure_effect(S_FEMALE) = std::clamp(i_hv.cure_effect(S_FEMALE), 0.0, 1.0);
@@ -2161,7 +2160,7 @@ public:
 
     for (int rg = RG_MSM; rg <= RG_MSMIDU; ++rg) {
       i_hv.r_mult(rg, S_MALE) = (rMultDenominatorAll > 0.0) ? vaccine_factor_m
-                      * (rMultNumeratorAll / rMultDenominatorAll) / rMultEqlb : 0.0;
+                                 * (rMultNumeratorAll / rMultDenominatorAll) / rMultEqlb : 0.0;
     }
 
   }
@@ -3656,8 +3655,7 @@ private:
         case RN_HIV_TEST_ANC:  // HIV testing for all women attending ANC
         {
           pop_reached = (i_hc.need_PMTCT > 0.0)
-              ? n_dp.births * (i_hc.on_PMTCT / i_hc.need_PMTCT)
-              : 0.0;
+              ? n_dp.births * (i_hc.on_PMTCT / i_hc.need_PMTCT) : 0.0;
           break;
         }
 
@@ -3751,7 +3749,7 @@ private:
               plhiv_rg =  n_hv.adults(VAC_ALL, rg, CD4_ALL, S_MALE) -
                           n_hv.adults(VAC_ALL, rg, CD4_NEG, S_MALE);
 
-              pop_reached +=  (hv_plhiv > 0.0) ? (plhiv_rg/hv_plhiv) : 0.0 * 
+              pop_reached +=  ((hv_plhiv > 0.0) ? (plhiv_rg/hv_plhiv) : 0.0) * 
                                p_hv.rn_cure_coverage_rg(rg, t) *
                                hahc_total_plhiv;
             }
@@ -3762,7 +3760,7 @@ private:
               plhiv_rg =  n_hv.adults(VAC_ALL, rg, CD4_ALL, S_FEMALE) -
                           n_hv.adults(VAC_ALL, rg, CD4_NEG, S_FEMALE);
 
-              pop_reached +=  (hv_plhiv > 0.0) ? (plhiv_rg/hv_plhiv) : 0.0 * 
+              pop_reached +=  ((hv_plhiv > 0.0) ? (plhiv_rg/hv_plhiv) : 0.0) * 
                                p_hv.rn_cure_coverage_rg(nr, t) *
                                hahc_total_plhiv;  
             }

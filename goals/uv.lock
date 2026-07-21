@@ -38,8 +38,8 @@ wheels = [
 
 [[package]]
 name = "avenir-spectrum-common"
-version = "0.1.16"
-source = { editable = "../../SpectrumEngine/SpectrumCommon" }
+version = "0.1.18"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "avenir-common" },
     { name = "loguru" },
@@ -50,32 +50,22 @@ dependencies = [
     { name = "requests" },
     { name = "ujson" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "avenir-common", specifier = ">=0.1.5" },
-    { name = "loguru", specifier = ">=0.7.3" },
-    { name = "numpy", specifier = ">=2.4.4" },
-    { name = "openpyxl", specifier = ">=3.1.5" },
-    { name = "pandas", specifier = ">=2.0.0" },
-    { name = "pydantic", specifier = ">=2.10.6" },
-    { name = "requests", specifier = ">=2.28.0" },
-    { name = "ujson", specifier = ">=5.12.0" },
+sdist = { url = "https://files.pythonhosted.org/packages/cf/aa/2b70047e4a8db203291dc0d7f7b27e7751a40df91ec2cdd8f8ab6f5ff5b2/avenir_spectrum_common-0.1.18.tar.gz", hash = "sha256:f895feb01b3b9e26a60e02739403167eec4e4d9198546c5884c5f7e7f5eb640c", size = 656948, upload-time = "2026-07-20T10:25:33.033Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/25/f2/19f628f10395db381313351f03ee0b84b2c08dc8a8421fe60e79f2f217c1/avenir_spectrum_common-0.1.18-py3-none-any.whl", hash = "sha256:c7c8930f90826490e6166ee629dfc7d4f5a9207db0db4755fa7cb3f51776120a", size = 735194, upload-time = "2026-07-20T10:25:31.05Z" },
 ]
 
 [[package]]
 name = "avenir-spectrum-import-pjnz"
-version = "0.1.9"
-source = { editable = "C:/work/LeapFrog/V9/SpectrumEngine/Tools/ImportPJNZ" }
+version = "0.1.10"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "avenir-common" },
     { name = "avenir-spectrum-common" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "avenir-common", specifier = ">=0.1.5" },
-    { name = "avenir-spectrum-common", editable = "../../SpectrumEngine/SpectrumCommon" },
+sdist = { url = "https://files.pythonhosted.org/packages/12/25/b335a8783ab071f2418a961028c6a5ab783211efd1647c8dce21b76d26be/avenir_spectrum_import_pjnz-0.1.10.tar.gz", hash = "sha256:8f17b1b5f595788ad33fb6a64dfdd4b5bf0370c2182c16169e3ce50ce1d22530", size = 46314, upload-time = "2026-07-14T14:49:00.964Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/12/61/f0db6cb995f7436b1ed9db1d61e31ebea93fc3bab44f4d9745df0543bb6d/avenir_spectrum_import_pjnz-0.1.10-py3-none-any.whl", hash = "sha256:b99abebbe2ee722b832a8392c69154a992bad00c28a4f9fd41fbaf6dc52397db", size = 49038, upload-time = "2026-07-14T14:49:02.064Z" },
 ]
 
 [[package]]
@@ -576,8 +566,8 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "avenir-spectrum-common", editable = "C:/work/LeapFrog/V9/SpectrumEngine/SpectrumCommon" },
-    { name = "avenir-spectrum-import-pjnz", editable = "C:/work/LeapFrog/V9/SpectrumEngine/Tools/ImportPJNZ" },
+    { name = "avenir-spectrum-common", specifier = ">=0.1.17" },
+    { name = "avenir-spectrum-import-pjnz", specifier = ">=0.1.10" },
     { name = "deepdiff", specifier = ">=8.4.2" },
     { name = "docopt", specifier = ">=0.6.2" },
     { name = "pytest", specifier = ">=8.3.5" },
