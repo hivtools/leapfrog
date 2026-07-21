@@ -3493,8 +3493,7 @@ private:
 
     for (int i = 1; i <= RN_MAX_INTERVN; ++i) {
       // a few interventions are now excluded from the editors and RN calcs
-      if (std::ranges::find(RN_UsedInterventions, i)
-          == RN_UsedInterventions.end())
+      if (std::ranges::find(RN_UsedInterventions, i) == RN_UsedInterventions.end())
       {
         continue;
       }
@@ -3697,15 +3696,15 @@ private:
           // prep for men
           for (int rg = RG_LRH; rg <= RG_MSMIDU; ++rg) {
             pop_reached += n_hv.adults(VAC_ALL, rg, CD4_NEG, S_MALE)
-                * p_hv.prep_method_mix(S_MALE, rg, m, t)
-                * p_hv.prep_cov(S_MALE, rg, t);
+                          * p_hv.prep_method_mix(S_MALE, rg, m, t)
+                          * p_hv.prep_cov(S_MALE, rg, t);
           }
 
           // prep for women
           for (int rg = RG_LRH; rg <= RG_IDU; ++rg) {
             pop_reached += n_hv.adults(VAC_ALL, rg, CD4_NEG, S_FEMALE)
-                * p_hv.prep_method_mix(S_FEMALE, rg, m, t)
-                * p_hv.prep_cov(S_FEMALE, rg, t);
+                          * p_hv.prep_method_mix(S_FEMALE, rg, m, t)
+                          * p_hv.prep_cov(S_FEMALE, rg, t);
           }
 
           break;
