@@ -388,7 +388,7 @@ public:
     init_vars_hiv_loop();
 
     // sum over the dimensions of adult pop
-    sum_adult_pop_dims(t);
+    sum_adult_pop_dims();
 
     // make inner-time loop copy of adult structure
     set_adults_hiv_loop();
@@ -415,7 +415,7 @@ public:
 
     // adjust distribution of new entrants into different risk groups
     if (t >= 2) {
-      calc_newrecruits_distribution(t, hiv_step);
+      calc_newrecruits_distribution();
     }
 
     // calc multiplier and new infections after PLHIV added via initial pulse
@@ -428,31 +428,31 @@ public:
     }
 
     // progress, hiv-neg, not at risk (RG_NONE)
-    progress_norisk_hiv_neg(t, hiv_step);
+    progress_norisk_hiv_neg();
 
     // progress, hiv-pos and hiv-art, not at risk RG_NONE
     if (has_plhiv == true) {
-      progress_hivp_and_art(t, RG_NONE, RG_NONE);
+      progress_hivp_and_art(RG_NONE, RG_NONE);
     }
 
     if (has_plhiv == true) {
       // calc prevalence used for new infections calc
-      calc_prevalence(t, hiv_step);
+      calc_prevalence();
       // force of infection multipliers
-      calc_r_multiplier(t);
+      calc_r_multiplier();
       // calc new infections
-      calc_new_infections(t, hiv_step);
+      calc_new_infections(t);
       // TODO: enable this function again
       // rescale new infections to the level of sex to match
       //calc_rescale_infections(t);
     }
 
     // progress, hiv-neg, at risk (RG_LRH..RG_MSM)
-    progress_atrisk_hiv_neg(t, RG_LRH, RG_MSM);
+    progress_atrisk_hiv_neg(RG_LRH, RG_MSM);
 
     // progress, hiv-pos and hiv-art (RG_LRH..RG_MSM)
     if (has_plhiv == true) {
-      progress_hivp_and_art(t, RG_LRH, RG_MSM);
+      progress_hivp_and_art(RG_LRH, RG_MSM);
 
       // ART allocation
       if (t >= opts.ts_art_start) {
@@ -466,14 +466,14 @@ public:
     }
 
     // sum over the dimensions of adult pop
-    sum_adult_pop_dims(t);
+    sum_adult_pop_dims();
 
     // add new infections
     if (t >= ((p_hv.epi_start_year) - opts.proj_start_year)) {
       if (has_new_inf == true) {
-        add_new_infections(t, hiv_step);
+        add_new_infections();
       }
-      //add_new_infections_goals(t, hiv_step);
+      //add_new_infections_goals(hiv_step);
     }
 
     // at hiv first year, apply initial pulse, t starts at last hiv_step
@@ -497,7 +497,7 @@ public:
     const auto& p_hv = pars.hv;
 
     // sum over the dimensions of adult pop
-    sum_adult_pop_dims(t);
+    sum_adult_pop_dims();
 
     // set yearly goals outputs
     set_goals_outputs(t);
@@ -546,9 +546,9 @@ public:
 
 
     // toggle return here:
-    if(t<70){
+    //if(t<70){
       return;
-    }
+    //}
 
     real_type total_pop = n_hv.total_population;
     std::cout << "pop goals: t " << t << " " << total_pop << " " << std::endl;
@@ -1604,7 +1604,7 @@ public:
     }
   }
 
-  void calc_newrecruits_distribution(int t, int hiv_step) {
+  void calc_newrecruits_distribution() {
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
@@ -1675,7 +1675,7 @@ public:
     }  // s
   }
 
-  void progress_norisk_hiv_neg(int t, int hiv_step) {
+  void progress_norisk_hiv_neg() {
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
@@ -1764,7 +1764,7 @@ public:
     }  // s
   }
 
-  void progress_atrisk_hiv_neg(int t, int RG_MIN, int RG_MAX) {
+  void progress_atrisk_hiv_neg(int RG_MIN, int RG_MAX) {
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
@@ -1871,7 +1871,7 @@ public:
     }  // s
   }
 
-  void progress_hivp_and_art(int t, int RG_MIN, int RG_MAX) {
+  void progress_hivp_and_art(int RG_MIN, int RG_MAX) {
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
@@ -2077,7 +2077,7 @@ public:
     }  // s
   }
 
-  void calc_r_multiplier(int t) {
+  void calc_r_multiplier() {
     // from goals
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
@@ -2166,7 +2166,7 @@ public:
 
   }
 
-  void calc_prevalence(int t, int hiv_step) {
+  void calc_prevalence() {
     real_type denom_s_both = 0.0;
     real_type plhiv_s_both = 0.0;
 
@@ -2206,7 +2206,7 @@ public:
     }  // rg
   }
 
-  void calc_new_infections(int t, int hiv_step) {
+  void calc_new_infections(int t) {
     // from goals
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
@@ -2649,7 +2649,7 @@ public:
     }  // s
   }
 
-  void add_new_infections_goals(int t, int hiv_step) {
+  void add_new_infections_goals(int hiv_step) {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
 
@@ -2719,7 +2719,7 @@ public:
     //}
   }
 
-  void add_new_infections(int t, int hiv_step) {
+  void add_new_infections() {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
 
@@ -3125,7 +3125,7 @@ public:
   };
 
   // post inner loop functions
-  void sum_adult_pop_dims(int t) {
+  void sum_adult_pop_dims() {
     auto& n_hv = state_next.hv;
 
     real_type sum = 0.0;
