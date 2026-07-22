@@ -152,7 +152,6 @@ private:
     VAC_COV_ALLRISK = 0,
     VAC_COV_SINGLE = 1,
 
-
     VAC_TARGET_HIV_ALL = 0,
     VAC_TARGET_HIV_NEG = 1,
 
@@ -333,12 +332,13 @@ public:
     // initialize annual variables
     init_vars_pre_hiv_loop(t);
 
-    // TODO: Turn this back on
-    // Set coverage chnage for impact adj
-    //if (t > p_hv.goals_base_year_idx) {
-    //  calc_adj_matrix(t);
-    //  calc_behav_matrix_impacts(t);
-    //}
+    // Impact of behavioral interventions
+    if (t > p_hv.goals_base_year_idx) {
+        // Set coverage change for impact adj
+        calc_adj_matrix(t);
+        // Apply coverage chnage and  impact values
+        calc_behav_matrix_impacts(t);
+    }
 
     // set risk group sizes from inputs
     // CDP move to t==1 when new variable type than intermediate is available
@@ -1080,7 +1080,7 @@ public:
     const auto& p_ha = pars.ha;
 
     //child model
-    auto& n_hc = state_next.hc;
+    auto& c_hc = state_curr.hc;
 
     // goals
     auto& i_hv = intermediate.hv;
@@ -1146,21 +1146,21 @@ public:
             if (a < hc2_agestart){
               for (int hd = 0; hd < hc1DS; ++hd) {
                  for (int cat = 0; cat < hcTT; ++cat) {
-                    i_hv.pop_hivpos_children += n_hc.hc1_hivpop(hd, cat, a, s);
+                    i_hv.pop_hivpos_children += c_hc.hc1_hivpop(hd, cat, a, s);
                   }
                   for (int dur = 0; dur < hTS; ++dur) {
-                    i_hv.pop_art_children += n_hc.hc1_artpop(dur, hd, a, s);
+                    i_hv.pop_art_children += c_hc.hc1_artpop(dur, hd, a, s);
                   }
               }    
             }
             else{ 
               for (int hd = 0; hd < hc2DS; ++hd) {
                 for (int cat = 0; cat < hcTT; ++cat) {
-                  i_hv.pop_hivpos_children +=  n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
+                  i_hv.pop_hivpos_children +=  c_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
                 }
 
                 for (int dur = 0; dur < hTS; ++dur) {
-                    i_hv.pop_art_children += n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
+                    i_hv.pop_art_children += c_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
                 }
 
               }
@@ -3219,8 +3219,8 @@ private:
     real_type total_pop = 0.0;
 
     // Calc adjusted coverage
-    for (int i = 1; i <= RN_MAX_BEHAV_INTVN; ++i) {
-      i_hv.adj_coverage_base_yr(i) = p_hv.rn_coverage(i, GoalsBaseYearIdx);
+    for (int i = RN_COM_MOB; i <= RN_MAX_BEHAV_INTVN; ++i) { 
+     i_hv.adj_coverage_base_yr(i) = p_hv.rn_coverage(i, GoalsBaseYearIdx);
     }
 
     for (int i = RN_COM_MOB; i <= RN_MAX_BEHAV_INTVN; ++i) {
@@ -3228,21 +3228,17 @@ private:
         case RN_COMP_SEX_EDUC: {
           // Adjust coverage of school-based intervention for proportion of
           // adults that are in school
-          real_type coverageDiff =
-              p_hv.rn_coverage(i, t) - i_hv.adj_coverage_base_yr(i);
+          real_type coverageDiff = p_hv.rn_coverage(i, t) - i_hv.adj_coverage_base_yr(i);
           real_type avgSchoolPop = 1.0 / 100.0
-              * (p_hv.rn_pop_sizes(RN_POP_SEC_SCHOOL_MALE, t)
-                 + p_hv.rn_pop_sizes(RN_POP_SEC_SCHOOL_FEMALE, t))
-              / 2.0;
+                                  * (p_hv.rn_pop_sizes(RN_POP_SEC_SCHOOL_MALE, t)
+                                    + p_hv.rn_pop_sizes(RN_POP_SEC_SCHOOL_FEMALE, t)) / 2.0;
 
           popRatio = 0.0;
           total_pop = 0.0;
           for (int a = 10; a <= 49; ++a) {
-            total_pop +=
-                (c_dp.p_totpop(a, S_MALE) + c_dp.p_totpop(a, S_FEMALE));
+            total_pop += (c_dp.p_totpop(a, S_MALE) + c_dp.p_totpop(a, S_FEMALE));
             if (a <= 19) {
-              popRatio +=
-                  (c_dp.p_totpop(a, S_MALE) + c_dp.p_totpop(a, S_FEMALE));
+              popRatio += (c_dp.p_totpop(a, S_MALE) + c_dp.p_totpop(a, S_FEMALE));
             }
           }
 
@@ -3254,8 +3250,7 @@ private:
         case RN_ECON_STRENGTH: {
           // Adjust coverage of workplace interventions for proportion of adults
           // in formal sector labor force
-          real_type coverageDiff =
-              p_hv.rn_coverage(i, t) - i_hv.adj_coverage_base_yr(i);
+          real_type coverageDiff = p_hv.rn_coverage(i, t) - i_hv.adj_coverage_base_yr(i);
 
           popRatio = 0.0;
           total_pop = 0.0;
@@ -3273,8 +3268,7 @@ private:
         }
 
         default: {
-          i_hv.adj_coverage(i) =
-              p_hv.rn_coverage(i, t) - i_hv.adj_coverage_base_yr(i);
+          i_hv.adj_coverage(i) = p_hv.rn_coverage(i, t) - i_hv.adj_coverage_base_yr(i);
           break;
         }
       }  // switch i
@@ -3296,27 +3290,25 @@ private:
         RN_IDU_DRUG_SUB,
         RN_MSM_OUTREACH,
         RN_CONDOMS,
-        RN_CONDOM_SUPPLY,
         RN_ANC_TESTING
     };
 
     real_type value = 0.0;
     real_type impact = 1.0;
+    int d = p_hv.hv_impact_data;
 
     for (int j = 1; j <= HV_MAX_BEHAV_IMPACTS; ++j) {
       for (int i = 1; i <= RN_MAX_BEHAV_INTVN; ++i) {
         // a few interventions are now excluded from the editors and RN calcs
-        if (std::ranges::find(RN_UsedInterventions, i)
-            == RN_UsedInterventions.end())
+        if (std::ranges::find(RN_UsedInterventions, i) == RN_UsedInterventions.end())
         {
           continue;
         }
 
-        i_hv.adj_coverage_prod(j) *=
-            (1.0 + i_hv.adj_coverage(i) * p_hv.hv_impact_matrix(i, j));
+         i_hv.adj_coverage_prod(j) *= (1.0 + i_hv.adj_coverage(i) * p_hv.hv_impact_matrix(d, i, j));
       }  // i
 
-      i_hv.adj_coverage_prod(j) = std::max(i_hv.adj_coverage_prod(j), 0.0);
+        i_hv.adj_coverage_prod(j) = std::max(i_hv.adj_coverage_prod(j), 0.0);
 
     }  // j
 

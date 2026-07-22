@@ -604,6 +604,8 @@ type
     rnPopSizesLength: Integer;
     hvImpactMatrix: PDouble;
     hvImpactMatrixLength: Integer;
+    hvImpactData: Integer;
+    hvImpactDataLength: Integer;
     artCoverageRg: PDouble;
     artCoverageRgLength: Integer;
     popEligTreat: PInteger;
@@ -676,6 +678,7 @@ type
     rnUnitCosts: TGBFixedArray<Double>;
     rnPopSizes: TGBFixedArray<Double>;
     hvImpactMatrix: TGBFixedArray<Double>;
+    hvImpactData: Integer;
     artCoverageRg: TGBFixedArray<Double>;
     popEligTreat: TGBFixedArray<Integer>;
     popEligYear: TGBFixedArray<Integer>;
@@ -1496,6 +1499,8 @@ begin;
   Result.rnPopSizesLength := rnPopSizes.GetLength();
   Result.hvImpactMatrix := PDouble(hvImpactMatrix.data);
   Result.hvImpactMatrixLength := hvImpactMatrix.GetLength();
+  Result.hvImpactData := hvImpactData;
+  Result.hvImpactDataLength := 1;
   Result.artCoverageRg := PDouble(artCoverageRg.data);
   Result.artCoverageRgLength := artCoverageRg.GetLength();
   Result.popEligTreat := PInteger(popEligTreat.data);
