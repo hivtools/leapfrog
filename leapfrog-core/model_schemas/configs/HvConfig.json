@@ -36,14 +36,16 @@
       "nIntervnRN":53,
       "nPREP":9,
       "nPREPIntervn":9,
-      "nPREPRG":9,
+      "nPREPRG":10,
       "RN_DurationMonths": 4,
       "nCure" : 6,
-      "nMAX_BEHAV_INTVN" :19,
+      "nMAX_BEHAV_INTVN" :18,
       "nMAX_BEHAV_IMPACTS" : 23,
       "nRNPopSizes":35,
       "nRG_VMM":4,
-      "nEligART":3
+      "nEligART":3,
+      "nIMP_DATA":2
+
 
     }
   },
@@ -180,7 +182,7 @@
     },
 
 
-     "rn_cure_effect": {
+    "rn_cure_effect": {
       "num_type": "real_type",
       "dims": ["SS::nCure"]
     },
@@ -290,7 +292,11 @@
 
     "hv_impact_matrix": {
       "num_type": "real_type",
-      "dims": ["SS::nMAX_BEHAV_INTVN", "SS::nMAX_BEHAV_IMPACTS"]
+      "dims": ["SS::nIMP_DATA+1","SS::nMAX_BEHAV_INTVN+1", "SS::nMAX_BEHAV_IMPACTS+1"]
+    },
+
+    "hv_impact_data": {
+      "num_type": "int"
     },
 
      "art_coverage_rg": {
@@ -575,17 +581,17 @@
 
      "adj_coverage_base_yr": {
       "num_type": "real_type",
-      "dims": ["SS::nMAX_BEHAV_INTVN"]
+      "dims": ["SS::nMAX_BEHAV_INTVN+1"]
     },
 
      "adj_coverage": {
       "num_type": "real_type",
-      "dims": ["SS::nMAX_BEHAV_INTVN"]
+      "dims": ["SS::nMAX_BEHAV_INTVN+1"]
     },
 
      "adj_coverage_prod": {
       "num_type": "real_type",
-      "dims": ["SS::nMAX_BEHAV_IMPACTS"]
+      "dims": ["SS::nMAX_BEHAV_IMPACTS+1"]
     },
 
     "cure_effect": {
@@ -740,8 +746,18 @@
       "num_type": "real_type"
     },
 
-     "total_vaccinated": {
+    "total_vaccinated": {
       "num_type": "real_type"
+    },
+
+    "total_15HIVp": {
+      "num_type": "real_type",
+       "dims": ["SS::nNS+1"]
+    },
+
+      "total_15HIVn": {
+      "num_type": "real_type",
+       "dims": ["SS::nNS+1"]
     }
 
   }

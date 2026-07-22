@@ -604,6 +604,8 @@ type
     rnPopSizesLength: Integer;
     hvImpactMatrix: PDouble;
     hvImpactMatrixLength: Integer;
+    hvImpactData: Integer;
+    hvImpactDataLength: Integer;
     artCoverageRg: PDouble;
     artCoverageRgLength: Integer;
     popEligTreat: PInteger;
@@ -676,6 +678,7 @@ type
     rnUnitCosts: TGBFixedArray<Double>;
     rnPopSizes: TGBFixedArray<Double>;
     hvImpactMatrix: TGBFixedArray<Double>;
+    hvImpactData: Integer;
     artCoverageRg: TGBFixedArray<Double>;
     popEligTreat: TGBFixedArray<Integer>;
     popEligYear: TGBFixedArray<Integer>;
@@ -753,6 +756,10 @@ type
     totalNewVaccinationsLength: Integer;
     totalVaccinated: PDouble;
     totalVaccinatedLength: Integer;
+    total15hivp: PDouble;
+    total15hivpLength: Integer;
+    total15hivn: PDouble;
+    total15hivnLength: Integer;
 end;
 
 type
@@ -788,6 +795,8 @@ type
     newInfScaleFactor: TGBFixedArray<Double>;
     totalNewVaccinations: TGBFixedArray<Double>;
     totalVaccinated: TGBFixedArray<Double>;
+    total15hivp: TGBFixedArray<Double>;
+    total15hivn: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsStateView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -1381,6 +1390,8 @@ begin;
   newInfScaleFactor.Free;
   totalNewVaccinations.Free;
   totalVaccinated.Free;
+  total15hivp.Free;
+  total15hivn.Free;
   inherited;
 end;
 
@@ -1488,6 +1499,8 @@ begin;
   Result.rnPopSizesLength := rnPopSizes.GetLength();
   Result.hvImpactMatrix := PDouble(hvImpactMatrix.data);
   Result.hvImpactMatrixLength := hvImpactMatrix.GetLength();
+  Result.hvImpactData := hvImpactData;
+  Result.hvImpactDataLength := 1;
   Result.artCoverageRg := PDouble(artCoverageRg.data);
   Result.artCoverageRgLength := artCoverageRg.GetLength();
   Result.popEligTreat := PInteger(popEligTreat.data);
@@ -1568,6 +1581,10 @@ begin;
   Result.totalNewVaccinationsLength := totalNewVaccinations.GetLength();
   Result.totalVaccinated := PDouble(totalVaccinated.data);
   Result.totalVaccinatedLength := totalVaccinated.GetLength();
+  Result.total15hivp := PDouble(total15hivp.data);
+  Result.total15hivpLength := total15hivp.GetLength();
+  Result.total15hivn := PDouble(total15hivn.data);
+  Result.total15hivnLength := total15hivn.GetLength();
 end;
 
 destructor LeapfrogVirginParams.Destroy;
@@ -1823,6 +1840,8 @@ begin;
   numPeopleReached.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'numPeopleReached');
   resourcesRequired.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'resourcesRequired');
   newInfScaleFactor.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newInfScaleFactor');
+  total15hivp.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'total15hivp');
+  total15hivn.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'total15hivn');
 end;
 
 procedure LeapfrogVirginParams.writeToDisk(dir: string);
