@@ -1,3 +1,5 @@
+skip_if_no_test_data()
+
 test_that("demographic projection can be run", {
   parameters <- read_parameters(test_path("testdata/adult_parms_full.h5"))
 

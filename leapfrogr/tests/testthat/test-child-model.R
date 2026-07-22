@@ -1,3 +1,5 @@
+skip_if_no_test_data()
+
 test_that("Child model can be run for all years", {
   parameters <- read_parameters(test_path("testdata/child_parms_full.h5"))
   expect_silent(out <- run_model(parameters, "ChildModel", 1970:2030))

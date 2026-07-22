@@ -1,3 +1,5 @@
+skip_if_no_test_data()
+
 test_that("initial state set up works as expected", {
   parameters <- read_parameters(test_path("testdata/adult_parms_full.h5"))
 

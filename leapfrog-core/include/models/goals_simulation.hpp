@@ -489,7 +489,7 @@ public:
 
    if( (t > p_hv.goals_base_year_idx) && (hiv_step == opts.hts_per_year - 1) ){
       calc_HIV_cure_effect(t);
-      calc_HIV_cure(t); 
+      calc_HIV_cure(t);
    }
   }
 
@@ -646,16 +646,16 @@ public:
               << std::endl;
 
     std::cout << "total HIVn 15 year old, M (#) t " << t << " " << n_hv.total_15HIVn(0) << " "
-              << std::endl;          
+              << std::endl;
 
     std::cout << "total HIVn 15 year old, F (#) t " << t << " " << n_hv.total_15HIVn(1) << " "
-              << std::endl;           
+              << std::endl;
 
     std::cout << "total HIVp 15 year old, M (#) t " << t << " " << n_hv.total_15HIVp(0) << " "
-              << std::endl;          
+              << std::endl;
 
     std::cout << "total HIVp 15 year old, F (#) t " << t << " " << n_hv.total_15HIVp(1) << " "
-              << std::endl;           
+              << std::endl;
 
     // plhiv = i_hv.pop_hivpos_adults + i_hv.total_pop_hivpos;
     // total_pop = i_hv.dp_totpop_1549(S_MALE) + i_hv.dp_totpop_1549(S_FEMALE);
@@ -691,7 +691,7 @@ public:
     n_hv.total_on_art = 0.0;
     n_hv.total_new_vaccinations = 0.0;
     n_hv.total_vaccinated = 0.0;
-    
+
     // infectiousness not on art
     nda::fill(n_hv.mult_no_art, 0.0);
     n_hv.mult_no_art(CD4_PRIM) = p_hv.epi_infectiousness(INF_PRIM);  // INF_PRIM
@@ -709,7 +709,7 @@ public:
     for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
       n_hv.mult_art(hd) = p_hv.epi_inf_mult_art(t);  //* p_hv.epi_infectiousness(INF_SYMPT_NO_ART);
       if (t > p_hv.goals_base_year_idx) {
-        n_hv.mult_art(hd) = p_hv.epi_inf_mult_art(t) *  
+        n_hv.mult_art(hd) = p_hv.epi_inf_mult_art(t) *
                             p_hv.epi_infectiousness(INF_ASYMPT) *
                             (1.0 - p_hv.rn_poc_cov(POC_VL, t) * p_hv.rn_poc_effect(POC_VL));
       }
@@ -717,7 +717,7 @@ public:
 
     nda::fill(i_hv.prep_effect, 0.0);
     if (t > p_hv.goals_base_year_idx) {
-    
+
       for (int s = S_MALE; s <= S_FEMALE; ++s) {
         for (int rg = RG_LRH; rg <= RG_TOTAL1; ++rg) {
           if (s == S_FEMALE && rg >= RG_MSM) {
@@ -768,7 +768,7 @@ public:
     nda::fill(n_hv.prevalence, 0.0);  // prevalence for each rg,  t
 
     nda::fill(n_hv.new_inf_vrs, 0.0);  // new infections for each t, by v,r,s, for goals
-    n_hv.total_new_vaccinations = 0.0;  
+    n_hv.total_new_vaccinations = 0.0;
 
     nda::fill(n_hv.cured_pop, 0.0);
     nda::fill(n_hv.cured_prop, 0.0);
@@ -983,9 +983,9 @@ public:
 
     nda::fill(i_hv.new_vaccinations, 0.0);
 
-    real_type vac_waning_rate = 
+    real_type vac_waning_rate =
     (p_hv.rn_vac_params(VAC_DUR) > 0.0) ? 1.0 / p_hv.rn_vac_params(VAC_DUR) : 0.0;
- 
+
     real_type value = 0.0;
     real_type vac_coverage = 0.0;
 
@@ -1109,25 +1109,25 @@ public:
 
 
     // denominators for resource need
-    i_hv.pop_hivpos_adults = 0.0;   
-    i_hv.pop_hivpos_children = 0.0; 
-    i_hv.pop_art_adults = 0.0;      
-    i_hv.pop_art_children = 0.0;   
+    i_hv.pop_hivpos_adults = 0.0;
+    i_hv.pop_hivpos_children = 0.0;
+    i_hv.pop_art_adults = 0.0;
+    i_hv.pop_art_children = 0.0;
 
-    i_hv.pop_hivpos_adults_ahd = 0.0;    
-    i_hv.pop_hivpos_children_ahd = 0.0;  
-    i_hv.pop_art_adults_ahd = 0.0;    
+    i_hv.pop_hivpos_adults_ahd = 0.0;
+    i_hv.pop_hivpos_children_ahd = 0.0;
+    i_hv.pop_art_adults_ahd = 0.0;
     i_hv.pop_art_children_ahd = 0.0;
 
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
         for (int a = 0; a < pAG; ++a) {
-          
+
           //adults
           const int a_hv = a - 15;  // for adult structure age 15 starts at 0
           if (a >= 15) {
-            
+
             for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
-              const int hd_hds = hd - CD4_GT500;  
+              const int hd_hds = hd - CD4_GT500;
               i_hv.pop_hivpos_adults += n_ha.h_hivpop(hd_hds, a_hv, s);
               if(hd>=CD4_100_199){
                 i_hv.pop_hivpos_adults_ahd += n_ha.h_hivpop(hd_hds, a_hv, s);
@@ -1140,8 +1140,8 @@ public:
                 }
               }
             }//hd
-         } 
-        else { 
+         }
+        else {
 
             if (a < hc2_agestart){
               for (int hd = 0; hd < hc1DS; ++hd) {
@@ -1151,9 +1151,9 @@ public:
                   for (int dur = 0; dur < hTS; ++dur) {
                     i_hv.pop_art_children += c_hc.hc1_artpop(dur, hd, a, s);
                   }
-              }    
+              }
             }
-            else{ 
+            else{
               for (int hd = 0; hd < hc2DS; ++hd) {
                 for (int cat = 0; cat < hcTT; ++cat) {
                   i_hv.pop_hivpos_children +=  c_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
@@ -1164,7 +1164,7 @@ public:
                 }
 
               }
-            } 
+            }
         }
       }
     }
@@ -1174,9 +1174,9 @@ public:
                                                                 i_hv.pop_hivpos_children : 0.0;
 
     i_hv.pop_art_children_ahd = (i_hv.pop_art_adults > 0.0) ? (i_hv.pop_art_adults_ahd/i_hv.pop_art_adults)*
-                                                           i_hv.pop_art_children : 0.0;                                                       
+                                                           i_hv.pop_art_children : 0.0;
 
-           
+
 
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
       int a50 = SS::pIDX_15to49 + SS::pAG_15to49;
@@ -1219,7 +1219,7 @@ public:
           i_hv.dp_aging_denom_1549(POP_H_NoART, hd, s) += hivpop_h;
           i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) -= hivpop_h;  // remove hiv states
 
-          if ((hiv_step == 0) && (a == SS::pIDX_15to49)) {   
+          if ((hiv_step == 0) && (a == SS::pIDX_15to49)) {
             i_hv.dp_entrants_age_15(POP_H_NoART, hd, s) += hivpop_h;
             i_hv.dp_entrants_age_15(POP_H_HIVNeg, CD4_NEG, s) -= hivpop_h;
           }
@@ -1238,7 +1238,7 @@ public:
             i_hv.dp_pop_sex_age_hiv(POP_H_ARTlt6m + ht, s) += artpop_h;
             i_hv.dp_aging_denom_1549(POP_H_ARTlt6m + ht, hd, s) += artpop_h;
             i_hv.dp_aging_denom_1549(POP_H_OnART, hd, s) += artpop_h;
-            i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) -= artpop_h;  
+            i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s) -= artpop_h;
 
             // TODO: CDP: using an average rate. review
             // i_hv.art_alpha(hd,s) +=  (p_ha.art_mortality(ht, hd, a,
@@ -1270,7 +1270,7 @@ public:
 
     real_type migration_num = 0.0;
     real_type migration_denom = 0.0;
-    
+
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
 
       // Migration for ages 15-49, by sex
@@ -1285,7 +1285,7 @@ public:
 
       i_hv.migration_rate(s) = (migration_denom != 0.0) ? migration_num / migration_denom : 0.0;
     }
-    
+
   };
 
   void calc_goals_rates(int t, int hiv_step) {
@@ -1315,7 +1315,7 @@ public:
 
     real_type years_in_primary = p_hv.epi_months_in_primary / 12.0;
 
-    //using this switch to control if HIV parameters come from dp/aim's editor, or if 
+    //using this switch to control if HIV parameters come from dp/aim's editor, or if
     //it is average from dp/aim population numbers. for now, forcing it as direct input
     bool do_cd4_params_editor = true;
 
@@ -1341,11 +1341,11 @@ public:
 
       for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
         const int hd_hds = hd - CD4_GT500;
-        
+
         //not doing averaging in this version but taking inputs from the the dp/aim editor
         if (do_cd4_params_editor == true) {
           // direct from age categories, no averaging
-          i_hv.hiv_mu(hd, s) = p_ha.cd4_mortality(hd_hds, a25_34, s); 
+          i_hv.hiv_mu(hd, s) = p_ha.cd4_mortality(hd_hds, a25_34, s);
           //ahd impact on mortality applies to advanced disease
           if(hd>=CD4_100_199){
             i_hv.hiv_mu(hd, s) *= i_hv.AHD_Tx_Impact;
@@ -1360,12 +1360,12 @@ public:
           i_hv.art_alpha(hd + hOnArt, s) = i_hv.alpha_mult
                                           * p_ha.art_mortality_time_rate_ratio(ART_GT12m, t)
                                           * p_ha.art_mortality(ART_GT12m, hd_hds, a25_34, s);
-              
-          //ahd impact on mortality applies to advanced disease 
+
+          //ahd impact on mortality applies to advanced disease
           if(hd>=CD4_100_199){
             i_hv.art_alpha(hd + hOnArt, s) *= i_hv.AHD_Tx_Impact;
-          }     
-                 
+          }
+
           i_hv.art_alpha_excess(hd + hOnArt, s) = p_ha.art_nonaids_excess_mort(ART_GT12m, hd_hds, a25_34, s);
           i_hv.art_alpha(hd + hOnArt, s) = i_hv.art_alpha(hd + hOnArt, s) + i_hv.art_alpha_excess(hd + hOnArt, s);
 
@@ -1470,13 +1470,13 @@ public:
                               * (1.0 - p_hv.rn_poc_cov(POC_VL, t) * p_hv.rn_poc_effect(POC_VL))
                               * (1.0 - p_hv.long_act_treat_cov(t) * p_hv.long_act_treat_eff_vls))
                        / (p_hv.epi_inf_mult_art(1) - 0.05));
-    }                   
+    }
 
     i_hv.alpha_mult = std::clamp(i_hv.alpha_mult, 0.0, 1.0);
   }
 
    void calc_HIV_cure_effect(int t){
-  
+
     auto& n_hv = state_next.hv;
     auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
@@ -1484,7 +1484,7 @@ public:
     int nr = 0;
     real_type hv_plhiv = 0.0;
     real_type hv_plhiv_rg = 0.0;
-    
+
     i_hv.cure_effect(S_MALE)   = p_hv.rn_cure_coverage_all(t) * p_hv.rn_cure_effect(VAC_EFF);
     i_hv.cure_effect(S_FEMALE) = p_hv.rn_cure_coverage_all(t) * p_hv.rn_cure_effect(VAC_EFF);
     if (p_hv.rn_cure_coverage_type != CURE_COV_ALLRISK) {
@@ -1493,7 +1493,7 @@ public:
         hv_plhiv =   n_hv.adults(VAC_ALL, RG_ALL, CD4_ALL, S_MALE) -
                      n_hv.adults(VAC_ALL, RG_ALL, CD4_NEG, S_MALE);
 
-        for (int rg = RG_NONE; rg <= RG_MSM; ++rg) { 
+        for (int rg = RG_NONE; rg <= RG_MSM; ++rg) {
             hv_plhiv_rg = n_hv.adults(VAC_ALL, rg, CD4_ALL, S_MALE) -
                           n_hv.adults(VAC_ALL, rg, CD4_NEG, S_MALE);
 
@@ -1508,7 +1508,7 @@ public:
         hv_plhiv =   n_hv.adults(VAC_ALL, RG_ALL, CD4_ALL, S_FEMALE) -
                      n_hv.adults(VAC_ALL, RG_ALL, CD4_NEG, S_FEMALE);
 
-        for (int rg = RG_NONE; rg <= RG_MSM; ++rg) { 
+        for (int rg = RG_NONE; rg <= RG_MSM; ++rg) {
            nr = rg + RG_NONE_F3;
 
            hv_plhiv_rg = n_hv.adults(VAC_ALL, rg, CD4_ALL, S_FEMALE) -
@@ -1522,7 +1522,7 @@ public:
         i_hv.cure_effect(S_FEMALE) = std::clamp(i_hv.cure_effect(S_FEMALE), 0.0, 1.0);
 
     }
-  
+
   }
 
   void calc_HIV_cure(int t) {
@@ -1629,7 +1629,7 @@ public:
           rg_proportion = p_hv.b_behav_properties(rg + RG_NONE_F3, PERC_POP);
         }
 
-        if (rg_proportion - 
+        if (rg_proportion -
             n_hv.adults(VAC_ALL, rg, CD4_ALL, s) / n_hv.adults(VAC_ALL, RG_ALL, CD4_ALL, s) != 0.0)
         {
           debut_rate = (std::max(i_hv.i_age_first_sex(s) - 15.0, 1.0) != 0.0)
@@ -1698,11 +1698,11 @@ public:
                               ? 1  / std::max(i_hv.i_age_first_sex(s) - 15.0, 1.0) : 0.0)
                          + i_hv.background_death_rate(s)
                          + i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s)) +
-                
+
                   // net migration
                   n_hv.adults_ts(VAC_UNV, RG_NONE, CD4_NEG, s)
                       * i_hv.migration_rate(s) -
-             
+
                   // new vaccinations, out
                   i_hv.new_vaccinations(RG_NONE, CD4_NEG, s) +
 
@@ -1741,7 +1741,7 @@ public:
 
                    // new vaccinations, in
                    i_hv.new_vaccinations(RG_NONE, CD4_NEG, s)
-                      * i_hv.vac_effect(p_hv.rn_vac_type, v) - 
+                      * i_hv.vac_effect(p_hv.rn_vac_type, v) -
 
                    // vaccine, exits
                    n_hv.adults_ts(v, RG_NONE, CD4_NEG, s)
@@ -1784,14 +1784,14 @@ public:
                         * ((std::max(i_hv.i_age_first_sex(s) - 15.0, 1.0) != 0.0)
                                ? 1.0 / std::max( i_hv.i_age_first_sex(s) - 15.0, 1.0 ) : 0.0)
                         * i_hv.b_riskgroup_proportions(rg, s) -
-                
+
                     // exits
                     n_hv.adults_ts(VAC_UNV, rg, CD4_NEG, s)
                         * (i_hv.background_death_rate(s)
                            + i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s)
                            +  // aging out at age 50
                            ((RG_MRH <= rg && rg <= RG_IDU) ? i_hv.b_behave_change_rate(rg, s) : 0.0)) +
-                
+
                     // net migration
                     n_hv.adults_ts(VAC_UNV, rg, CD4_NEG, s)
                         * i_hv.migration_rate(s) -
@@ -1805,7 +1805,7 @@ public:
                      + n_hv.adults_ts(VAC_NO_PROT, rg, CD4_NEG, s))
                         * ((i_hv.vac_params(VAC_DUR) != 0.0)
                                ? 1.0 / i_hv.vac_params(VAC_DUR) : 0.0) +
-                    
+
                     // entrants following behavior change
                     ((RG_LRH <= rg && rg <= RG_HRH)
                          ? n_hv.adults_ts(VAC_UNV, rg + 1, CD4_NEG, s)
@@ -1834,7 +1834,7 @@ public:
                     -  // aging out at age 50
                     ((RG_MRH <= rg && rg <= RG_IDU)
                           ? i_hv.b_behave_change_rate(rg, s) : 0.0)) +
-  
+
                     // net migration
                     n_hv.adults_ts(v, rg, CD4_NEG, s)
                         * i_hv.migration_rate(s) +
@@ -1842,12 +1842,12 @@ public:
                      // new vaccinations
                      i_hv.new_vaccinations(rg, CD4_NEG, s)
                           * i_hv.vac_effect(p_hv.rn_vac_type, v) -
-                     
+
                      // vaccine, exits
                      n_hv.adults_ts(v, rg, CD4_NEG, s)
                          * ((i_hv.vac_params(VAC_DUR) != 0.0)
                                 ? 1.0 / i_hv.vac_params(VAC_DUR) : 0.0) +
-                     
+
                      // entrants following behavior change
                      ((RG_LRH <= rg && rg <= RG_HRH)
                           ? n_hv.adults_ts(v, rg + 1, CD4_NEG, s)
@@ -1905,14 +1905,14 @@ public:
           real_type mort_hiv = 0.0;
           if (CD4_PRIM <= hd && hd <= CD4_LT50) {
             mort_hiv = i_hv.hiv_mu(hd, s);
-            
+
             //Mortality reductions off ART proportional to ART coverage
             numer = n_hv.adults(VAC_ALL, RG_ALL, hd+hOnArt, s);
             denom = n_hv.adults(VAC_ALL, RG_ALL, hd, s) + numer;
             if( (hd >= CD4_GT500) && (denom > 0.0)){
-              mort_hiv_fac = (1-numer/denom);  
+              mort_hiv_fac = (1-numer/denom);
               mort_hiv_fac = std::clamp(mort_hiv_fac, 0.0, 1.0);
-              mort_hiv *= mort_hiv_fac; 
+              mort_hiv *= mort_hiv_fac;
             }
 
           } else {
@@ -1934,7 +1934,7 @@ public:
               dp_entrants_age_15 = i_hv.dp_entrants_age_15(POP_H_OnART, hd - hOnArt, s);
             }
           };
-          
+
           n_hv.total_15HIVp(s) += opts.dt * dp_entrants_age_15;
 
           // Progression rate
@@ -1946,7 +1946,7 @@ public:
 
           real_type progress_in = 0.0;
           if (CD4_GT500 <= hd && hd <= CD4_LT50) {
-            progress_in = i_hv.hiv_lambda(hd - 1, s); 
+            progress_in = i_hv.hiv_lambda(hd - 1, s);
           };
 
           //Sexual debut
@@ -1973,9 +1973,9 @@ public:
                       // by assumption
                       dp_entrants_age_15 -
 
-                      // not at risk 
-                      debut_outof_rg + 
-                      
+                      // not at risk
+                      debut_outof_rg +
+
                       // risk at sexual debut
                       debut_into_rg -
 
@@ -1987,10 +1987,10 @@ public:
                              rate_aging_out +  // aging out at age 50
                              ((RG_MRH <= rg && rg <= RG_IDU)
                                   ? i_hv.b_behave_change_rate(rg, s) : 0.0)) +
-                
+
                       // net migration
                       n_hv.adults_ts(VAC_UNV, rg, hd, s)
-                          * i_hv.migration_rate(s) - 
+                          * i_hv.migration_rate(s) -
 
                       // new vaccinations
                       i_hv.new_vaccinations(rg, hd, s) +
@@ -2001,12 +2001,12 @@ public:
                        + n_hv.adults_ts(VAC_NO_PROT, rg, hd, s))
                           * ((i_hv.vac_params(VAC_DUR) != 0.0)
                                  ? 1.0 / i_hv.vac_params(VAC_DUR) : 0.0) +
-                      
+
                       // entrants following behavior change
                       ((RG_LRH <= rg && rg <= RG_HRH)
                            ? n_hv.adults_ts(VAC_UNV, rg + 1, hd, s)
                                * i_hv.b_behave_change_rate(rg + 1, s) : 0.0) +
-                      
+
                       // entrants following hiv stage progression
                       n_hv.adults_ts(VAC_UNV, rg, hd - 1, s) * progress_in
                   );
@@ -2034,24 +2034,24 @@ public:
                           +  // hiv mortality rate
                           progress_out +  // hiv progrssion rate
                           rate_aging_out) +
-                    
+
                        // net migration
-                       n_hv.adults_ts(v, rg, hd, s) * i_hv.migration_rate(s) + 
+                       n_hv.adults_ts(v, rg, hd, s) * i_hv.migration_rate(s) +
 
                        // new vaccinations
-                       i_hv.new_vaccinations(rg, hd, s) 
+                       i_hv.new_vaccinations(rg, hd, s)
                             * i_hv.vac_effect(p_hv.rn_vac_type, v) -
 
                        // vaccine, exits
                        n_hv.adults_ts(v, rg, hd, s)
                            * ((i_hv.vac_params(VAC_DUR) != 0.0)
                                   ? 1.0 / i_hv.vac_params(VAC_DUR) : 0.0) +
-                       
+
                        // entrants following behavior change
                        ((RG_LRH <= rg && rg <= RG_HRH)
                             ? n_hv.adults_ts(v, rg + 1, hd, s)
                                 * i_hv.b_behave_change_rate(rg + 1, s) : 0.0) +
-                       
+
                        // entrants following hiv stage progression
                        n_hv.adults_ts(v, rg, hd, s) * progress_in);
 
@@ -2116,7 +2116,7 @@ public:
           rMultDenominatorAll += n_hv.adults(VAC_ALL, rg, hd, s);
 
         }
-          
+
         // on ART
         for (int hd = CD4_GT500_ART; hd <= CD4_LT50_ART; ++hd) {
           rMultNumerator += n_hv.mult_art(hd-hOnArt) * n_hv.adults(VAC_ALL, rg, hd, s);
@@ -2337,7 +2337,7 @@ public:
         if( n_hv.adults(v, rg, CD4_NEG, s) <= 0.0 ){
           continue;
         }
-    
+
         vacc_effect = 0.0;
 
         // no new infections in take category
@@ -2369,7 +2369,7 @@ public:
 
         hiv_neg_pop = n_hv.adults(v, rg, CD4_NEG, S_MALE);
         n_hv.new_inf_vrs(v, rg, S_MALE) = foi * hiv_neg_pop;
-       
+
       }  // v, S_MALE
 
       // women
@@ -2436,7 +2436,7 @@ public:
         if( n_hv.adults(v, rg, CD4_NEG, S_MALE) <= 0.0){
           continue;
         }
-        
+
         vacc_effect = 0.0;
 
         // no new infections in take category
@@ -2517,11 +2517,11 @@ public:
     real_type foi_idu_sex = 0.0;
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
       for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) {
-        
+
          if( n_hv.adults(v, RG_IDU, CD4_NEG, s) <= 0.0){
           continue;
         }
-        
+
         SusceptibleIDU = n_hv.adults(v, RG_IDU, CD4_NEG, s);
         if (SusceptibleIDU
             > n_hv.adults(v, RG_IDU, CD4_ALL, s) * i_hv.i_idu_share_prop
@@ -2590,7 +2590,7 @@ public:
         SusceptibleIDU = n_hv.adults(v, RG_IDU, CD4_NEG, s);
         // sexual transmission
         n_hv.new_inf_vrs(v, rg, s) += std::max(0.0, foi_idu_sex * SusceptibleIDU);
-  
+
       }  // v
 
     }  // s
@@ -2702,7 +2702,7 @@ public:
     real_type denom_s_both = 0.0;
     //if (hiv_step == 0) {
       for (int s = S_MALE; s <= S_FEMALE; ++s) {
-        real_type num = 1.0 / opts.dt * n_hv.new_inf_s(s);  
+        real_type num = 1.0 / opts.dt * n_hv.new_inf_s(s);
         // dp needs annual new infections, distributes for each hiv_step
         real_type denom = i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s);
 
@@ -2775,7 +2775,7 @@ public:
     real_type denom_s_both = 0.0;
 
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
-      real_type num = 1.0 / opts.dt * n_hv.new_inf_s(s);  
+      real_type num = 1.0 / opts.dt * n_hv.new_inf_s(s);
       // dp needs annual new infections, distributes for each hiv_step
       real_type denom = i_hv.dp_aging_denom_1549(POP_H_HIVNeg, CD4_NEG, s);
 
@@ -3219,7 +3219,7 @@ private:
     real_type total_pop = 0.0;
 
     // Calc adjusted coverage
-    for (int i = RN_COM_MOB; i <= RN_MAX_BEHAV_INTVN; ++i) { 
+    for (int i = RN_COM_MOB; i <= RN_MAX_BEHAV_INTVN; ++i) {
      i_hv.adj_coverage_base_yr(i) = p_hv.rn_coverage(i, GoalsBaseYearIdx);
     }
 
@@ -3470,18 +3470,18 @@ private:
                                  i_hv.pop_art_children;
 
     real_type hahc_total_art = i_hv.pop_art_adults +
-                               i_hv.pop_art_children;                            
+                               i_hv.pop_art_children;
 
     real_type hahc_total_plhiv_ahd = i_hv.pop_hivpos_adults_ahd +
                                      i_hv.pop_hivpos_children_ahd +
                                      i_hv.pop_art_adults_ahd +
-                                     i_hv.pop_art_children_ahd; 
-                                
+                                     i_hv.pop_art_children_ahd;
+
     real_type hv_plhiv =   n_hv.adults(VAC_ALL, RG_ALL, CD4_ALL, S_ALL) -
-                           n_hv.adults(VAC_ALL, RG_ALL, CD4_NEG, S_ALL);  
-                           
-    real_type plhiv_rg = 0.0; 
-    int nr = 0;                      
+                           n_hv.adults(VAC_ALL, RG_ALL, CD4_NEG, S_ALL);
+
+    real_type plhiv_rg = 0.0;
+    int nr = 0;
 
     for (int i = 1; i <= RN_MAX_INTERVN; ++i) {
       // a few interventions are now excluded from the editors and RN calcs
@@ -3704,14 +3704,14 @@ private:
 
         case RN_AHD_TX:  // treatment advanced HIV
         {
-          pop_reached = p_hv.rn_ahd_treat_cov(t) * hahc_total_plhiv_ahd; 
+          pop_reached = p_hv.rn_ahd_treat_cov(t) * hahc_total_plhiv_ahd;
           break;
         }
 
         case RN_POC_CD4_INT:  // POC testing CD4
         {
-          
-          pop_reached = p_hv.rn_poc_cov(POC_CD4, t) * hahc_total_plhiv;  
+
+          pop_reached = p_hv.rn_poc_cov(POC_CD4, t) * hahc_total_plhiv;
           break;
         }
 
@@ -3731,16 +3731,16 @@ private:
         case RN_CURE_Adults:  // HIV cure
         {
           if (p_hv.rn_cure_coverage_type == CURE_COV_ALLRISK) {
-            pop_reached = p_hv.rn_cure_coverage_all(t) * hahc_total_plhiv; 
-  
+            pop_reached = p_hv.rn_cure_coverage_all(t) * hahc_total_plhiv;
+
           } else {
-            
+
             //males, cov weighted by RG size
             for (int rg = RG_LRH; rg <= RG_MSMIDU; ++rg) {
               plhiv_rg =  n_hv.adults(VAC_ALL, rg, CD4_ALL, S_MALE) -
                           n_hv.adults(VAC_ALL, rg, CD4_NEG, S_MALE);
 
-              pop_reached +=  ((hv_plhiv > 0.0) ? (plhiv_rg/hv_plhiv) : 0.0) * 
+              pop_reached +=  ((hv_plhiv > 0.0) ? (plhiv_rg/hv_plhiv) : 0.0) *
                                p_hv.rn_cure_coverage_rg(rg, t) *
                                hahc_total_plhiv;
             }
@@ -3751,9 +3751,9 @@ private:
               plhiv_rg =  n_hv.adults(VAC_ALL, rg, CD4_ALL, S_FEMALE) -
                           n_hv.adults(VAC_ALL, rg, CD4_NEG, S_FEMALE);
 
-              pop_reached +=  ((hv_plhiv > 0.0) ? (plhiv_rg/hv_plhiv) : 0.0) * 
+              pop_reached +=  ((hv_plhiv > 0.0) ? (plhiv_rg/hv_plhiv) : 0.0) *
                                p_hv.rn_cure_coverage_rg(nr, t) *
-                               hahc_total_plhiv;  
+                               hahc_total_plhiv;
             }
           }
 
@@ -3772,16 +3772,16 @@ private:
         case RN_VMM:  // microbiome
         {
            //VMM_COV_ALLRISK
-           vmm_coverage = p_hv.rn_vmm_coverage_all(t); 
+           vmm_coverage = p_hv.rn_vmm_coverage_all(t);
            pop_reached += vmm_coverage * n_hv.adults(VAC_ALL, RG_ALL, CD4_NEG, S_FEMALE);
-          
+
           //VMM by RG
-          if (p_hv.rn_vmm_coverage_type != VMM_COV_ALLRISK) {              
+          if (p_hv.rn_vmm_coverage_type != VMM_COV_ALLRISK) {
            for (int rg = RG_NONE; rg <= RG_HRH; ++rg) {
-            
+
             vmm_coverage = p_hv.rn_vmm_coverage_rg(rg, t);
             pop_reached += vmm_coverage * n_hv.adults(VAC_ALL, rg, CD4_NEG, S_FEMALE);
-      
+
            }
           }
 
