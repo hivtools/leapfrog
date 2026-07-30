@@ -725,8 +725,8 @@ public:
           }
 
           for (int m = PREP_OralDaily; m <= PREP_PEP; ++m) {
-            real_type prep_effect = std::clamp(p_hv.prep_effectiveness(PREP_EFFECT, m), 0.0, 1.0);
-            real_type prep_adh = std::clamp(p_hv.prep_effectiveness(PREP_ADH, m), 0.0, 1.0);
+            real_type prep_effect = std::clamp(p_hv.prep_effectiveness(m, PREP_EFFECT), 0.0, 1.0);
+            real_type prep_adh = std::clamp(p_hv.prep_effectiveness(m, PREP_ADH), 0.0, 1.0);
             real_type prep_methodmix = std::clamp(p_hv.prep_method_mix(s, rg, m, t), 0.0, 1.0);
 
             i_hv.prep_effect(rg, s) += prep_effect * prep_adh * prep_methodmix;
@@ -2359,7 +2359,7 @@ public:
                                    * ((1.0 - circum) + (1.0 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum)
                                    * (1.0 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(rg, t))
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
-                                   * (1.0 - p_hv.prep_cov(S_MALE, rg, t) * i_hv.prep_effect(rg, s))
+                                   * (1.0 - p_hv.prep_cov(S_MALE, rg - RG_LRH, t) * i_hv.prep_effect(rg, s))
                                    * (1.0 - n_hv.cured_prop(rg, S_MALE))),
                               p_hv.b_sex_acts(rg, t) * SexActsRatioM
                           )
@@ -2408,7 +2408,7 @@ public:
                                  * (1.0 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(rg + RG_NONE_F3, t))
                                  *  // check index
                                  (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect) *
-                                 (1.0 - p_hv.prep_cov(S_FEMALE, rg, t) * i_hv.prep_effect(rg, s))
+                                 (1.0 - p_hv.prep_cov(S_FEMALE, rg - RG_LRH, t) * i_hv.prep_effect(rg, s))
                                  * (1.0 - vmm_coverage * p_hv.rn_vmm_effect)
                                  * (1.0 - n_hv.cured_prop(rg, S_FEMALE))),
                             p_hv.b_sex_acts(rg, t) * SexActsRatioF
@@ -2460,7 +2460,7 @@ public:
                                    * p_hv.epi_transm_mult_MSM
                                    * (1.0 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(rg, t))
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
-                                   * (1.0 - p_hv.prep_cov(S_MALE, rg, t) * i_hv.prep_effect(rg, s))
+                                   * (1.0 - p_hv.prep_cov(S_MALE, rg - RG_LRH, t) * i_hv.prep_effect(rg, s))
                                    * (1.0 - n_hv.cured_prop(rg, S_MALE))),
                               p_hv.b_sex_acts(rg, t)
                           )
@@ -2556,7 +2556,7 @@ public:
                                    * ((1.0 - circum) + (1.0 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum)
                                    * (1.0 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(rg, t))
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
-                                   * (1.0 - p_hv.prep_cov(S_MALE, rg, t) * i_hv.prep_effect(rg, s))
+                                   * (1.0 - p_hv.prep_cov(S_MALE, rg - RG_LRH, t) * i_hv.prep_effect(rg, s))
                                    * (1.0 - n_hv.cured_prop(rg, S_MALE))),
                               p_hv.b_sex_acts(rg, t) * SexActsRatioM
                           )
@@ -2572,7 +2572,7 @@ public:
                                    ((1.0 - circum) + (1.0 - p_hv.epi_redwhen_circum(HV_INF)) * circum) *
                                    (1.0 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(rg + RG_NONE_F3, t)) *
                                    (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect) *
-                                   (1.0 - p_hv.prep_cov(S_FEMALE, rg, t) * i_hv.prep_effect(rg, s)) *
+                                   (1.0 - p_hv.prep_cov(S_FEMALE, rg - RG_LRH, t) * i_hv.prep_effect(rg, s)) *
                                    (1.0 - n_hv.cured_prop(rg, S_FEMALE))),
                               p_hv.b_sex_acts(rg, t) * SexActsRatioF
                           )
@@ -3689,14 +3689,14 @@ private:
           for (int rg = RG_LRH; rg <= RG_MSMIDU; ++rg) {
             pop_reached += n_hv.adults(VAC_ALL, rg, CD4_NEG, S_MALE)
                           * p_hv.prep_method_mix(S_MALE, rg, m, t)
-                          * p_hv.prep_cov(S_MALE, rg, t);
+                          * p_hv.prep_cov(S_MALE, rg - RG_LRH, t);
           }
 
           // prep for women
           for (int rg = RG_LRH; rg <= RG_IDU; ++rg) {
             pop_reached += n_hv.adults(VAC_ALL, rg, CD4_NEG, S_FEMALE)
                           * p_hv.prep_method_mix(S_FEMALE, rg, m, t)
-                          * p_hv.prep_cov(S_FEMALE, rg, t);
+                          * p_hv.prep_cov(S_FEMALE, rg - RG_LRH, t);
           }
 
           break;
