@@ -431,6 +431,8 @@ type
     mtctBySourceHcInfectionsLength: Integer;
     pmtctCoverageAtDelivery: PDouble;
     pmtctCoverageAtDeliveryLength: Integer;
+    pmtctNeed: PDouble;
+    pmtctNeedLength: Integer;
 end;
 
 type
@@ -453,6 +455,7 @@ type
     mtctBySourceWomen: TGBFixedArray<Double>;
     mtctBySourceHcInfections: TGBFixedArray<Double>;
     pmtctCoverageAtDelivery: TGBFixedArray<Double>;
+    pmtctNeed: TGBFixedArray<Double>;
     function getView(): LeapfrogHivChildStateView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -1161,6 +1164,7 @@ begin;
   mtctBySourceWomen.Free;
   mtctBySourceHcInfections.Free;
   pmtctCoverageAtDelivery.Free;
+  pmtctNeed.Free;
   inherited;
 end;
 
@@ -1282,6 +1286,8 @@ begin;
   Result.mtctBySourceHcInfectionsLength := mtctBySourceHcInfections.GetLength();
   Result.pmtctCoverageAtDelivery := PDouble(pmtctCoverageAtDelivery.data);
   Result.pmtctCoverageAtDeliveryLength := pmtctCoverageAtDelivery.GetLength();
+  Result.pmtctNeed := PDouble(pmtctNeed.data);
+  Result.pmtctNeedLength := pmtctNeed.GetLength();
 end;
 
 destructor LeapfrogSpectrumParams.Destroy;

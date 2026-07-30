@@ -56,7 +56,7 @@
           "hc_age_coarse_cd4": [0, 0, 0, 1, 1, 2, 2, 2, 2, 2]
         }
       }
-    ]    
+    ]
   },
   "pars": {
       "hc_nosocomial_infections_by_age": {
@@ -325,9 +325,6 @@
     "sumARV": {
       "num_type": "real_type"
     },
-    "need_PMTCT": {
-      "num_type": "real_type"
-    },
     "on_PMTCT": {
       "num_type": "real_type"
     },
@@ -495,6 +492,9 @@
     "pmtct_coverage_at_delivery": {
       "num_type": "real_type",
       "dims": ["SS::hPS"]
+    },
+    "pmtct_need": {
+      "num_type": "real_type"
     }
   }
 }
