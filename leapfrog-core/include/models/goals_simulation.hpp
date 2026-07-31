@@ -2053,7 +2053,7 @@ public:
                                 * i_hv.b_behave_change_rate(rg + 1, s) : 0.0) +
 
                        // entrants following hiv stage progression
-                       n_hv.adults_ts(v, rg, hd, s) * progress_in);
+                       n_hv.adults_ts(v, rg, hd - 1, s) * progress_in);
 
             n_hv.adults(v, rg, hd, s) = std::max(value, 0.0);
 
@@ -2556,7 +2556,7 @@ public:
                                    * ((1.0 - circum) + (1.0 - p_hv.epi_redwhen_circum(HV_SUCC)) * circum)
                                    * (1.0 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(rg, t))
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
-                                   * (1.0 - p_hv.prep_cov(S_MALE, rg, t) * i_hv.prep_effect(rg, s))
+                                   * (1.0 - p_hv.prep_cov(S_MALE, rg, t) * i_hv.prep_effect(rg, S_MALE))
                                    * (1.0 - n_hv.cured_prop(rg, S_MALE))),
                               p_hv.b_sex_acts(rg, t) * SexActsRatioM
                           )
@@ -2572,7 +2572,7 @@ public:
                                    ((1.0 - circum) + (1.0 - p_hv.epi_redwhen_circum(HV_INF)) * circum) *
                                    (1.0 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(rg + RG_NONE_F3, t)) *
                                    (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect) *
-                                   (1.0 - p_hv.prep_cov(S_FEMALE, rg, t) * i_hv.prep_effect(rg, s)) *
+                                   (1.0 - p_hv.prep_cov(S_FEMALE, rg, t) * i_hv.prep_effect(rg, S_FEMALE)) *
                                    (1.0 - n_hv.cured_prop(rg, S_FEMALE))),
                               p_hv.b_sex_acts(rg, t) * SexActsRatioF
                           )
@@ -2583,8 +2583,8 @@ public:
 
         // needle sharing
         real_type idu_inf = 0.0;
-        idu_inf = p_hv.b_foi_idu(s, t) * i_hv.r_mult(RG_ALL, S_ALL) * PrevB
-            * SusceptibleIDU;
+        idu_inf = p_hv.b_foi_idu(s, t) * i_hv.r_mult(RG_ALL, S_ALL) * PrevB * SusceptibleIDU *
+                  (1.0 - p_hv.prep_cov(s, rg, t) * i_hv.prep_effect(rg, s));
         n_hv.new_inf_vrs(v, rg, s) = std::max(idu_inf, 0.0);
 
         SusceptibleIDU = n_hv.adults(v, RG_IDU, CD4_NEG, s);
@@ -3469,6 +3469,9 @@ private:
                                  i_hv.pop_art_adults +
                                  i_hv.pop_art_children;
 
+    real_type ha_total_plhiv =   i_hv.pop_hivpos_adults +
+                                 i_hv.pop_art_adults;                            
+
     real_type hahc_total_art = i_hv.pop_art_adults +
                                i_hv.pop_art_children;
 
@@ -3616,18 +3619,16 @@ private:
         case RN_IDU_NSEP: {
           pop_reached = (n_hv.adults(VAC_ALL, RG_IDU, CD4_ALL, S_MALE)
                          + n_hv.adults(VAC_ALL, RG_IDU, CD4_ALL, S_FEMALE))
-              * p_hv.rn_pop_sizes(RN_POP_NUM_INJECT_YEAR, t) / 100.0
-              *  // CDP check /100
-              p_hv.rn_coverage(i, t);
+                        * p_hv.rn_pop_sizes(RN_POP_NUM_INJECT_YEAR, t) / 100.0
+                        * p_hv.rn_coverage(i, t);
           break;
         }
 
         case RN_IDU_DRUG_SUB: {
           pop_reached = (n_hv.adults(VAC_ALL, RG_IDU, CD4_ALL, S_MALE)
                          + n_hv.adults(VAC_ALL, RG_IDU, CD4_ALL, S_FEMALE))
-              * p_hv.rn_pop_sizes(RN_POP_IDU_OPIOD_DEP, t) / 100.0
-              *  // CDP check /100
-              p_hv.rn_coverage(i, t);
+                        * p_hv.rn_pop_sizes(RN_POP_IDU_OPIOD_DEP, t) / 100.0
+                        * p_hv.rn_coverage(i, t);
           break;
         }
 
@@ -3731,7 +3732,7 @@ private:
         case RN_CURE_Adults:  // HIV cure
         {
           if (p_hv.rn_cure_coverage_type == CURE_COV_ALLRISK) {
-            pop_reached = p_hv.rn_cure_coverage_all(t) * hahc_total_plhiv;
+            pop_reached = p_hv.rn_cure_coverage_all(t) * ha_total_plhiv;
 
           } else {
 
@@ -3742,7 +3743,7 @@ private:
 
               pop_reached +=  ((hv_plhiv > 0.0) ? (plhiv_rg/hv_plhiv) : 0.0) *
                                p_hv.rn_cure_coverage_rg(rg, t) *
-                               hahc_total_plhiv;
+                               ha_total_plhiv;
             }
 
             //females, cov weighted by RG size
@@ -3753,7 +3754,7 @@ private:
 
               pop_reached +=  ((hv_plhiv > 0.0) ? (plhiv_rg/hv_plhiv) : 0.0) *
                                p_hv.rn_cure_coverage_rg(nr, t) *
-                               hahc_total_plhiv;
+                               ha_total_plhiv;
             }
           }
 
