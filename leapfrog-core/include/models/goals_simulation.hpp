@@ -1831,7 +1831,7 @@ public:
                     n_hv.adults_ts(v, rg, CD4_NEG, s)
                     * (i_hv.background_death_rate(s)
                       + i_hv.rate_aging_50(POP_H_HIVNeg, CD4_NEG, s)
-                    -  // aging out at age 50
+                    +  // aging out at age 50
                     ((RG_MRH <= rg && rg <= RG_IDU)
                           ? i_hv.b_behave_change_rate(rg, s) : 0.0)) +
 
@@ -2053,7 +2053,7 @@ public:
                                 * i_hv.b_behave_change_rate(rg + 1, s) : 0.0) +
 
                        // entrants following hiv stage progression
-                       n_hv.adults_ts(v, rg, hd, s) * progress_in);
+                       n_hv.adults_ts(v, rg, hd - 1, s) * progress_in);
 
             n_hv.adults(v, rg, hd, s) = std::max(value, 0.0);
 
