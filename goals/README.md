@@ -16,13 +16,16 @@ In the following example you will need parameters - inputs to the model. We have
 ```python
 from leapfrog_goals import read_h5_file
 
-parameters_child = read_h5_file("../leapfrogr/tests/testthat/testdata/child_parms_full.h5")
+parameters_child = read_h5_file(
+    "../leapfrogr/tests/testthat/testdata/child_parms_full.h5"
+)
 ```
 
 We need to add a good way to import the goals parameters, for now add manually.
 
 ```python
 import numpy as np
+
 parameters_child["ex_input"] = np.full((81, 2), 1)
 ```
 
@@ -55,17 +58,14 @@ ret = run_goals(parameters_child, range(1970, 2001))
 run_goals_from_state(
     # parameters
     parameters_child,
-
     # get the last time slice of the state returned by run model so we
     # can continue from where the model left off
     get_time_slice(ret, 30),
-
     # simulation start year, this should be the year the previous
     # argument represents
     2000,
-
     # years you want the model to output
-    range(2001, 2031)
+    range(2001, 2031),
 )
 ```
 
@@ -82,10 +82,7 @@ ret_single_year = run_goals(parameters_child, [1970])
 
 for year in range(1970, 2030):
     ret_single_year = run_goals_from_state(
-        parameters_child,
-        get_time_slice(ret_single_year, 0),
-        year,
-        [year + 1]
+        parameters_child, get_time_slice(ret_single_year, 0), year, [year + 1]
     )
 ```
 
@@ -102,11 +99,7 @@ from leapfrog_goals import run_goals, run_goals_single_year, get_time_slice
 ret_single_year = get_time_slice(run_goals(parameters_child, [1970]), 0)
 
 for year in range(1970, 2030):
-    ret_single_year = run_goals_single_year(
-        parameters_child,
-        ret_single_year,
-        year
-    )
+    ret_single_year = run_goals_single_year(parameters_child, ret_single_year, year)
 ```
 
 ## Development
