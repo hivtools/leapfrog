@@ -1,4 +1,4 @@
-from typing import TypeAlias, Union, cast
+from typing import TypeAlias, cast
 
 import h5py
 import numpy as np
@@ -11,10 +11,10 @@ from leapfrog_py._core import (
     run_base_model_single_year,
 )
 
-LeapfrogParameters: TypeAlias = dict[str, Union[np.ndarray, int, float]]
+LeapfrogParameters: TypeAlias = dict[str, np.ndarray | int | float]
 LeapfrogDataSingleYear: TypeAlias = LeapfrogParameters
 LeapfrogData: TypeAlias = dict[str, np.ndarray]
-LeapfrogRange: TypeAlias = Union[range, list]
+LeapfrogRange: TypeAlias = range | list
 LeapfrogStateSpace: TypeAlias = dict[str, int | float]
 
 
@@ -35,7 +35,7 @@ def read_h5_file(file_path: str) -> LeapfrogParameters:
     return ret
 
 
-def save_h5_file(dat: Union[LeapfrogParameters, LeapfrogData], file_path: str) -> None:
+def save_h5_file(dat: LeapfrogParameters | LeapfrogData, file_path: str) -> None:
     f = h5py.File(file_path, "w")
     for key in list(dat.keys()):
         arr = dat[key]
@@ -53,7 +53,7 @@ def get_time_slice(state: LeapfrogData, index: int) -> LeapfrogDataSingleYear:
 
 
 def concat_on_time_dim(state1, state2):
-    return {k: np.concatenate((state1[k], state2[k]), axis=-1) for k in state1.keys()}
+    return {k: np.concatenate((state1[k], state2[k]), axis=-1) for k in state1}
 
 
 def run_model(
