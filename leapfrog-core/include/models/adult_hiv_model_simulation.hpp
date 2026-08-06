@@ -971,7 +971,7 @@ struct AdultHivModelSimulation<Config> {
     const auto& i_ha = intermediate.ha;
 
     for (int s = 0; s < NS; ++s) {
-      const real_type cured_proportion = intermediate.hv.cure_effect(s);
+      const real_type cured_proportion = intermediate.hv.cure_effect_adults(s);
 
       for (int ha = 0; ha < hAG; ++ha) {
         const int a = ha + p_idx_hiv_first_adult;

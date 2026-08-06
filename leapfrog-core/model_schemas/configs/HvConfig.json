@@ -197,6 +197,11 @@
       "dims": ["opts.proj_steps"]
     },
 
+    "rn_cure_coverage_children": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+
     "rn_cure_coverage_type": {
       "num_type": "int"
     },
@@ -335,6 +340,38 @@
     "art_interrupt_rate": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
+    },
+
+    "therapeutic_vac_cov": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+
+    "therapeutic_vac_eff": {
+      "num_type": "real_type"
+    },
+
+    "func_cure_HR_cov": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+
+    "func_cure_LR_cov": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+
+    "func_cure_children_cov": {
+      "num_type": "real_type",
+      "dims": ["opts.proj_steps"]
+    },
+
+    "func_cure_reduce_inf": {
+      "num_type": "real_type"
+    },
+
+    "func_cure_reduce_mort": {
+      "num_type": "real_type"
     }
 
   },
@@ -490,7 +527,7 @@
     },
 
 
-      "dp_aging_50": {
+    "dp_aging_50": {
       "num_type": "real_type",
       "dims": ["SS::nHIV", "SS::nCD4p","SS::nNS"]
     },
@@ -594,9 +631,28 @@
       "dims": ["SS::nMAX_BEHAV_IMPACTS+1"]
     },
 
-    "cure_effect": {
+    "cure_effect_adults": {
       "num_type": "real_type",
       "dims": ["SS::nNS"]
+    },
+
+    "cure_effect_children": {
+      "num_type": "real_type"
+    },
+
+    "func_cure_impact_inf": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG1","SS::nNS"]
+    },
+
+    
+    "func_cure_impact_mort": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG1","SS::nNS"]
+    },
+
+    "func_cure_child_impact_mort": {
+      "num_type": "real_type"
     }
 
   },

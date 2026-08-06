@@ -165,6 +165,12 @@ struct ChildModelSimulation<Config> {
     nosocomial_infections();
     fill_total_pop_outputs();
 
+    if constexpr (ModelVariant::run_goals) {
+      if (t > pars.hv.goals_base_year_idx) {
+        apply_goals_cure(t);
+      }
+    }
+
   };
 
   // private methods that we don't want people to call
@@ -1096,6 +1102,11 @@ struct ChildModelSimulation<Config> {
 
           // ctx reduction on mortality for those on ART
           i_hc.hc_death_rate *= i_hc.ctx_mean(art_flag);
+          if constexpr (ModelVariant::run_goals) {
+            if (t > pars.hv.goals_base_year_idx) {
+              i_hc.hc_death_rate *= intermediate.hv.func_cure_child_impact_mort;
+            }
+          }
 
           if (a < hc2_agestart) {
             bool any_hc1_art_deaths = i_hc.hc_death_rate * n_hc.hc1_artpop(t_art_idx, hd, a, s) >= 0;
@@ -1613,7 +1624,63 @@ struct ChildModelSimulation<Config> {
     }
   };
 
-  
+  void apply_goals_cure(int t){
+
+    auto& n_ha = state_next.ha;
+    auto& n_hc = state_next.hc;
+
+    real_type cured_proportion=0.0;
+    real_type cured = 0.0;
+
+     for (int s = 0; s < NS; ++s) {
+      cured_proportion =  intermediate.hv.cure_effect_children;
+      for (int a = 0; a < hcAG_end; ++a) {
+         
+            //clhiv 0-4, not on art
+            if (a < hc2_agestart){
+              //clhiv 0-4, not on art
+              for (int cat = 0; cat < hcTT; ++cat) {
+                for (int hd = 0; hd < hc1DS; ++hd) {
+                  cured = cured_proportion * n_hc.hc1_hivpop(hd, cat, a, s); 
+                  n_hc.hc1_hivpop(hd, cat, a, s) -= cured;
+                  n_ha.p_hivpop(a, s) -= cured;
+                }
+              }
+              //clhiv 0-4, on art
+              for (int hd = 0; hd < hc1DS; ++hd) {
+                  for (int dur = 0; dur < hTS; ++dur) {
+                     cured = cured_proportion * n_hc.hc1_artpop(dur, hd, a, s); 
+                     n_hc.hc1_artpop(dur, hd, a, s) -= cured;
+                     n_ha.p_hivpop(a, s) -= cured;
+                  }
+              }    
+          }
+          else{
+             //clhiv 5+, not on art
+              for (int hd = 0; hd < hc2DS; ++hd) {
+                  for (int cat = 0; cat < hcTT; ++cat) {
+                    cured = cured_proportion * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s); 
+                    n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) -= cured;
+                    n_ha.p_hivpop(a, s) -= cured;
+                  }
+              }
+              //clhiv 5+, on art
+              for (int hd = 0; hd < hc2DS; ++hd) {
+               for (int dur = 0; dur < hTS; ++dur) {
+                  cured = cured_proportion * n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s); 
+                  n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s) -= cured;
+                  n_ha.p_hivpop(a, s) -= cured;
+                }
+              }
+          }
+
+      }//a
+    }//s
+   
+  };
+
+
+
 };
 
 }
