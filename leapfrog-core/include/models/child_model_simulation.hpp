@@ -275,24 +275,24 @@ struct ChildModelSimulation<Config> {
       i_hc.sumARV += p_hc.PMTCT(hp, t);
     }
 
-    i_hc.need_PMTCT = std::max(i_hc.sumARV, n_ha.hiv_births);
+    n_hc.pmtct_need = std::max(i_hc.sumARV, n_ha.hiv_births);
 
     i_hc.on_PMTCT = i_hc.sumARV + p_hc.patients_reallocated(t);
-    i_hc.on_PMTCT = std::min(i_hc.on_PMTCT, i_hc.need_PMTCT);
+    i_hc.on_PMTCT = std::min(i_hc.on_PMTCT, n_hc.pmtct_need);
 
     // replace all instances of coverage input as numbers with percentage covered
     if (p_hc.PMTCT_input_is_percent(t)) {
       for (int hp = 0; hp < hPS; ++hp) {
         i_hc.PMTCT_coverage(hp) = p_hc.PMTCT(hp, t) / 100;
       } // end hPS
-      i_hc.sumARV = i_hc.sumARV * i_hc.need_PMTCT;
+      i_hc.sumARV = i_hc.sumARV * n_hc.pmtct_need;
     } else {
       for (int hp = 0; hp < hPS; ++hp) {
         if (i_hc.sumARV == 0) {
           i_hc.PMTCT_coverage(hp) = 0.0;
         } else {
           i_hc.PMTCT_coverage(hp) = p_hc.PMTCT(hp, t) / i_hc.sumARV *
-            i_hc.on_PMTCT / i_hc.need_PMTCT ;
+            i_hc.on_PMTCT / n_hc.pmtct_need;
           if(hp == BPLUS_BEFORE){
             //Dropped off ART, started before
             n_hc.mtct_by_source_women(BPLUS_BEFORE_DROPOUT) += p_hc.PMTCT(hp, t) * (1 - p_hc.PMTCT_dropout(hp, 0, t)); //number
@@ -312,8 +312,8 @@ struct ChildModelSimulation<Config> {
       }// end hPS
 
       //No ART
-      n_hc.mtct_by_source_women(NO_ART) = i_hc.need_PMTCT;
-      for(int ms = 0; ms < mtct_source; ms++){
+      n_hc.mtct_by_source_women(NO_ART) = n_hc.pmtct_need;
+      for(int ms = 0; ms < mtct_source; ++ms){
         if(ms != NO_ART){
           n_hc.mtct_by_source_women(NO_ART) -= n_hc.mtct_by_source_women(ms);
         }
@@ -460,9 +460,9 @@ struct ChildModelSimulation<Config> {
         i_hc.incidence_rate_wlhiv = i_hc.age_weighted_infections / i_hc.age_weighted_hivneg;
         // 0.75 is 9/12, gestational period, index 7 in the vertical transmission object is the index for maternal seroconversion
         i_hc.perinatal_transmission_from_incidence = i_hc.incidence_rate_wlhiv * 0.75 *
-                                                     (p_hc.total_births(t) - i_hc.need_PMTCT) *
+                                                     (p_hc.total_births(t) - n_hc.pmtct_need) *
                                                      p_hc.vertical_transmission_rate(7, 0);
-        n_hc.mtct_by_source_women(8) = i_hc.incidence_rate_wlhiv * 0.75 * (p_hc.total_births(t) - i_hc.need_PMTCT);
+        n_hc.mtct_by_source_women(8) = i_hc.incidence_rate_wlhiv * 0.75 * (p_hc.total_births(t) - n_hc.pmtct_need);
       } else {
         i_hc.incidence_rate_wlhiv = 0.0;
         i_hc.perinatal_transmission_from_incidence = 0.0;
@@ -478,7 +478,7 @@ struct ChildModelSimulation<Config> {
         i_hc.incidence_rate_wlhiv = i_hc.age_weighted_infections / i_hc.age_weighted_hivneg;
         //0.75 is 9/12, gestational period, index 7 in the vertical trasnmission object is the index for maternal seroconversion
         i_hc.perinatal_transmission_from_incidence = i_hc.incidence_rate_wlhiv * 0.75 *
-                                                     (n_dp.births - i_hc.need_PMTCT) *
+                                                     (n_dp.births - n_hc.pmtct_need) *
                                                      p_hc.vertical_transmission_rate(7, 0);
       } else {
         i_hc.incidence_rate_wlhiv = 0.0;
@@ -543,9 +543,9 @@ struct ChildModelSimulation<Config> {
 
     maternal_incidence_in_pregnancy_tr();
 
-    if (i_hc.need_PMTCT > 0.0) {
-      i_hc.perinatal_transmission_rate += i_hc.perinatal_transmission_from_incidence / i_hc.need_PMTCT;
-      n_hc.mtct_by_source_tr(MAT_SERO,0) = i_hc.perinatal_transmission_from_incidence / i_hc.need_PMTCT;
+    if (n_hc.pmtct_need > 0.0) {
+      i_hc.perinatal_transmission_rate += i_hc.perinatal_transmission_from_incidence / n_hc.pmtct_need;
+      n_hc.mtct_by_source_tr(MAT_SERO,0) = i_hc.perinatal_transmission_from_incidence / n_hc.pmtct_need;
     }
   };
 
@@ -1630,13 +1630,13 @@ struct ChildModelSimulation<Config> {
      for (int s = 0; s < NS; ++s) {
       cured_proportion =  intermediate.hv.cure_effect(s);
       for (int a = 0; a < hcAG_end; ++a) {
-         
+
             //clhiv 0-4, not on art
             if (a < hc2_agestart){
               //clhiv 0-4, not on art
               for (int cat = 0; cat < hcTT; ++cat) {
                 for (int hd = 0; hd < hc1DS; ++hd) {
-                  cured = cured_proportion * n_hc.hc1_hivpop(hd, cat, a, s); 
+                  cured = cured_proportion * n_hc.hc1_hivpop(hd, cat, a, s);
                   n_hc.hc1_hivpop(hd, cat, a, s) -= cured;
                   n_ha.p_hivpop(a, s) -= cured;
                 }
@@ -1644,17 +1644,17 @@ struct ChildModelSimulation<Config> {
               //clhiv 0-4, on art
               for (int hd = 0; hd < hc1DS; ++hd) {
                   for (int dur = 0; dur < hTS; ++dur) {
-                     cured = cured_proportion * n_hc.hc1_artpop(dur, hd, a, s); 
+                     cured = cured_proportion * n_hc.hc1_artpop(dur, hd, a, s);
                      n_hc.hc1_artpop(dur, hd, a, s) -= cured;
                      n_ha.p_hivpop(a, s) -= cured;
                   }
-              }    
+              }
           }
           else{
              //clhiv 5+, not on art
               for (int hd = 0; hd < hc2DS; ++hd) {
                   for (int cat = 0; cat < hcTT; ++cat) {
-                    cured = cured_proportion * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s); 
+                    cured = cured_proportion * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
                     n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) -= cured;
                     n_ha.p_hivpop(a, s) -= cured;
                   }
@@ -1662,7 +1662,7 @@ struct ChildModelSimulation<Config> {
               //clhiv 5+, on art
               for (int hd = 0; hd < hc2DS; ++hd) {
                for (int dur = 0; dur < hTS; ++dur) {
-                  cured = cured_proportion * n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s); 
+                  cured = cured_proportion * n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
                   n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s) -= cured;
                   n_ha.p_hivpop(a, s) -= cured;
                 }
@@ -1671,7 +1671,7 @@ struct ChildModelSimulation<Config> {
 
       }//a
     }//s
-   
+
   };
 
 
