@@ -94,6 +94,7 @@ def test_child_model():
         "mtct_by_source_women",
         "mtct_by_source_hc_infections",
         "pmtct_coverage_at_delivery",
+        "pmtct_need"
     ]
     returned_vars.sort()
     expected_vars.sort()

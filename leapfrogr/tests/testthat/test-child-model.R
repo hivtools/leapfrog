@@ -21,7 +21,8 @@ test_that("Child model can be run for all years", {
       "hc_art_init", "hc_art_init_total", "hc_art_need_init", "ctx_need", "infection_by_type",
       "mtct_by_source_tr", "mtct_by_source_women",
       "mtct_by_source_hc_infections", "pmtct_coverage_at_delivery",
-      "prevalence_15to49_hts", "incidence_15to49_hts", "artcoverage_15to49_hts")
+      "prevalence_15to49_hts", "incidence_15to49_hts", "artcoverage_15to49_hts",
+      "pmtct_need")
   )
 
   ## Nothing should ever be negative
@@ -67,7 +68,8 @@ test_that("Coarse child model can be run for all years", {
       "hc_art_init", "hc_art_init_total", "hc_art_need_init", "ctx_need", "infection_by_type",
       "mtct_by_source_tr", "mtct_by_source_women",
       "mtct_by_source_hc_infections", "pmtct_coverage_at_delivery",
-      "prevalence_15to49_hts", "incidence_15to49_hts", "artcoverage_15to49_hts")
+      "prevalence_15to49_hts", "incidence_15to49_hts", "artcoverage_15to49_hts",
+      "pmtct_need")
   )
 
   ## Nothing should ever be negative
@@ -194,33 +196,33 @@ test_that("Model outputs are consistent", {
 test_that("Nosocomial infections map to the correct child age bands", {
   parameters <- read_parameters(test_path("testdata/child_parms_full.h5"))
   parameters$hc_nosocomial_infections_by_age[] <- 0
-  
+
   ## VT/BF only contribute to p_infections at ages 0-2, so ages 3-14 (R indices
   ## 4:15) are zero in the baseline and only receive nosocomial infections.
   ## This lets us use exact equality to verify the hc_age_coarse[a] routing.
-  
+
   pars1 <- parameters; pars1$hc_nosocomial_infections_by_age[1:5, ] <- rep(100, 5)
   pars2 <- parameters; pars2$hc_nosocomial_infections_by_age[6:10, ] <- rep(100, 5)
   pars3 <- parameters; pars3$hc_nosocomial_infections_by_age[11:15, ] <- rep(100, 5)
-  
+
   out1 <- run_model(pars1, "ChildModel", 1970:2030)
   out2 <- run_model(pars2, "ChildModel", 1970:2030)
   out3 <- run_model(pars3, "ChildModel", 1970:2030)
-  
+
   ## Row 1 → ages 0-4 only; ages 5-14 stay at their baseline (zero)
   expect_true(sum(out1$p_infections[4:5, , ]) > 0)    # ages 3-4 receive infections
   expect_true(all(out1$p_infections[6:15, , ] == 0))  # ages 5-14 untouched
-  
+
   ## Row 2 → ages 5-9 only; ages 3-4 and 10-14 stay at zero
   expect_true(all(out2$p_infections[4:5, , ]  == 0))  # ages 3-4 untouched
   expect_true(sum(out2$p_infections[6:10, , ]) > 0)   # ages 5-9 receive infections
   expect_true(all(out2$p_infections[11:15, , ] == 0)) # ages 10-14 untouched
-  
+
   ## Row 3 → ages 10-14 only; ages 5-9 stay at zero
   expect_true(all(out3$p_infections[6:10, , ]  == 0)) # ages 5-9 untouched
   expect_true(sum(out3$p_infections[11:15, , ]) > 0)  # ages 10-14 receive infections
-  
-  ## Infections are divided evenly across the sexes C++ divides by NS, so 
+
+  ## Infections are divided evenly across the sexes C++ divides by NS, so
   ## every sex cell gets the same value.
   ## Year index 1 is the initial state (1970, pre-simulation); index 2 is the
   ## first computed year (1971) where nosocomial infections are first applied.
@@ -237,7 +239,7 @@ test_that("Model outputs are consistent for midyear projections", {
   parameters <- read_parameters(test_path("testdata/child_parms_full.h5"))
   parameters$projection_period <- "midyear"
   out <- run_model(parameters, "ChildModel", 1970:2030)
-  
+
   ## Regression test: run_hc_hivpop_end_year_migration() was previously only
   ## called for calendar-year projections.
   hc1_hiv <- apply(out$hc1_hivpop, c(3,4,5), sum)
@@ -254,7 +256,7 @@ test_that("Model outputs are consistent for midyear projections", {
     dplyr::inner_join(out_df, by = c("Var1", "Var2", "Var3")) %>%
     dplyr::mutate(diff = strat - pop)
   expect_true(all(abs(c1$diff) < 1e-5))
-  
+
   hc2_hiv <- apply(out$hc2_hivpop, c(3,4,5), sum)
   hc2_art <- apply(out$hc2_artpop, c(3,4,5), sum)
   hc2 <- hc2_hiv + hc2_art
@@ -273,19 +275,19 @@ test_that("Model outputs are consistent for midyear projections", {
 
 test_that("Nosocomial infections are applied across all three child age groups", {
   parameters <- read_parameters(test_path("testdata/child_parms_full.h5"))
-  
+
   ## Baseline: zero out all nosocomial infections
   parameters_none <- parameters
   parameters_none$hc_nosocomial_infections_by_age[] <- 0
   out_none <- run_model(parameters_none, "ChildModel", 1970:2030)
-  
+
   ## Apply nosocomial infections only to age groups 5-9 and 10-14 (rows 6 to 15).
   ## Regression test: previously only age group 0-4 received infections.
   parameters_older <- parameters
   parameters_older$hc_nosocomial_infections_by_age[] <- 0
   parameters_older$hc_nosocomial_infections_by_age[6:15, ] <- 100
   out_older <- run_model(parameters_older, "ChildModel", 1970:2030)
-  
+
   ## Ages 5-14 should gain infections; ages 0-4 should be unaffected
   expect_true(
     sum(out_older$p_infections[6:15, , ]) > sum(out_none$p_infections[6:15, , ])
