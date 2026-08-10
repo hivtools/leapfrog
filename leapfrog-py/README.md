@@ -16,8 +16,12 @@ In the following example you will need parameters - inputs to the model. We have
 ```python
 from leapfrog_py import read_h5_file
 
-parameters_adult = read_h5_file("../leapfrogr/tests/testthat/testdata/adult_parms_full.h5")
-parameters_child = read_h5_file("../leapfrogr/tests/testthat/testdata/child_parms_full.h5")
+parameters_adult = read_h5_file(
+    "../leapfrogr/tests/testthat/testdata/adult_parms_full.h5"
+)
+parameters_child = read_h5_file(
+    "../leapfrogr/tests/testthat/testdata/child_parms_full.h5"
+)
 ```
 
 
@@ -52,20 +56,16 @@ ret = run_model(parameters_adult, "HivFullAgeStratification", range(1970, 2001))
 run_model_from_state(
     # parameters
     parameters_adult,
-
     # configuration
     "HivFullAgeStratification",
-
     # get the last time slice of the state returned by run model so we
     # can continue from where the model left off
     get_time_slice(ret, 30),
-
     # simulation start year, this should be the year the previous
     # argument represents
     2000,
-
     # years you want the model to output
-    range(2001, 2031)
+    range(2001, 2031),
 )
 ```
 
@@ -86,7 +86,7 @@ for year in range(1970, 2031):
         "HivFullAgeStratification",
         get_time_slice(ret_single_year, 0),
         year,
-        [year + 1]
+        [year + 1],
     )
 ```
 
@@ -100,14 +100,13 @@ that returns the time slice for a single year:
 ```python
 from leapfrog_py import run_model, run_model_single_year, get_time_slice
 
-ret_single_year = get_time_slice(run_model(parameters_adult, "HivFullAgeStratification", [1970]), 0)
+ret_single_year = get_time_slice(
+    run_model(parameters_adult, "HivFullAgeStratification", [1970]), 0
+)
 
 for year in range(1970, 2031):
     ret_single_year = run_model_single_year(
-        parameters_adult,
-        "HivFullAgeStratification",
-        ret_single_year,
-        year
+        parameters_adult, "HivFullAgeStratification", ret_single_year, year
     )
 ```
 
