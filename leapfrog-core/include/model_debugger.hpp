@@ -78,7 +78,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
 
     i_hv. vac_effect;
 
-  
+
     //i_hv.totpop_1549;
     //i_hv.pop_1549;
     //i_hv.entrants_age_15;
@@ -362,8 +362,8 @@ struct HvDebugInfo {
   NdaInfo prep_method_mix;
   NdaInfo prep_effectiveness;
   NdaInfo b_foi_idu;
-  NdaInfo rn_coverage; 
-  NdaInfo hv_impact_matrix; 
+  NdaInfo rn_coverage;
+  NdaInfo hv_impact_matrix;
   NdaInfo adj_coverage_prod;
   NdaInfo rn_unit_costs;
 
@@ -483,8 +483,8 @@ struct HcDebugInfo {
   NdaInfo abortion;
   NdaInfo patients_reallocated;
   NdaInfo hc_art_ltfu;
-  NdaInfo adult_female_infections;
-  NdaInfo adult_female_hivnpop;
+  NdaInfo fert_infections;
+  NdaInfo fert_hivnpop;
   NdaInfo total_births;
   NdaInfo ctx_effect;
   int hc_art_start;
@@ -626,7 +626,7 @@ template <class HvState, class IntermediateHv, class ParsHv>
     p_hv.rn_unit_costs;
 
     p_hv.art_coverage_rg;
-  
+
 
   }
 inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
@@ -638,7 +638,7 @@ inline HvDebugInfo capture_hv(const HvState& hv, const IntermediateHv& i_hv,
 
   out.mult_no_art = nda_capture(hv.mult_no_art);
   out.mult_art = nda_capture(hv.mult_art);
- 
+
   out.r_mult = nda_capture(i_hv.r_mult);
 
   out.new_inf_vrs = nda_capture(hv.new_inf_vrs);
@@ -812,7 +812,7 @@ inline HaDebugInfo capture_ha(const HaState& ha, const AnyIntermediate& i_any,
   out.fert_mult_off_art = nda_capture(p_ha.fert_mult_off_art);
   out.fert_mult_on_art = nda_capture(p_ha.fert_mult_on_art);
   out.local_adj_factor = static_cast<double>(p_ha.local_adj_factor);
-  
+
 
   return out;
 }
@@ -891,8 +891,8 @@ inline HcDebugInfo capture_hc(const HcState& hc, const IntermediateHc& i_hc,
   out.abortion = nda_capture(p_hc.abortion);
   out.patients_reallocated = nda_capture(p_hc.patients_reallocated);
   out.hc_art_ltfu = nda_capture(p_hc.hc_art_ltfu);
-  out.adult_female_infections = nda_capture(p_hc.adult_female_infections);
-  out.adult_female_hivnpop = nda_capture(p_hc.adult_female_hivnpop);
+  out.fert_infections = nda_capture(p_hc.fert_infections);
+  out.fert_hivnpop = nda_capture(p_hc.fert_hivnpop);
   out.total_births = nda_capture(p_hc.total_births);
   out.ctx_effect = nda_capture(p_hc.ctx_effect);
   out.hc_art_start = static_cast<int>(p_hc.hc_art_start);
