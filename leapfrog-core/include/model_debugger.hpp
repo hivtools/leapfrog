@@ -455,8 +455,6 @@ struct HcDebugInfo {
   NdaInfo PMTCT_coverage;
   NdaInfo PMTCT_not_retained;
   NdaInfo bf_transmission_rate;
-  double retained;
-  double hc_death_rate;
   NdaInfo ctx_mean;
 
   // Pars (selected)
@@ -866,8 +864,6 @@ inline HcDebugInfo capture_hc(const HcState& hc, const IntermediateHc& i_hc,
   out.PMTCT_coverage = nda_capture(i_hc.PMTCT_coverage);
   out.PMTCT_not_retained = nda_capture(i_hc.PMTCT_not_retained);
   out.bf_transmission_rate = nda_capture(i_hc.bf_transmission_rate);
-  out.retained = static_cast<double>(i_hc.retained);
-  out.hc_death_rate = static_cast<double>(i_hc.hc_death_rate);
   out.ctx_mean = nda_capture(i_hc.ctx_mean);
 
   //out.hc_nosocomial = nda_capture(p_hc.hc_nosocomial);

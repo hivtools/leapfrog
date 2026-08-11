@@ -187,18 +187,18 @@ struct AdultHivModelSimulation<Config> {
     for (int s = 0; s < NS; ++s) {
       for (int ha = 0; ha < hAG; ++ha) {
         for (int hm = 0; hm < hDS; ++hm) {
-          i_ha.cd4mx_scale = 1.0;
+          real_type cd4mx_scale = 1.0;
           if (p_ha.scale_cd4_mortality && t >= opts.ts_art_start &&
               hm >= i_ha.everARTelig_idx && n_ha.h_hivpop(hm, ha, s) > 0.0) {
-            i_ha.artpop_hahm = 0.0;
+            real_type artpop_hahm = 0.0;
             for (int hu = 0; hu < hTS; ++hu) {
-              i_ha.artpop_hahm += n_ha.h_artpop(hu, hm, ha, s);
+              artpop_hahm += n_ha.h_artpop(hu, hm, ha, s);
             }
-            i_ha.cd4mx_scale = n_ha.h_hivpop(hm, ha, s) /
-                              (n_ha.h_hivpop(hm, ha, s) + i_ha.artpop_hahm);
+            cd4mx_scale = n_ha.h_hivpop(hm, ha, s) /
+                          (n_ha.h_hivpop(hm, ha, s) + artpop_hahm);
           }
 
-          auto deaths_hiv  = i_ha.cd4mx_scale * p_ha.cd4_mortality(hm, ha, s) * n_ha.h_hivpop(hm, ha, s);
+          auto deaths_hiv = cd4mx_scale * p_ha.cd4_mortality(hm, ha, s) * n_ha.h_hivpop(hm, ha, s);
           //capture the impact of AHD treament on hiv mortality
           if constexpr (ModelVariant::run_goals) {
             if ( (t > pars.hv.goals_base_year_idx) && (hm>=4) ) { // index 4 is CD4_100_199
@@ -374,7 +374,7 @@ struct AdultHivModelSimulation<Config> {
 
     nda::fill(i_ha.hiv_negative_pop, 0.0);
     for (int s = 0; s < NS; ++s) {
-      i_ha.Xhivn_incagerr = 0.0;
+      real_type Xhivn_incagerr = 0.0;
 
       for (int a = p_idx_hiv_first_adult; a < pAG; ++a) {
         i_ha.hiv_negative_pop(a, s) = n_dp.p_totpop(a, s) - n_ha.p_hivpop(a, s);
@@ -391,8 +391,8 @@ struct AdultHivModelSimulation<Config> {
       }
 
       for (int a = adult_incid_first_age_group; a < adult_incid_last_age_group; ++a) {
-        i_ha.Xhivn_incagerr += p_ha.incidence_rate_ratio_age(a - p_idx_hiv_first_adult, s, t) *
-                               i_ha.hiv_negative_pop(a, s);
+        Xhivn_incagerr += p_ha.incidence_rate_ratio_age(a - p_idx_hiv_first_adult, s, t) *
+                          i_ha.hiv_negative_pop(a, s);
       }
 
       for (int a = SS::p_idx_hiv_first_adult; a < pAG; ++a) {
@@ -400,7 +400,7 @@ struct AdultHivModelSimulation<Config> {
                                      i_ha.incidence_rate_sex(s) *
                                      p_ha.incidence_rate_ratio_age(a - p_idx_hiv_first_adult, s, t) *
                                      i_ha.hiv_neg_aggregate(s) /
-                                     i_ha.Xhivn_incagerr;
+                                     Xhivn_incagerr;
       }
     }
   };
@@ -424,22 +424,22 @@ struct AdultHivModelSimulation<Config> {
     for (int s = 0; s < NS; ++s) {
 
       nda::fill(i_ha.hiv_negative_pop, 0.0);
-      i_ha.Xhivn_incagerr = 0.0;
+      real_type Xhivn_incagerr = 0.0;
 
       for (int a = adult_incid_first_age_group; a < pAG; ++a) {
         i_ha.hiv_negative_pop(a, s) = n_dp.p_totpop(a, s) - n_ha.p_hivpop(a, s);
       }
 
       for (int a = adult_incid_first_age_group; a < adult_incid_last_age_group; ++a) {
-        i_ha.Xhivn_incagerr += p_ha.incidence_rate_ratio_age(a - adult_incid_first_age_group, s, t) *
-                               i_ha.hiv_negative_pop(a, s);
+        Xhivn_incagerr += p_ha.incidence_rate_ratio_age(a - adult_incid_first_age_group, s, t) *
+                          i_ha.hiv_negative_pop(a, s);
       }
 
       for (int a = SS::p_idx_hiv_first_adult; a < pAG; ++a) {
         i_ha.p_infections_ts(a, s) =  n_hv.new_infections_goals(s) * // new infections from goals
                                       i_ha.hiv_negative_pop(a, s) *
                                       p_ha.incidence_rate_ratio_age(a - adult_incid_first_age_group, s, t)/
-                                      i_ha.Xhivn_incagerr;
+                                      Xhivn_incagerr;
       }
     }
   };
@@ -452,11 +452,11 @@ struct AdultHivModelSimulation<Config> {
     for (int s = 0; s < NS; s++) {
       int a = p_idx_hiv_first_adult;
       for (int ha = 0; ha < hAG; ++ha) {
-        i_ha.p_infections_ha = 0.0;
+        real_type p_infections_ha = 0.0;
         for (int i = 0; i < hAG_span[ha]; i++, a++) {
-          i_ha.p_infections_a = i_ha.p_infections_ts(a, s);
-          i_ha.p_infections_ha += i_ha.p_infections_a;
-          const auto new_infections = opts.dt * i_ha.p_infections_a;
+          const real_type p_infections_a = i_ha.p_infections_ts(a, s);
+          p_infections_ha += p_infections_a;
+          const auto new_infections = opts.dt * p_infections_a;
           n_ha.p_infections(a, s) += new_infections;
           n_ha.p_hivpop(a, s) += new_infections;
 
@@ -470,7 +470,7 @@ struct AdultHivModelSimulation<Config> {
 
         // add p_infections to grad hivpop
         for (int hm = 0; hm < hDS; ++hm) {
-          i_ha.grad_infections(hm, ha, s) += i_ha.p_infections_ha * p_ha.cd4_initial_distribution(hm, ha, s);
+          i_ha.grad_infections(hm, ha, s) += p_infections_ha * p_ha.cd4_initial_distribution(hm, ha, s);
         }
       }
     }
@@ -486,18 +486,18 @@ struct AdultHivModelSimulation<Config> {
       for (int ha = 0; ha < hAG; ++ha) {
         for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
           for (int hu = 0; hu < hTS; ++hu) {
-            i_ha.deaths_art = p_ha.art_mortality(hu, hm, ha, s) *
-                              p_ha.art_mortality_time_rate_ratio(hu, t) *
-                              n_ha.h_artpop(hu, hm, ha, s);
+            real_type deaths_art = p_ha.art_mortality(hu, hm, ha, s) *
+                                   p_ha.art_mortality_time_rate_ratio(hu, t) *
+                                   n_ha.h_artpop(hu, hm, ha, s);
 
            //capture the impact of AHD treament on art mortality
            if constexpr (ModelVariant::run_goals) {
               if ( (t > pars.hv.goals_base_year_idx) && (hm>=4) ) { // index 4 is CD4_100_199
-                i_ha.deaths_art *= intermediate.hv.AHD_Tx_Impact;
+                deaths_art *= intermediate.hv.AHD_Tx_Impact;
               }
             }
 
-            const auto new_hiv_deaths_art = opts.dt * i_ha.deaths_art;
+            const auto new_hiv_deaths_art = opts.dt * deaths_art;
             i_ha.h_hiv_deaths_age_sex(ha, s) += new_hiv_deaths_art;
             n_ha.h_hiv_deaths_art(hu, hm, ha, s) += new_hiv_deaths_art;
 
@@ -505,7 +505,7 @@ struct AdultHivModelSimulation<Config> {
             i_ha.h_deaths_excess_nonaids_agesex(ha, s) += opts.dt * deaths_excess_nonaids;
             n_ha.h_deaths_excess_nonaids_on_art(hu, hm, ha, s) += opts.dt * deaths_excess_nonaids;
 
-            i_ha.gradART(hu, hm, ha, s) = -(i_ha.deaths_art + deaths_excess_nonaids);
+            i_ha.gradART(hu, hm, ha, s) = -(deaths_art + deaths_excess_nonaids);
           }
 
           for (int hu = 0; hu < (hTS - 1); ++hu) {
@@ -618,7 +618,6 @@ struct AdultHivModelSimulation<Config> {
   real_type calc_artinit_from_initiation_rate(int s) {
     const auto& p_ha = pars.ha;
     const auto& c_ha = state_curr.ha;
-    const auto& i_ha = intermediate.ha;
 
     real_type new_infections = 0.0;
     real_type plhiv = 0.0;
@@ -638,25 +637,26 @@ struct AdultHivModelSimulation<Config> {
     auto& i_ha = intermediate.ha;
 
     real_type art_interp_w = opts.dt * (hiv_step + 1.0);
+    real_type artnum_hts = 0.0;
     if (opts.proj_period_int == PROJPERIOD_MIDYEAR && art_interp_w < 0.5) {
       if (!p_ha.adults_on_art_is_percent(s, t - 2) && !p_ha.adults_on_art_is_percent(s, t - 1)) {
         // case: both values are numbers
-        i_ha.artnum_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2) +
-                          (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
+        artnum_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2) +
+                     (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
       } else if (p_ha.adults_on_art_is_percent(s, t - 2) && p_ha.adults_on_art_is_percent(s, t - 1)) {
         // case: both values are percentages
-        i_ha.artcov_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2) +
-                          (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
-        i_ha.artnum_hts = i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+        const real_type artcov_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2) +
+                                     (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
+        artnum_hts = artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
       } else if (!p_ha.adults_on_art_is_percent(s, t - 2) && p_ha.adults_on_art_is_percent(s, t - 1)) {
         // case: value is percentage only at time t - 1
         // transition from number to percentage
-        i_ha.curr_coverage = i_ha.Xart_15plus / (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
-        i_ha.artcov_hts = i_ha.curr_coverage +
-                          (p_ha.adults_on_art(s, t - 1) - i_ha.curr_coverage) *
-                          opts.dt / (0.5 - opts.dt * hiv_step);
+        const real_type curr_coverage = i_ha.Xart_15plus / (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+        const real_type artcov_hts = curr_coverage +
+                                     (p_ha.adults_on_art(s, t - 1) - curr_coverage) *
+                                     opts.dt / (0.5 - opts.dt * hiv_step);
         // back to number
-        i_ha.artnum_hts = i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+        artnum_hts = artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
       }
     } else {
       // If the projection period is calendar year (>= Spectrum v6.2),
@@ -673,27 +673,27 @@ struct AdultHivModelSimulation<Config> {
 
       if (!p_ha.adults_on_art_is_percent(s, t - 1) && !p_ha.adults_on_art_is_percent(s, t)) {
         // case: both values are numbers
-        i_ha.artnum_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1) +
-                          art_interp_w * p_ha.adults_on_art(s, t);
+        artnum_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1) +
+                     art_interp_w * p_ha.adults_on_art(s, t);
       } else if (p_ha.adults_on_art_is_percent(s, t - 1) && p_ha.adults_on_art_is_percent(s, t)) {
         // case: both values are percentages
-        i_ha.artcov_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1) +
-                          art_interp_w * p_ha.adults_on_art(s, t);
+        const real_type artcov_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1) +
+                                     art_interp_w * p_ha.adults_on_art(s, t);
         // transition to number
-        i_ha.artnum_hts = i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+        artnum_hts = artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
       } else if (!p_ha.adults_on_art_is_percent(s, t - 1) && p_ha.adults_on_art_is_percent(s, t)) {
         // case: value is percentage only at time t
         // transition from number to percentage
-        i_ha.curr_coverage = i_ha.Xart_15plus / (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
-        i_ha.artcov_hts = i_ha.curr_coverage +
-                          (p_ha.adults_on_art(s, t) - i_ha.curr_coverage) *
-                          opts.dt / (1.0 - art_interp_w + opts.dt);
+        const real_type curr_coverage = i_ha.Xart_15plus / (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+        const real_type artcov_hts = curr_coverage +
+                                     (p_ha.adults_on_art(s, t) - curr_coverage) *
+                                     opts.dt / (1.0 - art_interp_w + opts.dt);
         // back to number
-        i_ha.artnum_hts = i_ha.artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+        artnum_hts = artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
       }
     }
 
-    return std::max(i_ha.artnum_hts - i_ha.Xart_15plus, 0.0);
+    return std::max(artnum_hts - i_ha.Xart_15plus, 0.0);
   };
 
   // Step 1: allocate ART initiations by CD4 stage, weighting eligibility against
@@ -730,15 +730,15 @@ struct AdultHivModelSimulation<Config> {
     for (int ha = hIDX_15PLUS; ha < hAG; ++ha) {
       for (int hm = i_ha.anyelig_idx; hm < hDS; ++hm) {
         if (i_ha.artelig_hm(hm) > 0.0) {
-          i_ha.artinit_hahm = i_ha.artinit_hm(hm) *
-                              i_ha.artelig_hahm(hm, ha - hIDX_15PLUS) /
-                              i_ha.artelig_hm(hm);
-          i_ha.artinit_hahm = std::min(i_ha.artinit_hahm, i_ha.artelig_hahm(hm, ha - hIDX_15PLUS));
-          i_ha.artinit_hahm = std::min(i_ha.artinit_hahm,
-                                       n_ha.h_hivpop(hm, ha, s) + opts.dt * i_ha.grad(hm, ha, s));
-          i_ha.grad(hm, ha, s) -= i_ha.artinit_hahm / opts.dt;
-          i_ha.gradART(ART0MOS, hm, ha, s) += i_ha.artinit_hahm / opts.dt;
-          n_ha.h_art_initiation(hm, ha, s) += i_ha.artinit_hahm;
+          real_type artinit_hahm = i_ha.artinit_hm(hm) *
+                                   i_ha.artelig_hahm(hm, ha - hIDX_15PLUS) /
+                                   i_ha.artelig_hm(hm);
+          artinit_hahm = std::min(artinit_hahm, i_ha.artelig_hahm(hm, ha - hIDX_15PLUS));
+          artinit_hahm = std::min(artinit_hahm,
+                                  n_ha.h_hivpop(hm, ha, s) + opts.dt * i_ha.grad(hm, ha, s));
+          i_ha.grad(hm, ha, s) -= artinit_hahm / opts.dt;
+          i_ha.gradART(ART0MOS, hm, ha, s) += artinit_hahm / opts.dt;
+          n_ha.h_art_initiation(hm, ha, s) += artinit_hahm;
         }
       }
     }
@@ -791,11 +791,11 @@ struct AdultHivModelSimulation<Config> {
       for (int ha = 0; ha < hAG; ++ha) {
 
         if (i_ha.hivpop_ha(ha) > 0) {
-          i_ha.hivqx_ha = i_ha.h_hiv_deaths_age_sex(ha, s) / i_ha.hivpop_ha(ha);
+          const real_type hivqx_ha = i_ha.h_hiv_deaths_age_sex(ha, s) / i_ha.hivpop_ha(ha);
           auto nonaids_excess_qx_ha = i_ha.h_deaths_excess_nonaids_agesex(ha, s) / i_ha.hivpop_ha(ha);
 
           for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
-            auto deaths_aids_a = n_ha.p_hivpop(a, s) * i_ha.hivqx_ha;
+            auto deaths_aids_a = n_ha.p_hivpop(a, s) * hivqx_ha;
             auto deaths_nonaids_excess_a = n_ha.p_hivpop(a, s) * nonaids_excess_qx_ha;
 
             i_ha.deaths_hivpop_hts(a, s) = deaths_aids_a + deaths_nonaids_excess_a;
@@ -891,26 +891,24 @@ struct AdultHivModelSimulation<Config> {
     const auto& c_ha = state_curr.ha;
     auto& n_ha = state_next.ha;
     auto& n_dp = state_next.dp;
-    auto& i_ha = intermediate.ha;
-
-    i_ha.asfr_sum = 0.0;
+    real_type asfr_sum = 0.0;
     for (int a = 0; a < p_fertility_age_groups; ++a) {
-      i_ha.asfr_sum += p_dp.age_specific_fertility_rate(a, t);
+      asfr_sum += p_dp.age_specific_fertility_rate(a, t);
     } // end a
 
     int a_idx_in = p_idx_fertility_first;
     n_ha.hiv_births = 0.0;
     for (int ha = 0; ha < hAG_fertility; ++ha) {
-      i_ha.nHIVcurr = 0.0;
-      i_ha.nHIVlast = 0.0;
-      i_ha.df = 0.0;
+      real_type nHIVcurr = 0.0;
+      real_type nHIVlast = 0.0;
+      real_type df = 0.0;
 
       for (int hd = 0; hd < hDS; ++hd) {
-        i_ha.nHIVcurr += n_ha.h_hivpop(hd, ha, FEMALE);
-        i_ha.nHIVlast += c_ha.h_hivpop(hd, ha, FEMALE);
+        nHIVcurr += n_ha.h_hivpop(hd, ha, FEMALE);
+        nHIVlast += c_ha.h_hivpop(hd, ha, FEMALE);
         for (int ht = 0; ht < hTS; ++ht) {
-          i_ha.nHIVcurr += n_ha.h_artpop(ht, hd, ha, FEMALE);
-          i_ha.nHIVlast += c_ha.h_artpop(ht, hd, ha, FEMALE);
+          nHIVcurr += n_ha.h_artpop(ht, hd, ha, FEMALE);
+          nHIVlast += c_ha.h_artpop(ht, hd, ha, FEMALE);
         } // end hTS
       } // end hDS
 
@@ -918,41 +916,41 @@ struct AdultHivModelSimulation<Config> {
       auto asfr_w = 0.0;
       for (int a_idx = a_idx_in; a_idx < (a_idx_in + hAG_span[ha]); ++a_idx) {
         total_pop += n_dp.p_totpop(a_idx, FEMALE);
-        asfr_w += p_dp.age_specific_fertility_rate(a_idx - p_idx_fertility_first, t) / i_ha.asfr_sum;
+        asfr_w += p_dp.age_specific_fertility_rate(a_idx - p_idx_fertility_first, t) / asfr_sum;
       }
       //set up a_idx_in for the next loop
       a_idx_in = a_idx_in + hAG_span[ha];
       asfr_w /= hAG_span[ha];
 
-      i_ha.prev = i_ha.nHIVcurr / total_pop;
+      const real_type prev = nHIVcurr / total_pop;
 
       for (int hd = 0; hd < hDS; ++hd) {
-        i_ha.df += p_ha.local_adj_factor *
+        df += p_ha.local_adj_factor *
           p_ha.fert_mult_by_age(ha, t) *
           p_ha.fert_mult_off_art(hd) *
           (n_ha.h_hivpop(hd, ha, FEMALE) + c_ha.h_hivpop(hd, ha, FEMALE)) / 2;
 
         // women on ART less than 6 months use the off art fertility multiplier
-        i_ha.df += p_ha.local_adj_factor *
+        df += p_ha.local_adj_factor *
           p_ha.fert_mult_by_age(ha, t) *
           p_ha.fert_mult_off_art(hd) *
           (n_ha.h_artpop(0, hd, ha, FEMALE) + c_ha.h_artpop(0, hd, ha, FEMALE)) / 2;
         for (int ht = 1; ht < hTS; ++ht) {
-          i_ha.df += p_ha.local_adj_factor *
+          df += p_ha.local_adj_factor *
             p_ha.fert_mult_on_art(ha) *
             (n_ha.h_artpop(ht, hd, ha, FEMALE) + c_ha.h_artpop(ht, hd, ha, FEMALE)) / 2;
         } // end hTS
       } // end hDS
 
-      auto midyear_fertileHIV = (i_ha.nHIVcurr + i_ha.nHIVlast) / 2;
+      auto midyear_fertileHIV = (nHIVcurr + nHIVlast) / 2;
       if (midyear_fertileHIV > 0) {
-        i_ha.df = i_ha.df / midyear_fertileHIV;
+        df = df / midyear_fertileHIV;
       } else {
-        i_ha.df = 1;
+        df = 1;
       }
 
       n_ha.hiv_births_by_mat_age(ha) = midyear_fertileHIV * p_dp.total_fertility_rate(t) *
-        i_ha.df / (i_ha.df * i_ha.prev + 1 - i_ha.prev) *
+        df / (df * prev + 1 - prev) *
         asfr_w;
 
 
