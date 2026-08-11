@@ -844,7 +844,7 @@ struct ChildModelSimulation<Config> {
     auto& n_ha = state_next.ha;
 
     // Births from the last 18 months are eligible
-    n_hc.ctx_need = n_ha.hiv_births * 1.5;
+    n_hc.cotrim_need = n_ha.hiv_births * 1.5;
 
     // All children 1.5-4 eligible
     for (int s = 0; s < NS; ++s) {
@@ -852,9 +852,9 @@ struct ChildModelSimulation<Config> {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc1DS; ++hd) {
             if (a == age_1) {
-              n_hc.ctx_need += n_hc.hc1_hivpop(hd, cat, a, s) * 0.5;
+              n_hc.cotrim_need += n_hc.hc1_hivpop(hd, cat, a, s) * 0.5;
             } else {
-              n_hc.ctx_need += n_hc.hc1_hivpop(hd, cat, a, s);
+              n_hc.cotrim_need += n_hc.hc1_hivpop(hd, cat, a, s);
             }
           }
         }
@@ -867,9 +867,9 @@ struct ChildModelSimulation<Config> {
         for (int hd = 0; hd < hc1DS; ++hd) {
           for (int dur = 0; dur < hTS; ++dur) {
             if (a == age_1) {
-              n_hc.ctx_need += n_hc.hc1_artpop(dur, hd, a, s) * 0.5;
+              n_hc.cotrim_need += n_hc.hc1_artpop(dur, hd, a, s) * 0.5;
             } else {
-              n_hc.ctx_need += n_hc.hc1_artpop(dur, hd, a, s) ;
+              n_hc.cotrim_need += n_hc.hc1_artpop(dur, hd, a, s) ;
             }
           } // end hTS
         } // end hc1DS
@@ -883,7 +883,7 @@ struct ChildModelSimulation<Config> {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc2DS; ++hd) {
             if (a < p_hc.hc_art_elig_age(t) || hd >= p_hc.hc_art_elig_cd4(a, t - 1)) {
-              n_hc.ctx_need += c_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
+              n_hc.cotrim_need += c_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
             }
           } // end hc2DS
         } // end hcTT
@@ -896,10 +896,10 @@ struct ChildModelSimulation<Config> {
     auto& n_hc = state_next.hc;
     auto& i_hc = intermediate.hc;
 
-    if (p_hc.ctx_val_is_percent(t)) {
-      i_hc.ctx_mean(art_flag) = 1 - p_hc.ctx_effect(art_flag) * p_hc.ctx_val(t);
-    } else if (n_hc.ctx_need > 0) {
-      i_hc.ctx_mean(art_flag) = 1 - p_hc.ctx_effect(art_flag) * p_hc.ctx_val(t) / n_hc.ctx_need;
+    if (p_hc.cotrim_val_is_percent(t)) {
+      i_hc.cotrim_mean(art_flag) = 1 - p_hc.cotrim_effect(art_flag) * p_hc.cotrim_val(t);
+    } else if (n_hc.cotrim_need > 0) {
+      i_hc.cotrim_mean(art_flag) = 1 - p_hc.cotrim_effect(art_flag) * p_hc.cotrim_val(t) / n_hc.cotrim_need;
     }
   };
 
@@ -915,7 +915,7 @@ struct ChildModelSimulation<Config> {
       for (int a = 0; a < hc2_agestart; ++a) {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc1DS; ++hd) {
-            auto hiv_deaths_strat = i_hc.ctx_mean(art_flag) * n_hc.hc1_hivpop(hd, cat, a, s) * p_hc.hc1_cd4_mort(hd, cat, a);
+            auto hiv_deaths_strat = i_hc.cotrim_mean(art_flag) * n_hc.hc1_hivpop(hd, cat, a, s) * p_hc.hc1_cd4_mort(hd, cat, a);
             i_hc.hc_posthivmort(hd, cat, a, s) = n_hc.hc1_hivpop(hd, cat, a, s) - hiv_deaths_strat;
           }
         }
@@ -926,7 +926,7 @@ struct ChildModelSimulation<Config> {
       for (int a = hc2_agestart; a < hcAG_end; ++a) {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc2DS; ++hd) {
-            auto hiv_deaths_strat = i_hc.ctx_mean(art_flag) * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) *
+            auto hiv_deaths_strat = i_hc.cotrim_mean(art_flag) * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) *
                                     p_hc.hc2_cd4_mort(hd, cat, a - hc2_agestart);
             i_hc.hc_posthivmort(hd, cat, a, s) = n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) -
                                                 hiv_deaths_strat;
@@ -977,7 +977,7 @@ struct ChildModelSimulation<Config> {
       for (int a = 0; a < hc2_agestart; ++a) {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc1DS; ++hd) {
-            auto cd4_deaths_grad = i_hc.ctx_mean(art_flag) * n_hc.hc1_hivpop(hd, cat, a, s) *
+            auto cd4_deaths_grad = i_hc.cotrim_mean(art_flag) * n_hc.hc1_hivpop(hd, cat, a, s) *
                                    p_hc.hc1_cd4_mort(hd, cat, a);
             i_hc.hc_grad(hd, cat, a, s) -= cd4_deaths_grad;
             n_hc.hc1_noart_aids_deaths(hd, cat, a, s) += cd4_deaths_grad;
@@ -990,7 +990,7 @@ struct ChildModelSimulation<Config> {
       for (int a = hc2_agestart; a < hcAG_end; ++a) {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc2DS; ++hd) {
-            auto cd4_mort_grad = i_hc.ctx_mean(art_flag) *
+            auto cd4_mort_grad = i_hc.cotrim_mean(art_flag) *
                                  n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) *
                                  p_hc.hc2_cd4_mort(hd, cat, a - hc2_agestart);
             i_hc.hc_grad(hd, cat, a, s) -= cd4_mort_grad;
@@ -1082,8 +1082,8 @@ struct ChildModelSimulation<Config> {
             }
           }
 
-          // ctx reduction on mortality for those on ART
-          hc_death_rate *= i_hc.ctx_mean(art_flag);
+          // cotrim reduction on mortality for those on ART
+          hc_death_rate *= i_hc.cotrim_mean(art_flag);
           //impact of new products
           if constexpr (ModelVariant::run_goals) {
             if (t > pars.hv.goals_base_year_idx) {
@@ -1150,9 +1150,9 @@ struct ChildModelSimulation<Config> {
               }
             }
 
-            // ctx reduction on mortality for those on ART
+            // cotrim reduction on mortality for those on ART
             // NOTE: ART initiation calculations don't include the effect of cotrim (TODO: verify)
-            // hc_death_rate *= i_hc.ctx_mean(art_flag);
+            // hc_death_rate *= i_hc.cotrim_mean(art_flag);
             if (a < hc2_agestart) {
               bool any_hc1_art_deaths = hc_death_rate * n_hc.hc1_artpop(dur, hd, a, s) >= 0;
               if (any_hc1_art_deaths) {

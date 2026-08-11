@@ -61,7 +61,7 @@ def test_goals_model(test_data):
         "hc_art_init",
         "hc_art_init_total",
         "hc_art_need_init",
-        "ctx_need",
+        "cotrim_need",
         "infection_by_type",
         "mtct_by_source_tr",
         "mtct_by_source_women",

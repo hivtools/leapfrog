@@ -427,7 +427,7 @@ struct HcDebugInfo {
   NdaInfo hc2_art_aids_deaths;
   NdaInfo hc_art_init;
   NdaInfo hc_art_need_init;
-  double ctx_need;
+  double cotrim_need;
   NdaInfo infection_by_type;
   NdaInfo mtct_by_source_tr;
   NdaInfo mtct_by_source_women;
@@ -455,7 +455,7 @@ struct HcDebugInfo {
   NdaInfo PMTCT_coverage;
   NdaInfo PMTCT_not_retained;
   NdaInfo bf_transmission_rate;
-  NdaInfo ctx_mean;
+  NdaInfo cotrim_mean;
 
   // Pars (selected)
   //NdaInfo hc_nosocomial;
@@ -464,7 +464,7 @@ struct HcDebugInfo {
   NdaInfo hc2_cd4_mort;
   NdaInfo hc1_cd4_prog;
   NdaInfo hc2_cd4_prog;
-  NdaInfo ctx_val;
+  NdaInfo cotrim_val;
   NdaInfo hc_art_mort_rr;
   NdaInfo hc1_art_mort;
   NdaInfo hc2_art_mort;
@@ -486,7 +486,7 @@ struct HcDebugInfo {
   NdaInfo fert_infections;
   NdaInfo fert_hivnpop;
   NdaInfo total_births;
-  NdaInfo ctx_effect;
+  NdaInfo cotrim_effect;
   int hc_art_start;
   NdaInfo hc_age_specific_fertility_rate;
 };
@@ -837,7 +837,7 @@ inline HcDebugInfo capture_hc(const HcState& hc, const IntermediateHc& i_hc,
   out.hc2_art_aids_deaths = nda_capture(hc.hc2_art_aids_deaths);
   out.hc_art_init = nda_capture(hc.hc_art_init);
   out.hc_art_need_init = nda_capture(hc.hc_art_need_init);
-  out.ctx_need = static_cast<double>(hc.ctx_need);
+  out.cotrim_need = static_cast<double>(hc.cotrim_need);
   out.infection_by_type = nda_capture(hc.infection_by_type);
   out.mtct_by_source_tr = nda_capture(hc.mtct_by_source_tr);
   out.mtct_by_source_women = nda_capture(hc.mtct_by_source_women);
@@ -864,7 +864,7 @@ inline HcDebugInfo capture_hc(const HcState& hc, const IntermediateHc& i_hc,
   out.PMTCT_coverage = nda_capture(i_hc.PMTCT_coverage);
   out.PMTCT_not_retained = nda_capture(i_hc.PMTCT_not_retained);
   out.bf_transmission_rate = nda_capture(i_hc.bf_transmission_rate);
-  out.ctx_mean = nda_capture(i_hc.ctx_mean);
+  out.cotrim_mean = nda_capture(i_hc.cotrim_mean);
 
   //out.hc_nosocomial = nda_capture(p_hc.hc_nosocomial);
   out.hc1_cd4_dist = nda_capture(p_hc.hc1_cd4_dist);
@@ -872,7 +872,7 @@ inline HcDebugInfo capture_hc(const HcState& hc, const IntermediateHc& i_hc,
   out.hc2_cd4_mort = nda_capture(p_hc.hc2_cd4_mort);
   out.hc1_cd4_prog = nda_capture(p_hc.hc1_cd4_prog);
   out.hc2_cd4_prog = nda_capture(p_hc.hc2_cd4_prog);
-  out.ctx_val = nda_capture(p_hc.ctx_val);
+  out.cotrim_val = nda_capture(p_hc.cotrim_val);
   out.hc_art_mort_rr = nda_capture(p_hc.hc_art_mort_rr);
   out.hc1_art_mort = nda_capture(p_hc.hc1_art_mort);
   out.hc2_art_mort = nda_capture(p_hc.hc2_art_mort);
@@ -894,7 +894,7 @@ inline HcDebugInfo capture_hc(const HcState& hc, const IntermediateHc& i_hc,
   out.fert_infections = nda_capture(p_hc.fert_infections);
   out.fert_hivnpop = nda_capture(p_hc.fert_hivnpop);
   out.total_births = nda_capture(p_hc.total_births);
-  out.ctx_effect = nda_capture(p_hc.ctx_effect);
+  out.cotrim_effect = nda_capture(p_hc.cotrim_effect);
   out.hc_art_start = static_cast<int>(p_hc.hc_art_start);
   out.hc_age_specific_fertility_rate = nda_capture(p_hc.hc_age_specific_fertility_rate);
 
