@@ -31,12 +31,8 @@ struct ChildModelSimulation<Config> {
   static constexpr int pAG = SS::pAG;
   static constexpr int hDS = SS::hDS;
   static constexpr int hTS = SS::hTS;
-  static constexpr int hAG = SS::hAG;
-  static constexpr auto hAG_span = SS::hAG_span;
-  static constexpr int PROJPERIOD_MIDYEAR = SS::PROJPERIOD_MIDYEAR;
   static constexpr int MALE = SS::MALE;
   static constexpr int FEMALE = SS::FEMALE;
-  static constexpr int ART0MOS = SS::ART0MOS;
   static constexpr int hc2_agestart = SS::hc2_agestart;
   static constexpr int hcAG_end = SS::hcAG_end;
   static constexpr int hc_infant = SS::hc_infant;
@@ -47,15 +43,11 @@ struct ChildModelSimulation<Config> {
   static constexpr int hPS = SS::hPS;
   static constexpr int hBF = SS::hBF;
   static constexpr int hcAG_c = SS::hcAG_c;
-  static constexpr int p_idx_fertility_first = SS::p_idx_fertility_first;
   static constexpr int hAG_fertility = SS::hAG_fertility;
-  static constexpr int p_idx_hiv_first_adult = SS::p_idx_hiv_first_adult;
   static constexpr auto hc_age_coarse = SS::hc_age_coarse;
   static constexpr auto hc_age_coarse_cd4 = SS::hc_age_coarse_cd4;
   static constexpr auto hc1_to_hc2_cd4_transition = SS::hc1_to_hc2_cd4_transition;
   static constexpr auto mtct_source = SS::mtct_source;
-  static constexpr auto hVT = SS::hVT;
-  static constexpr auto hVT_dropout = SS::hVT_dropout;
 
   enum Index {
     // PVT categories (including those tracked by stacked bar)
@@ -167,7 +159,7 @@ struct ChildModelSimulation<Config> {
 
     if constexpr (ModelVariant::run_goals) {
       if (t > pars.hv.goals_base_year_idx) {
-        apply_goals_cure_children(t);
+        apply_goals_cure_children();
       }
     }
 
@@ -1618,7 +1610,7 @@ struct ChildModelSimulation<Config> {
     }
   };
 
-  void apply_goals_cure_children(int t){
+  void apply_goals_cure_children() {
 
     auto& n_ha = state_next.ha;
     auto& n_hc = state_next.hc;
@@ -1644,7 +1636,7 @@ struct ChildModelSimulation<Config> {
 
                     // add to total for costing
                     state_next.hv.total_new_cures += cured;
-                    
+
                     // for impact, use proportion for costing, with efficacy applied
                     cured = pars.hv.rn_cure_coverage_children(t) *
                             n_hc.hc1_hivpop(hd, cat, a, s) *

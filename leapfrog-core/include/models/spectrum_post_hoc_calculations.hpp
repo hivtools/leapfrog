@@ -32,7 +32,6 @@ struct SpectrumPostHocCalculations<Config> {
   static constexpr int hTS = SS::hTS;
   static constexpr int hAG = SS::hAG;
   static constexpr auto hAG_span = SS::hAG_span;
-  static constexpr int pAG = SS::pAG;
   static constexpr int p_idx_hiv_first_adult = SS::p_idx_hiv_first_adult;
 
   // function args
