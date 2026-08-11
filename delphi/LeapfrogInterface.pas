@@ -146,6 +146,10 @@ type
     pwidPropHivpopLength: Integer;
     pwidSexRatio: PDouble;
     pwidSexRatioLength: Integer;
+    artEntryOption: Integer;
+    artEntryOptionLength: Integer;
+    artInitiationRate: PDouble;
+    artInitiationRateLength: Integer;
 end;
 
 type
@@ -183,6 +187,8 @@ type
     pwidHivposNonaidsMortality: Double;
     pwidPropHivpop: TGBFixedArray<Double>;
     pwidSexRatio: TGBFixedArray<Double>;
+    artEntryOption: Integer;
+    artInitiationRate: TGBFixedArray<Double>;
     function getView(): LeapfrogHivAdultParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -260,8 +266,8 @@ end;
 type
   LeapfrogHivChildParamsView = record
   private
-    hcNosocomial: PDouble;
-    hcNosocomialLength: Integer;
+    hcNosocomialInfectionsByAge: PDouble;
+    hcNosocomialInfectionsByAgeLength: Integer;
     hc1Cd4Dist: PDouble;
     hc1Cd4DistLength: Integer;
     hc1Cd4Mort: PDouble;
@@ -288,6 +294,8 @@ type
     hcArtIspercLength: Integer;
     hcArtVal: PDouble;
     hcArtValLength: Integer;
+    hcArtValTotal: PDouble;
+    hcArtValTotalLength: Integer;
     hcArtInitDist: PDouble;
     hcArtInitDistLength: Integer;
     pmtct: PDouble;
@@ -341,7 +349,7 @@ end;
 type
   LeapfrogHivChildParams = class
   public
-    hcNosocomial: TGBFixedArray<Double>;
+    hcNosocomialInfectionsByAge: TGBFixedArray<Double>;
     hc1Cd4Dist: TGBFixedArray<Double>;
     hc1Cd4Mort: TGBFixedArray<Double>;
     hc2Cd4Mort: TGBFixedArray<Double>;
@@ -355,6 +363,7 @@ type
     hc2ArtMort: TGBFixedArray<Double>;
     hcArtIsperc: TGBFixedArray<Integer>;
     hcArtVal: TGBFixedArray<Double>;
+    hcArtValTotal: TGBFixedArray<Double>;
     hcArtInitDist: TGBFixedArray<Double>;
     pmtct: TGBFixedArray<Double>;
     verticalTransmissionRate: TGBFixedArray<Double>;
@@ -406,6 +415,8 @@ type
     hc2ArtAidsDeathsLength: Integer;
     hcArtInit: PDouble;
     hcArtInitLength: Integer;
+    hcArtInitTotal: PDouble;
+    hcArtInitTotalLength: Integer;
     hcArtNeedInit: PDouble;
     hcArtNeedInitLength: Integer;
     ctxNeed: PDouble;
@@ -420,6 +431,8 @@ type
     mtctBySourceHcInfectionsLength: Integer;
     pmtctCoverageAtDelivery: PDouble;
     pmtctCoverageAtDeliveryLength: Integer;
+    pmtctNeed: PDouble;
+    pmtctNeedLength: Integer;
 end;
 
 type
@@ -434,6 +447,7 @@ type
     hc1ArtAidsDeaths: TGBFixedArray<Double>;
     hc2ArtAidsDeaths: TGBFixedArray<Double>;
     hcArtInit: TGBFixedArray<Double>;
+    hcArtInitTotal: TGBFixedArray<Double>;
     hcArtNeedInit: TGBFixedArray<Double>;
     ctxNeed: TGBFixedArray<Double>;
     infectionByType: TGBFixedArray<Double>;
@@ -441,6 +455,7 @@ type
     mtctBySourceWomen: TGBFixedArray<Double>;
     mtctBySourceHcInfections: TGBFixedArray<Double>;
     pmtctCoverageAtDelivery: TGBFixedArray<Double>;
+    pmtctNeed: TGBFixedArray<Double>;
     function getView(): LeapfrogHivChildStateView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -552,16 +567,28 @@ type
     rnCureCoverageAllLength: Integer;
     rnCureCoverageType: Integer;
     rnCureCoverageTypeLength: Integer;
+    rnCureCoverageNeonates: PDouble;
+    rnCureCoverageNeonatesLength: Integer;
+    rnCureEffectNeonates: Double;
+    rnCureEffectNeonatesLength: Integer;
+    rnVmmEffect: Double;
+    rnVmmEffectLength: Integer;
+    rnVmmCoverageRg: PDouble;
+    rnVmmCoverageRgLength: Integer;
+    rnVmmCoverageAll: PDouble;
+    rnVmmCoverageAllLength: Integer;
+    rnVmmCoverageType: Integer;
+    rnVmmCoverageTypeLength: Integer;
     rnCoverage: PDouble;
     rnCoverageLength: Integer;
     rnPocCov: PDouble;
     rnPocCovLength: Integer;
     rnPocEffect: PDouble;
     rnPocEffectLength: Integer;
-    rnAdhTreatCov: PDouble;
-    rnAdhTreatCovLength: Integer;
-    rnAdhTreatReducMort: Double;
-    rnAdhTreatReducMortLength: Integer;
+    rnAhdTreatCov: PDouble;
+    rnAhdTreatCovLength: Integer;
+    rnAhdTreatReducMort: Double;
+    rnAhdTreatReducMortLength: Integer;
     rnVacParams: PDouble;
     rnVacParamsLength: Integer;
     rnVacCoverageRg: PDouble;
@@ -572,16 +599,32 @@ type
     rnVacCovTypeLength: Integer;
     rnVacTargetting: Integer;
     rnVacTargettingLength: Integer;
+    rnVacType: Integer;
+    rnVacTypeLength: Integer;
     rnUnitCosts: PDouble;
     rnUnitCostsLength: Integer;
     rnPopSizes: PDouble;
     rnPopSizesLength: Integer;
     hvImpactMatrix: PDouble;
     hvImpactMatrixLength: Integer;
+    hvImpactData: Integer;
+    hvImpactDataLength: Integer;
     artCoverageRg: PDouble;
     artCoverageRgLength: Integer;
-    artCovNumPercent: PInteger;
-    artCovNumPercentLength: Integer;
+    popEligTreat: PInteger;
+    popEligTreatLength: Integer;
+    popEligYear: PInteger;
+    popEligYearLength: Integer;
+    programSupportMarkup: PDouble;
+    programSupportMarkupLength: Integer;
+    longActTreatCov: PDouble;
+    longActTreatCovLength: Integer;
+    longActTreatEffVls: Double;
+    longActTreatEffVlsLength: Integer;
+    longActTreatEffLtfu: Double;
+    longActTreatEffLtfuLength: Integer;
+    artInterruptRate: PDouble;
+    artInterruptRateLength: Integer;
 end;
 
 type
@@ -618,21 +661,35 @@ type
     rnCureCoverageRg: TGBFixedArray<Double>;
     rnCureCoverageAll: TGBFixedArray<Double>;
     rnCureCoverageType: Integer;
+    rnCureCoverageNeonates: TGBFixedArray<Double>;
+    rnCureEffectNeonates: Double;
+    rnVmmEffect: Double;
+    rnVmmCoverageRg: TGBFixedArray<Double>;
+    rnVmmCoverageAll: TGBFixedArray<Double>;
+    rnVmmCoverageType: Integer;
     rnCoverage: TGBFixedArray<Double>;
     rnPocCov: TGBFixedArray<Double>;
     rnPocEffect: TGBFixedArray<Double>;
-    rnAdhTreatCov: TGBFixedArray<Double>;
-    rnAdhTreatReducMort: Double;
+    rnAhdTreatCov: TGBFixedArray<Double>;
+    rnAhdTreatReducMort: Double;
     rnVacParams: TGBFixedArray<Double>;
     rnVacCoverageRg: TGBFixedArray<Double>;
     rnVacCoverageAll: TGBFixedArray<Double>;
     rnVacCovType: Integer;
     rnVacTargetting: Integer;
+    rnVacType: Integer;
     rnUnitCosts: TGBFixedArray<Double>;
     rnPopSizes: TGBFixedArray<Double>;
     hvImpactMatrix: TGBFixedArray<Double>;
+    hvImpactData: Integer;
     artCoverageRg: TGBFixedArray<Double>;
-    artCovNumPercent: TGBFixedArray<Integer>;
+    popEligTreat: TGBFixedArray<Integer>;
+    popEligYear: TGBFixedArray<Integer>;
+    programSupportMarkup: TGBFixedArray<Double>;
+    longActTreatCov: TGBFixedArray<Double>;
+    longActTreatEffVls: Double;
+    longActTreatEffLtfu: Double;
+    artInterruptRate: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsParamsView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
@@ -680,6 +737,10 @@ type
     totalPrevalenceLength: Integer;
     newlyOnArt: PDouble;
     newlyOnArtLength: Integer;
+    totalOnArt: PDouble;
+    totalOnArtLength: Integer;
+    totalPlhiv: PDouble;
+    totalPlhivLength: Integer;
     multNoArt: PDouble;
     multNoArtLength: Integer;
     multArt: PDouble;
@@ -692,6 +753,16 @@ type
     numPeopleReachedLength: Integer;
     resourcesRequired: PDouble;
     resourcesRequiredLength: Integer;
+    newInfScaleFactor: PDouble;
+    newInfScaleFactorLength: Integer;
+    totalNewVaccinations: PDouble;
+    totalNewVaccinationsLength: Integer;
+    totalVaccinated: PDouble;
+    totalVaccinatedLength: Integer;
+    total15hivp: PDouble;
+    total15hivpLength: Integer;
+    total15hivn: PDouble;
+    total15hivnLength: Integer;
 end;
 
 type
@@ -716,13 +787,63 @@ type
     prevalence: TGBFixedArray<Double>;
     totalPrevalence: TGBFixedArray<Double>;
     newlyOnArt: TGBFixedArray<Double>;
+    totalOnArt: TGBFixedArray<Double>;
+    totalPlhiv: TGBFixedArray<Double>;
     multNoArt: TGBFixedArray<Double>;
     multArt: TGBFixedArray<Double>;
     newInfVrs: TGBFixedArray<Double>;
     newInfS: TGBFixedArray<Double>;
     numPeopleReached: TGBFixedArray<Double>;
     resourcesRequired: TGBFixedArray<Double>;
+    newInfScaleFactor: TGBFixedArray<Double>;
+    totalNewVaccinations: TGBFixedArray<Double>;
+    totalVaccinated: TGBFixedArray<Double>;
+    total15hivp: TGBFixedArray<Double>;
+    total15hivn: TGBFixedArray<Double>;
     function getView(): LeapfrogGoalsStateView;
+    procedure writeToDisk(dir: string);
+    Destructor Destroy; override;
+end;
+
+{$ALIGN 8}
+type
+  LeapfrogVirginParamsView = record
+  private
+    sexdebutAnnualProb: PDouble;
+    sexdebutAnnualProbLength: Integer;
+end;
+
+type
+  LeapfrogVirginParams = class
+  public
+    sexdebutAnnualProb: TGBFixedArray<Double>;
+    function getView(): LeapfrogVirginParamsView;
+    procedure writeToDisk(dir: string);
+    Destructor Destroy; override;
+end;
+
+{$ALIGN 8}
+type
+  LeapfrogVirginStateView = record
+  private
+    pTotpopVirgin: PDouble;
+    pTotpopVirginLength: Integer;
+    pHivpopVirgin: PDouble;
+    pHivpopVirginLength: Integer;
+    hHivpopVirgin: PDouble;
+    hHivpopVirginLength: Integer;
+    hArtpopVirgin: PDouble;
+    hArtpopVirginLength: Integer;
+end;
+
+type
+  LeapfrogVirginState = class
+  public
+    pTotpopVirgin: TGBFixedArray<Double>;
+    pHivpopVirgin: TGBFixedArray<Double>;
+    hHivpopVirgin: TGBFixedArray<Double>;
+    hArtpopVirgin: TGBFixedArray<Double>;
+    function getView(): LeapfrogVirginStateView;
     procedure writeToDisk(dir: string);
     Destructor Destroy; override;
 end;
@@ -736,12 +857,14 @@ type
     hivchild: ^LeapfrogHivChildParamsView;
     spectrum: ^LeapfrogSpectrumParamsView;
     goals: ^LeapfrogGoalsParamsView;
+    virgin: ^LeapfrogVirginParamsView;
   public
     procedure SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);
     procedure SetHivAdultParams(const hivadultParams: LeapfrogHivAdultParamsView);
     procedure SetHivChildParams(const hivchildParams: LeapfrogHivChildParamsView);
     procedure SetSpectrumParams(const spectrumParams: LeapfrogSpectrumParamsView);
     procedure SetGoalsParams(const goalsParams: LeapfrogGoalsParamsView);
+    procedure SetVirginParams(const virginParams: LeapfrogVirginParamsView);
 end;
 
 {$ALIGN 8}
@@ -753,12 +876,14 @@ type
     hivchild: ^LeapfrogHivChildStateView;
     spectrum: ^LeapfrogSpectrumStateView;
     goals: ^LeapfrogGoalsStateView;
+    virgin: ^LeapfrogVirginStateView;
   public
     procedure SetDemProjState(const demprojState: LeapfrogDemProjStateView);
     procedure SetHivAdultState(const hivadultState: LeapfrogHivAdultStateView);
     procedure SetHivChildState(const hivchildState: LeapfrogHivChildStateView);
     procedure SetSpectrumState(const spectrumState: LeapfrogSpectrumStateView);
     procedure SetGoalsState(const goalsState: LeapfrogGoalsStateView);
+    procedure SetVirginState(const virginState: LeapfrogVirginStateView);
 end;
 
 type TCallbackFunction = procedure(Msg: PAnsiChar); stdcall;
@@ -838,6 +963,7 @@ begin;
   fertMultOnArt.Free;
   pwidPropHivpop.Free;
   pwidSexRatio.Free;
+  artInitiationRate.Free;
   inherited;
 end;
 
@@ -930,6 +1056,10 @@ begin;
   Result.pwidPropHivpopLength := pwidPropHivpop.GetLength();
   Result.pwidSexRatio := PDouble(pwidSexRatio.data);
   Result.pwidSexRatioLength := pwidSexRatio.GetLength();
+  Result.artEntryOption := artEntryOption;
+  Result.artEntryOptionLength := 1;
+  Result.artInitiationRate := PDouble(artInitiationRate.data);
+  Result.artInitiationRateLength := artInitiationRate.GetLength();
 end;
 
 function LeapfrogHivAdultState.getView(): LeapfrogHivAdultStateView;
@@ -974,7 +1104,7 @@ end;
 
 destructor LeapfrogHivChildParams.Destroy;
 begin;
-  hcNosocomial.Free;
+  hcNosocomialInfectionsByAge.Free;
   hc1Cd4Dist.Free;
   hc1Cd4Mort.Free;
   hc2Cd4Mort.Free;
@@ -988,6 +1118,7 @@ begin;
   hc2ArtMort.Free;
   hcArtIsperc.Free;
   hcArtVal.Free;
+  hcArtValTotal.Free;
   hcArtInitDist.Free;
   pmtct.Free;
   verticalTransmissionRate.Free;
@@ -1025,6 +1156,7 @@ begin;
   hc1ArtAidsDeaths.Free;
   hc2ArtAidsDeaths.Free;
   hcArtInit.Free;
+  hcArtInitTotal.Free;
   hcArtNeedInit.Free;
   ctxNeed.Free;
   infectionByType.Free;
@@ -1032,13 +1164,14 @@ begin;
   mtctBySourceWomen.Free;
   mtctBySourceHcInfections.Free;
   pmtctCoverageAtDelivery.Free;
+  pmtctNeed.Free;
   inherited;
 end;
 
 function LeapfrogHivChildParams.getView(): LeapfrogHivChildParamsView;
 begin;
-  Result.hcNosocomial := PDouble(hcNosocomial.data);
-  Result.hcNosocomialLength := hcNosocomial.GetLength();
+  Result.hcNosocomialInfectionsByAge := PDouble(hcNosocomialInfectionsByAge.data);
+  Result.hcNosocomialInfectionsByAgeLength := hcNosocomialInfectionsByAge.GetLength();
   Result.hc1Cd4Dist := PDouble(hc1Cd4Dist.data);
   Result.hc1Cd4DistLength := hc1Cd4Dist.GetLength();
   Result.hc1Cd4Mort := PDouble(hc1Cd4Mort.data);
@@ -1065,6 +1198,8 @@ begin;
   Result.hcArtIspercLength := hcArtIsperc.GetLength();
   Result.hcArtVal := PDouble(hcArtVal.data);
   Result.hcArtValLength := hcArtVal.GetLength();
+  Result.hcArtValTotal := PDouble(hcArtValTotal.data);
+  Result.hcArtValTotalLength := hcArtValTotal.GetLength();
   Result.hcArtInitDist := PDouble(hcArtInitDist.data);
   Result.hcArtInitDistLength := hcArtInitDist.GetLength();
   Result.pmtct := PDouble(pmtct.data);
@@ -1135,6 +1270,8 @@ begin;
   Result.hc2ArtAidsDeathsLength := hc2ArtAidsDeaths.GetLength();
   Result.hcArtInit := PDouble(hcArtInit.data);
   Result.hcArtInitLength := hcArtInit.GetLength();
+  Result.hcArtInitTotal := PDouble(hcArtInitTotal.data);
+  Result.hcArtInitTotalLength := hcArtInitTotal.GetLength();
   Result.hcArtNeedInit := PDouble(hcArtNeedInit.data);
   Result.hcArtNeedInitLength := hcArtNeedInit.GetLength();
   Result.ctxNeed := PDouble(ctxNeed.data);
@@ -1149,6 +1286,8 @@ begin;
   Result.mtctBySourceHcInfectionsLength := mtctBySourceHcInfections.GetLength();
   Result.pmtctCoverageAtDelivery := PDouble(pmtctCoverageAtDelivery.data);
   Result.pmtctCoverageAtDeliveryLength := pmtctCoverageAtDelivery.GetLength();
+  Result.pmtctNeed := PDouble(pmtctNeed.data);
+  Result.pmtctNeedLength := pmtctNeed.GetLength();
 end;
 
 destructor LeapfrogSpectrumParams.Destroy;
@@ -1203,10 +1342,13 @@ begin;
   rnCureEffect.Free;
   rnCureCoverageRg.Free;
   rnCureCoverageAll.Free;
+  rnCureCoverageNeonates.Free;
+  rnVmmCoverageRg.Free;
+  rnVmmCoverageAll.Free;
   rnCoverage.Free;
   rnPocCov.Free;
   rnPocEffect.Free;
-  rnAdhTreatCov.Free;
+  rnAhdTreatCov.Free;
   rnVacParams.Free;
   rnVacCoverageRg.Free;
   rnVacCoverageAll.Free;
@@ -1214,7 +1356,11 @@ begin;
   rnPopSizes.Free;
   hvImpactMatrix.Free;
   artCoverageRg.Free;
-  artCovNumPercent.Free;
+  popEligTreat.Free;
+  popEligYear.Free;
+  programSupportMarkup.Free;
+  longActTreatCov.Free;
+  artInterruptRate.Free;
   inherited;
 end;
 
@@ -1239,12 +1385,19 @@ begin;
   prevalence.Free;
   totalPrevalence.Free;
   newlyOnArt.Free;
+  totalOnArt.Free;
+  totalPlhiv.Free;
   multNoArt.Free;
   multArt.Free;
   newInfVrs.Free;
   newInfS.Free;
   numPeopleReached.Free;
   resourcesRequired.Free;
+  newInfScaleFactor.Free;
+  totalNewVaccinations.Free;
+  totalVaccinated.Free;
+  total15hivp.Free;
+  total15hivn.Free;
   inherited;
 end;
 
@@ -1312,16 +1465,28 @@ begin;
   Result.rnCureCoverageAllLength := rnCureCoverageAll.GetLength();
   Result.rnCureCoverageType := rnCureCoverageType;
   Result.rnCureCoverageTypeLength := 1;
+  Result.rnCureCoverageNeonates := PDouble(rnCureCoverageNeonates.data);
+  Result.rnCureCoverageNeonatesLength := rnCureCoverageNeonates.GetLength();
+  Result.rnCureEffectNeonates := rnCureEffectNeonates;
+  Result.rnCureEffectNeonatesLength := 1;
+  Result.rnVmmEffect := rnVmmEffect;
+  Result.rnVmmEffectLength := 1;
+  Result.rnVmmCoverageRg := PDouble(rnVmmCoverageRg.data);
+  Result.rnVmmCoverageRgLength := rnVmmCoverageRg.GetLength();
+  Result.rnVmmCoverageAll := PDouble(rnVmmCoverageAll.data);
+  Result.rnVmmCoverageAllLength := rnVmmCoverageAll.GetLength();
+  Result.rnVmmCoverageType := rnVmmCoverageType;
+  Result.rnVmmCoverageTypeLength := 1;
   Result.rnCoverage := PDouble(rnCoverage.data);
   Result.rnCoverageLength := rnCoverage.GetLength();
   Result.rnPocCov := PDouble(rnPocCov.data);
   Result.rnPocCovLength := rnPocCov.GetLength();
   Result.rnPocEffect := PDouble(rnPocEffect.data);
   Result.rnPocEffectLength := rnPocEffect.GetLength();
-  Result.rnAdhTreatCov := PDouble(rnAdhTreatCov.data);
-  Result.rnAdhTreatCovLength := rnAdhTreatCov.GetLength();
-  Result.rnAdhTreatReducMort := rnAdhTreatReducMort;
-  Result.rnAdhTreatReducMortLength := 1;
+  Result.rnAhdTreatCov := PDouble(rnAhdTreatCov.data);
+  Result.rnAhdTreatCovLength := rnAhdTreatCov.GetLength();
+  Result.rnAhdTreatReducMort := rnAhdTreatReducMort;
+  Result.rnAhdTreatReducMortLength := 1;
   Result.rnVacParams := PDouble(rnVacParams.data);
   Result.rnVacParamsLength := rnVacParams.GetLength();
   Result.rnVacCoverageRg := PDouble(rnVacCoverageRg.data);
@@ -1332,16 +1497,32 @@ begin;
   Result.rnVacCovTypeLength := 1;
   Result.rnVacTargetting := rnVacTargetting;
   Result.rnVacTargettingLength := 1;
+  Result.rnVacType := rnVacType;
+  Result.rnVacTypeLength := 1;
   Result.rnUnitCosts := PDouble(rnUnitCosts.data);
   Result.rnUnitCostsLength := rnUnitCosts.GetLength();
   Result.rnPopSizes := PDouble(rnPopSizes.data);
   Result.rnPopSizesLength := rnPopSizes.GetLength();
   Result.hvImpactMatrix := PDouble(hvImpactMatrix.data);
   Result.hvImpactMatrixLength := hvImpactMatrix.GetLength();
+  Result.hvImpactData := hvImpactData;
+  Result.hvImpactDataLength := 1;
   Result.artCoverageRg := PDouble(artCoverageRg.data);
   Result.artCoverageRgLength := artCoverageRg.GetLength();
-  Result.artCovNumPercent := PInteger(artCovNumPercent.data);
-  Result.artCovNumPercentLength := artCovNumPercent.GetLength();
+  Result.popEligTreat := PInteger(popEligTreat.data);
+  Result.popEligTreatLength := popEligTreat.GetLength();
+  Result.popEligYear := PInteger(popEligYear.data);
+  Result.popEligYearLength := popEligYear.GetLength();
+  Result.programSupportMarkup := PDouble(programSupportMarkup.data);
+  Result.programSupportMarkupLength := programSupportMarkup.GetLength();
+  Result.longActTreatCov := PDouble(longActTreatCov.data);
+  Result.longActTreatCovLength := longActTreatCov.GetLength();
+  Result.longActTreatEffVls := longActTreatEffVls;
+  Result.longActTreatEffVlsLength := 1;
+  Result.longActTreatEffLtfu := longActTreatEffLtfu;
+  Result.longActTreatEffLtfuLength := 1;
+  Result.artInterruptRate := PDouble(artInterruptRate.data);
+  Result.artInterruptRateLength := artInterruptRate.GetLength();
 end;
 
 function LeapfrogGoalsState.getView(): LeapfrogGoalsStateView;
@@ -1384,6 +1565,10 @@ begin;
   Result.totalPrevalenceLength := totalPrevalence.GetLength();
   Result.newlyOnArt := PDouble(newlyOnArt.data);
   Result.newlyOnArtLength := newlyOnArt.GetLength();
+  Result.totalOnArt := PDouble(totalOnArt.data);
+  Result.totalOnArtLength := totalOnArt.GetLength();
+  Result.totalPlhiv := PDouble(totalPlhiv.data);
+  Result.totalPlhivLength := totalPlhiv.GetLength();
   Result.multNoArt := PDouble(multNoArt.data);
   Result.multNoArtLength := multNoArt.GetLength();
   Result.multArt := PDouble(multArt.data);
@@ -1396,6 +1581,49 @@ begin;
   Result.numPeopleReachedLength := numPeopleReached.GetLength();
   Result.resourcesRequired := PDouble(resourcesRequired.data);
   Result.resourcesRequiredLength := resourcesRequired.GetLength();
+  Result.newInfScaleFactor := PDouble(newInfScaleFactor.data);
+  Result.newInfScaleFactorLength := newInfScaleFactor.GetLength();
+  Result.totalNewVaccinations := PDouble(totalNewVaccinations.data);
+  Result.totalNewVaccinationsLength := totalNewVaccinations.GetLength();
+  Result.totalVaccinated := PDouble(totalVaccinated.data);
+  Result.totalVaccinatedLength := totalVaccinated.GetLength();
+  Result.total15hivp := PDouble(total15hivp.data);
+  Result.total15hivpLength := total15hivp.GetLength();
+  Result.total15hivn := PDouble(total15hivn.data);
+  Result.total15hivnLength := total15hivn.GetLength();
+end;
+
+destructor LeapfrogVirginParams.Destroy;
+begin;
+  sexdebutAnnualProb.Free;
+  inherited;
+end;
+
+destructor LeapfrogVirginState.Destroy;
+begin;
+  pTotpopVirgin.Free;
+  pHivpopVirgin.Free;
+  hHivpopVirgin.Free;
+  hArtpopVirgin.Free;
+  inherited;
+end;
+
+function LeapfrogVirginParams.getView(): LeapfrogVirginParamsView;
+begin;
+  Result.sexdebutAnnualProb := PDouble(sexdebutAnnualProb.data);
+  Result.sexdebutAnnualProbLength := sexdebutAnnualProb.GetLength();
+end;
+
+function LeapfrogVirginState.getView(): LeapfrogVirginStateView;
+begin;
+  Result.pTotpopVirgin := PDouble(pTotpopVirgin.data);
+  Result.pTotpopVirginLength := pTotpopVirgin.GetLength();
+  Result.pHivpopVirgin := PDouble(pHivpopVirgin.data);
+  Result.pHivpopVirginLength := pHivpopVirgin.GetLength();
+  Result.hHivpopVirgin := PDouble(hHivpopVirgin.data);
+  Result.hHivpopVirginLength := hHivpopVirgin.GetLength();
+  Result.hArtpopVirgin := PDouble(hArtpopVirgin.data);
+  Result.hArtpopVirginLength := hArtpopVirgin.GetLength();
 end;
 
 procedure LeapfrogDemProjParams.writeToDisk(dir: string);
@@ -1443,6 +1671,7 @@ begin;
   fertMultOnArt.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'fertMultOnArt');
   pwidPropHivpop.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pwidPropHivpop');
   pwidSexRatio.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pwidSexRatio');
+  artInitiationRate.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artInitiationRate');
 end;
 
 procedure LeapfrogHivAdultState.writeToDisk(dir: string);
@@ -1472,7 +1701,7 @@ procedure LeapfrogHivChildParams.writeToDisk(dir: string);
 begin;
   if not DirectoryExists(dir) then
     ForceDirectories(dir);
-  hcNosocomial.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hcNosocomial');
+  hcNosocomialInfectionsByAge.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hcNosocomialInfectionsByAge');
   hc1Cd4Dist.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hc1Cd4Dist');
   hc1Cd4Mort.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hc1Cd4Mort');
   hc2Cd4Mort.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hc2Cd4Mort');
@@ -1486,6 +1715,7 @@ begin;
   hc2ArtMort.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hc2ArtMort');
   hcArtIsperc.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hcArtIsperc');
   hcArtVal.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hcArtVal');
+  hcArtValTotal.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hcArtValTotal');
   hcArtInitDist.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hcArtInitDist');
   pmtct.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pmtct');
   verticalTransmissionRate.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'verticalTransmissionRate');
@@ -1572,10 +1802,13 @@ begin;
   rnCureEffect.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnCureEffect');
   rnCureCoverageRg.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnCureCoverageRg');
   rnCureCoverageAll.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnCureCoverageAll');
+  rnCureCoverageNeonates.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnCureCoverageNeonates');
+  rnVmmCoverageRg.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnVmmCoverageRg');
+  rnVmmCoverageAll.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnVmmCoverageAll');
   rnCoverage.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnCoverage');
   rnPocCov.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnPocCov');
   rnPocEffect.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnPocEffect');
-  rnAdhTreatCov.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnAdhTreatCov');
+  rnAhdTreatCov.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnAhdTreatCov');
   rnVacParams.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnVacParams');
   rnVacCoverageRg.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnVacCoverageRg');
   rnVacCoverageAll.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnVacCoverageAll');
@@ -1583,7 +1816,11 @@ begin;
   rnPopSizes.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'rnPopSizes');
   hvImpactMatrix.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hvImpactMatrix');
   artCoverageRg.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCoverageRg');
-  artCovNumPercent.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artCovNumPercent');
+  popEligTreat.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'popEligTreat');
+  popEligYear.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'popEligYear');
+  programSupportMarkup.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'programSupportMarkup');
+  longActTreatCov.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'longActTreatCov');
+  artInterruptRate.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'artInterruptRate');
 end;
 
 procedure LeapfrogGoalsState.writeToDisk(dir: string);
@@ -1608,6 +1845,26 @@ begin;
   newInfS.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newInfS');
   numPeopleReached.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'numPeopleReached');
   resourcesRequired.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'resourcesRequired');
+  newInfScaleFactor.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'newInfScaleFactor');
+  total15hivp.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'total15hivp');
+  total15hivn.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'total15hivn');
+end;
+
+procedure LeapfrogVirginParams.writeToDisk(dir: string);
+begin;
+  if not DirectoryExists(dir) then
+    ForceDirectories(dir);
+  sexdebutAnnualProb.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'sexdebutAnnualProb');
+end;
+
+procedure LeapfrogVirginState.writeToDisk(dir: string);
+begin;
+  if not DirectoryExists(dir) then
+    ForceDirectories(dir);
+  pTotpopVirgin.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pTotpopVirgin');
+  pHivpopVirgin.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'pHivpopVirgin');
+  hHivpopVirgin.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hHivpopVirgin');
+  hArtpopVirgin.WriteToDisk(IncludeTrailingPathDelimiter(dir) +  'hArtpopVirgin');
 end;
 
 procedure LeapfrogParams.SetDemProjParams(const demprojParams: LeapfrogDemProjParamsView);
@@ -1658,6 +1915,16 @@ end;
 procedure LeapfrogState.SetGoalsState(const goalsState: LeapfrogGoalsStateView);
 begin
   goals := @goalsState;
+end;
+
+procedure LeapfrogParams.SetVirginParams(const virginParams: LeapfrogVirginParamsView);
+begin
+  virgin := @virginParams;
+end;
+
+procedure LeapfrogState.SetVirginState(const virginState: LeapfrogVirginStateView);
+begin
+  virgin := @virginState;
 end;
 
 end.

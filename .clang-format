@@ -1,0 +1,33 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+
+# Indentation
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+AccessModifierOffset: 0
+NamespaceIndentation: None
+ConstructorInitializerIndentWidth: 4
+
+# Line length
+ColumnLimit: 120
+
+# Braces and breaks
+BreakBeforeBraces: Attach
+BreakConstructorInitializers: AfterColon
+
+# Alignment
+PointerAlignment: Left
+ReferenceAlignment: Left
+AlignOperands: Align
+BreakBeforeBinaryOperators: None
+
+# Short constructs
+AllowShortFunctionsOnASingleLine: Empty
+
+# Spaces
+SpaceBeforeParens: ControlStatements
+
+# Includes — preserve intentional ordering (project headers before system headers)
+SortIncludes: Never

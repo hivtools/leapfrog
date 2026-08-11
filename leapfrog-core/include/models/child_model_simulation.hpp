@@ -46,7 +46,7 @@ struct ChildModelSimulation<Config> {
   static constexpr int hc2DS = SS::hc2DS;
   static constexpr int hPS = SS::hPS;
   static constexpr int hBF = SS::hBF;
-  static constexpr int hcAG_coarse = SS::hcAG_coarse;
+  static constexpr int hcAG_c = SS::hcAG_c;
   static constexpr int p_idx_fertility_first = SS::p_idx_fertility_first;
   static constexpr int hAG_fertility = SS::hAG_fertility;
   static constexpr int p_idx_hiv_first_adult = SS::p_idx_hiv_first_adult;
@@ -164,6 +164,13 @@ struct ChildModelSimulation<Config> {
 
     nosocomial_infections();
     fill_total_pop_outputs();
+
+    if constexpr (ModelVariant::run_goals) {
+      if (t > pars.hv.goals_base_year_idx) {
+        apply_goals_cure(t);
+      }
+    }
+
   };
 
   // private methods that we don't want people to call
@@ -176,10 +183,12 @@ struct ChildModelSimulation<Config> {
     for (int s = 0; s < NS; ++s) {
       // less than 5 because there is a cd4 transition between ages 4 and 5
       for (int a = 1; a < hc2_agestart; ++a) {
-        for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc1DS; ++hd) {
             n_hc.hc1_hivpop(hd, cat, a, s) += c_hc.hc1_hivpop(hd, cat, a - 1, s) * p_dp.survival_probability(a, s, t);
           }
+        }
+        for (int hd = 0; hd < hc1DS; ++hd) {
           for (int dur = 0; dur < hTS; ++dur) {
             n_hc.hc1_artpop(dur, hd, a, s) += c_hc.hc1_artpop(dur, hd, a - 1, s) * p_dp.survival_probability(a, s, t);
           }
@@ -189,12 +198,14 @@ struct ChildModelSimulation<Config> {
 
     for (int s = 0; s < NS; ++s) {
       for (int hd = 0; hd < hc1DS; ++hd) {
-        for (int hd_alt = 0; hd_alt < hc2DS; ++hd_alt) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd_alt = 0; hd_alt < hc2DS; ++hd_alt) {
             n_hc.hc2_hivpop(hd_alt, cat, 0, s) += c_hc.hc1_hivpop(hd, cat, (hc2_agestart-1), s) *
                                                    p_dp.survival_probability(hc2_agestart, s, t) *
                                                    hc1_to_hc2_cd4_transition[hd_alt][hd];
           }
+        }
+        for (int hd_alt = 0; hd_alt < hc2DS; ++hd_alt) {
           for (int dur = 0; dur < hTS; ++dur) {
             n_hc.hc2_artpop(dur, hd_alt, 0, s) += c_hc.hc1_artpop(dur, hd, (hc2_agestart-1), s) *
                                                    p_dp.survival_probability(hc2_agestart, s, t) *
@@ -206,11 +217,13 @@ struct ChildModelSimulation<Config> {
 
     for (int s = 0; s < NS; ++s) {
       for (int a = (hc2_agestart + 1); a < hcAG_end; ++a) {
-        for (int hd = 0; hd < hc2DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc2DS; ++hd) {
             n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) += c_hc.hc2_hivpop(hd, cat, a - hc2_agestart - 1, s) *
                                                               p_dp.survival_probability(a, s, t);
           }
+        }
+        for (int hd = 0; hd < hc2DS; ++hd) {
           for (int dur = 0; dur < hTS; ++dur) {
             n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s) += c_hc.hc2_artpop(dur, hd, a - hc2_agestart - 1, s) *
                                                               p_dp.survival_probability(a, s, t);
@@ -262,24 +275,24 @@ struct ChildModelSimulation<Config> {
       sumARV += p_hc.PMTCT(hp, t);
     }
 
-    i_hc.need_PMTCT = std::max(sumARV, n_ha.hiv_births);
+    n_hc.pmtct_need = std::max(sumARV, n_ha.hiv_births);
 
     i_hc.on_PMTCT = sumARV + p_hc.patients_reallocated(t);
-    i_hc.on_PMTCT = std::min(i_hc.on_PMTCT, i_hc.need_PMTCT);
+    i_hc.on_PMTCT = std::min(i_hc.on_PMTCT, n_hc.pmtct_need);
 
     // replace all instances of coverage input as numbers with percentage covered
     if (p_hc.PMTCT_input_is_percent(t)) {
       for (int hp = 0; hp < hPS; ++hp) {
         i_hc.PMTCT_coverage(hp) = p_hc.PMTCT(hp, t) / 100;
       } // end hPS
-      sumARV *= i_hc.need_PMTCT;
+      sumARV = sumARV * n_hc.pmtct_need;
     } else {
       for (int hp = 0; hp < hPS; ++hp) {
         if (sumARV == 0) {
           i_hc.PMTCT_coverage(hp) = 0.0;
         } else {
           i_hc.PMTCT_coverage(hp) = p_hc.PMTCT(hp, t) / sumARV *
-            i_hc.on_PMTCT / i_hc.need_PMTCT ;
+            i_hc.on_PMTCT / n_hc.pmtct_need;
           if(hp == BPLUS_BEFORE){
             //Dropped off ART, started before
             n_hc.mtct_by_source_women(BPLUS_BEFORE_DROPOUT) += p_hc.PMTCT(hp, t) * (1 - p_hc.PMTCT_dropout(hp, 0, t)); //number
@@ -299,8 +312,8 @@ struct ChildModelSimulation<Config> {
       }// end hPS
 
       //No ART
-      n_hc.mtct_by_source_women(NO_ART) = i_hc.need_PMTCT;
-      for(int ms = 0; ms < mtct_source; ms++){
+      n_hc.mtct_by_source_women(NO_ART) = n_hc.pmtct_need;
+      for(int ms = 0; ms < mtct_source; ++ms){
         if(ms != NO_ART){
           n_hc.mtct_by_source_women(NO_ART) -= n_hc.mtct_by_source_women(ms);
         }
@@ -375,7 +388,7 @@ struct ChildModelSimulation<Config> {
     // option AB will be less effective for these women so we adjust for that
     calc_wlhiv_cd4_proportion();
 
-    auto option_A_B_coverage = i_hc.PMTCT_coverage(0) + i_hc.PMTCT_coverage(1);
+    const auto option_A_B_coverage = i_hc.PMTCT_coverage(0) + i_hc.PMTCT_coverage(1);
     real_type excessratio = 0.0;
     if (option_A_B_coverage > i_hc.prop_wlhiv_gte350) {
       if (i_hc.prop_wlhiv_gte350 > 0) {
@@ -424,12 +437,12 @@ struct ChildModelSimulation<Config> {
 
     // Transmission due to incident infections
     real_type asfr_sum = 0.0;
+    real_type age_weighted_hivneg = 0.0;
+    real_type age_weighted_infections = 0.0;
     for (int a = 0; a < hAG_fertility; ++a) {
       asfr_sum += p_hc.hc_age_specific_fertility_rate(a, t);
     } // end a
 
-    real_type age_weighted_hivneg = 0.0;
-    real_type age_weighted_infections = 0.0;
     if (p_hc.mat_prev_input(t)) {
       for (int a = 0; a < hAG_fertility; ++a) {
         auto asfr_weight = p_hc.hc_age_specific_fertility_rate(a, t) / asfr_sum;
@@ -441,9 +454,9 @@ struct ChildModelSimulation<Config> {
         i_hc.incidence_rate_wlhiv = age_weighted_infections / age_weighted_hivneg;
         // 0.75 is 9/12, gestational period, index 7 in the vertical transmission object is the index for maternal seroconversion
         i_hc.perinatal_transmission_from_incidence = i_hc.incidence_rate_wlhiv * 0.75 *
-                                                     (p_hc.total_births(t) - i_hc.need_PMTCT) *
+                                                     (p_hc.total_births(t) - n_hc.pmtct_need) *
                                                      p_hc.vertical_transmission_rate(7, 0);
-        n_hc.mtct_by_source_women(8) = i_hc.incidence_rate_wlhiv * 0.75 * (p_hc.total_births(t) - i_hc.need_PMTCT);
+        n_hc.mtct_by_source_women(8) = i_hc.incidence_rate_wlhiv * 0.75 * (p_hc.total_births(t) - n_hc.pmtct_need);
       } else {
         i_hc.incidence_rate_wlhiv = 0.0;
         i_hc.perinatal_transmission_from_incidence = 0.0;
@@ -459,7 +472,7 @@ struct ChildModelSimulation<Config> {
         i_hc.incidence_rate_wlhiv = age_weighted_infections / age_weighted_hivneg;
         //0.75 is 9/12, gestational period, index 7 in the vertical trasnmission object is the index for maternal seroconversion
         i_hc.perinatal_transmission_from_incidence = i_hc.incidence_rate_wlhiv * 0.75 *
-                                                     (n_dp.births - i_hc.need_PMTCT) *
+                                                     (n_dp.births - n_hc.pmtct_need) *
                                                      p_hc.vertical_transmission_rate(7, 0);
       } else {
         i_hc.incidence_rate_wlhiv = 0.0;
@@ -485,7 +498,7 @@ struct ChildModelSimulation<Config> {
     real_type receiving_PMTCT = 0.0;
     for (int hp = 0; hp < hPS; ++hp) {
       receiving_PMTCT += i_hc.PMTCT_coverage(hp);
-    }
+     }
     const real_type no_PMTCT = std::max(1 - receiving_PMTCT, 0.0);
 
 
@@ -521,9 +534,9 @@ struct ChildModelSimulation<Config> {
 
     maternal_incidence_in_pregnancy_tr();
 
-    if (i_hc.need_PMTCT > 0.0) {
-      i_hc.perinatal_transmission_rate += i_hc.perinatal_transmission_from_incidence / i_hc.need_PMTCT;
-      n_hc.mtct_by_source_tr(MAT_SERO,0) = i_hc.perinatal_transmission_from_incidence / i_hc.need_PMTCT;
+    if (n_hc.pmtct_need > 0.0) {
+      i_hc.perinatal_transmission_rate += i_hc.perinatal_transmission_from_incidence / n_hc.pmtct_need;
+      n_hc.mtct_by_source_tr(MAT_SERO,0) = i_hc.perinatal_transmission_from_incidence / n_hc.pmtct_need;
     }
   };
 
@@ -648,15 +661,17 @@ struct ChildModelSimulation<Config> {
     auto& n_hc = state_next.hc;
 
     for (int s = 0; s < NS; ++s) {
-      // Run only first 5 age groups in total population 0, 1, 2, 3, 4
-      for (int a = 0; a < hc2_agestart; ++a) {
-        if (p_hc.hc_nosocomial(t) > 0) {
-          // 5.0 is used because we want to evenly distribute across the 5 age groups in 0-4
-          n_ha.p_infections(a, s) = p_hc.hc_nosocomial(t) / (5.0 * NS);
-          // Putting all nosocomial acquired HIV infections in perinatally acquired infection timing and highest CD4 category to match Spectrum implementation
-          n_hc.hc1_hivpop(0, 0, a, s) += n_ha.p_infections(a, s);
+      for (int a = 0; a < hcAG_end; ++a) {
+        if (const auto infections_raw = p_hc.hc_nosocomial_infections_by_age(a, t); infections_raw > 0) {
+          const auto infections = infections_raw / NS;
+          n_ha.p_infections(a, s) += infections;
+          if (a < hc2_agestart) {
+            n_hc.hc1_hivpop(0, 0, a, s) += infections;
+          } else {
+            n_hc.hc2_hivpop(0, 0, a - hc2_agestart, s) += infections;
+          }
         }
-      } // end a
+      }
     } // end NS
   };
 
@@ -815,8 +830,8 @@ struct ChildModelSimulation<Config> {
 
     // all children under a certain CD4 eligible for ART
     for (int s = 0; s < NS; ++s) {
-      for (int cat = 0; cat < hcTT; ++cat) {
-        for (int a = hc_art_elig_age; a < hcAG_end; ++a) {
+      for (int a = hc_art_elig_age; a < hcAG_end; ++a) {
+        for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc1DS; ++hd) {
             if (hd >= p_hc.hc_art_elig_cd4(a, t)) {
               if (a < hc2_agestart) {
@@ -826,8 +841,8 @@ struct ChildModelSimulation<Config> {
               }
             }
           } // end hc1DS
-        } // end a
-      } // end hcTT
+        } // end hcTT
+      } // end a
     } // end NS
   };
 
@@ -858,30 +873,30 @@ struct ChildModelSimulation<Config> {
     // Children under five on ART also eligible
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hc2_agestart; ++a) {
-        for (int dur = 0; dur < hTS; ++dur) {
-          for (int hd = 0; hd < hc1DS; ++hd) {
+        for (int hd = 0; hd < hc1DS; ++hd) {
+          for (int dur = 0; dur < hTS; ++dur) {
             if (a == age_1) {
               n_hc.ctx_need += n_hc.hc1_artpop(dur, hd, a, s) * 0.5;
             } else {
               n_hc.ctx_need += n_hc.hc1_artpop(dur, hd, a, s) ;
             }
-          } // end hc1DS
-        } // end a
-      } // end hcTT
+          } // end hTS
+        } // end hc1DS
+      } // end hc2_agestart
     } // end NS
 
     // All ART eligible children ages 5-14 eligible
     // Spectrum uses a lagged population and eligibility for children over five (TODO: verify, noted in issue #274)
     for (int s = 0; s < NS; ++s) {
-      for (int cat = 0; cat < hcTT; ++cat) {
-        for (int a = hc2_agestart; a < hcAG_end; ++a) {
+      for (int a = hc2_agestart; a < hcAG_end; ++a) {
+        for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc2DS; ++hd) {
             if (a < p_hc.hc_art_elig_age(t) || hd >= p_hc.hc_art_elig_cd4(a, t - 1)) {
               n_hc.ctx_need += c_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
             }
-          } // end hc1DS
-        } // end a
-      } // end hcTT
+          } // end hc2DS
+        } // end hcTT
+      } // end hcAG_end
     } // end NS
   };
 
@@ -931,9 +946,9 @@ struct ChildModelSimulation<Config> {
 
     // progress through CD4 categories
     for (int s = 0; s < NS; ++s) {
-      for (int hd = 1; hd < hc1DS; ++hd) {
-        for (int a = 0; a < hc2_agestart; ++a) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+      for (int a = 0; a < hc2_agestart; ++a) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 1; hd < hc1DS; ++hd) {
             const auto& coarse_hc1_cd4_prog = p_hc.hc1_cd4_prog(hd - 1, hc_age_coarse_cd4[a], s);
             auto cd4_grad = coarse_hc1_cd4_prog *
                             (i_hc.hc_posthivmort(hd - 1, cat, a, s) + n_hc.hc1_hivpop(hd - 1, cat, a, s)) /
@@ -947,9 +962,9 @@ struct ChildModelSimulation<Config> {
 
     // progress through CD4 categories
     for (int s = 0; s < NS; ++s) {
-      for (int hd = 1; hd < hc2DS; ++hd) {
-        for (int a = hc2_agestart; a < hcAG_end; ++a) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+      for (int a = hc2_agestart; a < hcAG_end; ++a) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 1; hd < hc2DS; ++hd) {
             auto cd4_grad = p_hc.hc2_cd4_prog(hd - 1, 0, s) *
                             (i_hc.hc_posthivmort(hd - 1, cat, a, s) + n_hc.hc2_hivpop(hd - 1, cat, a - hc2_agestart, s)) /
                             2.0;
@@ -1055,14 +1070,14 @@ struct ChildModelSimulation<Config> {
           if (t_art_idx == 0) {
             if (a < hc2_agestart) {
               hc_death_rate = p_hc.hc_art_mort_rr(t_art_idx, a, t) *
-                              (p_hc.hc1_art_mort(hd, 0, a) + p_hc.hc1_art_mort(hd, 1, a)) /
-                              2.0;
+                                   (p_hc.hc1_art_mort(hd, 0, a) + p_hc.hc1_art_mort(hd, 1, a)) /
+                                   2.0;
             } else if (hd < hc2DS) {
               bool is_hc2_artpop = n_hc.hc2_artpop(t_art_idx, hd, a - hc2_agestart, s) > 0;
               if (is_hc2_artpop) {
                 hc_death_rate = p_hc.hc_art_mort_rr(t_art_idx, a, t) *
-                                (p_hc.hc2_art_mort(hd, 0, a - hc2_agestart) + p_hc.hc2_art_mort(hd, 1, a - hc2_agestart)) /
-                                2.0;
+                                     (p_hc.hc2_art_mort(hd, 0, a - hc2_agestart) + p_hc.hc2_art_mort(hd, 1, a - hc2_agestart)) /
+                                     2.0;
               }
             }
           } else {
@@ -1105,23 +1120,23 @@ struct ChildModelSimulation<Config> {
     auto& n_hc = state_next.hc;
     auto& i_hc = intermediate.hc;
 
-    for (int dur = 0; dur < hTS; ++dur) {
-      for (int s = 0; s < NS; ++s) {
+    for (int s = 0; s < NS; ++s) {
+      for (int a = 0; a < hcAG_end; ++a) {
         for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int a = 0; a < hcAG_end; ++a) {
+          for (int dur = 0; dur < hTS; ++dur) {
             real_type hc_death_rate = 0.0;
 
             if (dur == 0) {
               if (a < hc2_agestart) {
                 hc_death_rate = p_hc.hc_art_mort_rr(dur, a, t) *
-                                (p_hc.hc1_art_mort(hd, 0, a) + p_hc.hc1_art_mort(hd, 1, a)) /
-                                2.0;
+                                     (p_hc.hc1_art_mort(hd, 0, a) + p_hc.hc1_art_mort(hd, 1, a)) /
+                                     2.0;
               } else if (hd < hc2DS) {
                 bool is_hc2_artpop = n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s) > 0;
                 if (is_hc2_artpop) {
                   hc_death_rate = p_hc.hc_art_mort_rr(dur, a, t) *
-                                  (p_hc.hc2_art_mort(hd, 0, a - hc2_agestart) + p_hc.hc2_art_mort(hd, 1, a - hc2_agestart)) /
-                                  2.0;
+                                       (p_hc.hc2_art_mort(hd, 0, a - hc2_agestart) + p_hc.hc2_art_mort(hd, 1, a - hc2_agestart)) /
+                                       2.0;
                 }
               }
             } else {
@@ -1150,24 +1165,20 @@ struct ChildModelSimulation<Config> {
                                                              n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
               }
             }
-          } // end a
+          } // end hTS
         } // end hc1DS
-      } // end NS
-    } // end dur
+      } // end hcAG_end
+    } // end NS
 
-    i_hc.hc_art_deaths(0) = 0.0;
-    for (int hca = 1; hca < hcAG_coarse; ++hca) {
-     i_hc.hc_art_deaths(0) += i_hc.hc_art_deaths(hca);
-    }
   };
 
   void progress_time_on_art(int curr_t_idx, int end_t_idx) {
     auto& n_hc = state_next.hc;
 
     // Progress ART to the correct time on ART
-    for (int hd = 0; hd < hc1DS; ++hd) {
+    for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
-        for (int s = 0; s < NS; ++s) {
+        for (int hd = 0; hd < hc1DS; ++hd) {
           if (a < hc2_agestart) {
             if (n_hc.hc1_artpop(curr_t_idx, hd, a, s) > 0) {
               n_hc.hc1_artpop(end_t_idx, hd, a, s) += n_hc.hc1_artpop(curr_t_idx, hd, a, s);
@@ -1212,22 +1223,19 @@ struct ChildModelSimulation<Config> {
       } // end a
     } // end NS
 
-    for (int ag = 1; ag < hcAG_coarse; ++ag) {
-      i_hc.on_art(0) += i_hc.on_art(ag);
-      i_hc.unmet_need(0) += i_hc.unmet_need(ag);
-      i_hc.total_need(ag) += i_hc.on_art(ag) + i_hc.unmet_need(ag) + i_hc.hc_art_deaths(ag);
+    for (int ag = 0; ag < hcAG_c; ++ag) {
+      i_hc.total_need(ag) = i_hc.on_art(ag) + i_hc.unmet_need(ag) + i_hc.hc_art_deaths(ag);
     } // end ag
-    i_hc.total_need(0) = i_hc.on_art(0) + i_hc.unmet_need(0) + i_hc.hc_art_deaths(0);
   };
 
-  void age_specific_art_last_year() {
+  void age_specific_art_previous() {
     const auto& p_hc = pars.hc;
     const auto& c_hc = state_curr.hc;
     auto& i_hc = intermediate.hc;
 
     if (p_hc.hc_art_is_age_spec(t - 1)) {
-      for (int ag = 1; ag < hcAG_coarse; ++ag) {
-        i_hc.total_art_last_year(ag) = p_hc.hc_art_val(ag, t - 1);
+      for (int ag = 0; ag < hcAG_c; ++ag) {
+        i_hc.art_previous(ag) = p_hc.hc_art_val(ag, t - 1);
       } // end ag
     } else {
       for (int s = 0; s < NS; ++s) {
@@ -1235,36 +1243,41 @@ struct ChildModelSimulation<Config> {
           for (int hd = 0; hd < hc1DS; ++hd) {
             for (int dur = 0; dur < hTS; ++dur) {
               if (a < hc2_agestart) {
-                i_hc.total_art_last_year(hc_age_coarse[a]) += c_hc.hc1_artpop(dur, hd, a, s);
+                i_hc.art_previous(hc_age_coarse[a]) += c_hc.hc1_artpop(dur, hd, a, s);
               } else if (hd < hc2DS) {
-                i_hc.total_art_last_year(hc_age_coarse[a]) += c_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
+                i_hc.art_previous(hc_age_coarse[a]) += c_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
               }
             }
           }
         }
       }
 
-      i_hc.total_art_last_year(0) = 0.0;
-      for (int hca = 1; hca < hcAG_coarse; ++hca) {
-	i_hc.total_art_last_year(0) += i_hc.total_art_last_year(hca);
+      real_type on_art_previous_total = 0.0;
+      for (int ag = 0; ag < hcAG_c; ++ag) {
+        on_art_previous_total += i_hc.art_previous(ag);
       }
 
-      for (int ag = 1; ag < hcAG_coarse; ++ag) {
-        if (i_hc.total_art_last_year(0) > 0.0) {
-          i_hc.total_art_last_year(ag) = p_hc.hc_art_val(0, t - 1) *
-                                      i_hc.total_art_last_year(ag) / i_hc.total_art_last_year(0);
+      real_type total_need_all_children = 0.0;
+      for (int ag = 0; ag < hcAG_c; ++ag) {
+        total_need_all_children += i_hc.total_need(ag);
+      }
+
+      for (int ag = 0; ag < hcAG_c; ++ag) {
+        if (on_art_previous_total > 0.0) {
+          i_hc.art_previous(ag) = p_hc.hc_art_val_total(t - 1) *
+                                      i_hc.art_previous(ag) / on_art_previous_total;
         } else {
-          i_hc.total_art_last_year(ag) = 0.0;
+          i_hc.art_previous(ag) = 0.0;
         }
 
         if (p_hc.hc_art_isperc(t - 1)) {
-          i_hc.total_art_last_year(ag) *= i_hc.total_need(0) + i_hc.hc_art_deaths(ag);
+          i_hc.art_previous(ag) *= total_need_all_children + i_hc.hc_art_deaths(ag);
         }
       } // end ag
     }
   };
 
-  void art_last_year() {
+  void art_previous() {
     const auto& p_hc = pars.hc;
     auto& i_hc = intermediate.hc;
 
@@ -1273,36 +1286,49 @@ struct ChildModelSimulation<Config> {
       // breakdown would have been
 
       // Age specific ART will always be entered as a number
-      age_specific_art_last_year();
+      age_specific_art_previous();
     } else {
       if (p_hc.hc_art_isperc(t - 1)) {
         // ART entered as percent last year so convert to number
-        i_hc.total_art_last_year(0) = p_hc.hc_art_val(0, t - 1) * i_hc.total_need(0);
+        real_type total_need_all_children = 0.0;
+        for (int ag = 0; ag < hcAG_c; ++ag) {
+          total_need_all_children += i_hc.total_need(ag);
+        }
+        i_hc.art_previous_total = p_hc.hc_art_val_total(t - 1) * total_need_all_children;
       } else if (p_hc.hc_art_is_age_spec(t - 1)) {
-        // ART entered as number last year but this year isn't then aggregate
-        // ages
-
-	i_hc.total_art_last_year(0) = 0.0;
-	for (int hca = 1; hca < hcAG_coarse; ++hca) {
-	  i_hc.total_art_last_year(0) += p_hc.hc_art_val(hca, t - 1);
-	}
+        // ART entered as number in t-1 and dis-aggregated by age.
+        i_hc.art_previous_total = 0.0;
+        for (int ag = 0; ag < hcAG_c; ++ag) {
+          i_hc.art_previous_total += p_hc.hc_art_val(ag, t - 1);
+        }
       } else {
-        // Last year was age aggregated and a number so use previous value
-        i_hc.total_art_last_year(0) = p_hc.hc_art_val(0, t - 1);
+        // ART entered as number in t-1 and aggregated across ages.
+        i_hc.art_previous_total = p_hc.hc_art_val_total(t - 1);
       }
     }
   };
 
-  void art_this_year() {
+  void art_current() {
     const auto& p_hc = pars.hc;
     auto& i_hc = intermediate.hc;
 
-    for (int ag = 0; ag < hcAG_coarse; ++ag) {
-      i_hc.total_art_this_year(ag) = p_hc.hc_art_val(ag, t);
+    if (p_hc.hc_art_is_age_spec(t)) {
+      for (int ag = 0; ag < hcAG_c; ++ag) {
+        i_hc.art_current(ag) = p_hc.hc_art_val(ag, t);
+        if (p_hc.hc_art_isperc(t)) {
+          i_hc.art_current(ag) *= i_hc.total_need(ag);
+        }
+      } // end ag
+    } else {
+      i_hc.art_current_total = p_hc.hc_art_val_total(t);
       if (p_hc.hc_art_isperc(t)) {
-        i_hc.total_art_this_year(ag) *= i_hc.total_need(ag);
+        real_type total_need_all_children = 0.0;
+        for (int ag = 0; ag < hcAG_c; ++ag) {
+          total_need_all_children += i_hc.total_need(ag);
+        }
+        i_hc.art_current_total *= total_need_all_children;
       }
-    } // end ag
+    }
   };
 
   void calc_art_initiates() {
@@ -1313,17 +1339,29 @@ struct ChildModelSimulation<Config> {
     calc_on_art();
     deaths_this_year();
     calc_total_and_unmet_art_need();
-    art_last_year();
-    art_this_year();
+    art_previous();
+    art_current();
 
     const real_type retained = 1 - p_hc.hc_art_ltfu(t);
-    for (int ag = 0; ag < hcAG_coarse; ++ag) {
-      auto average_art_by_year = (i_hc.total_art_last_year(ag) + i_hc.total_art_this_year(ag)) /
-                                2.0;
-      n_hc.hc_art_init(ag) = std::max(i_hc.hc_art_deaths(ag) + average_art_by_year - i_hc.on_art(ag) * retained, 0.0);
-      n_hc.hc_art_init(ag) = std::min(n_hc.hc_art_init(ag),
-                                      i_hc.unmet_need(ag) + i_hc.on_art(ag) * p_hc.hc_art_ltfu(t));
-    } // end ag
+    if (p_hc.hc_art_is_age_spec(t)) {
+      for (int ag = 0; ag < hcAG_c; ++ag) {
+        auto average_art_by_year = (i_hc.art_previous(ag) + i_hc.art_current(ag)) / 2.0;
+        n_hc.hc_art_init(ag) = std::max(i_hc.hc_art_deaths(ag) + average_art_by_year - i_hc.on_art(ag) * retained, 0.0);
+        n_hc.hc_art_init(ag) = std::min(n_hc.hc_art_init(ag),
+                                        i_hc.unmet_need(ag) + i_hc.on_art(ag) * p_hc.hc_art_ltfu(t));
+      } // end ag
+    } else {
+      real_type art_deaths_total = 0.0, on_art_total = 0.0, unmet_need_total = 0.0;
+      for (int ag = 0; ag < hcAG_c; ++ag) {
+        art_deaths_total += i_hc.hc_art_deaths(ag);
+        on_art_total += i_hc.on_art(ag);
+        unmet_need_total += i_hc.unmet_need(ag);
+      }
+      auto average_art_by_year = (i_hc.art_previous_total + i_hc.art_current_total) / 2.0;
+      n_hc.hc_art_init_total = std::max(art_deaths_total + average_art_by_year - on_art_total * retained, 0.0);
+      n_hc.hc_art_init_total = std::min(n_hc.hc_art_init_total,
+                                        unmet_need_total + on_art_total * p_hc.hc_art_ltfu(t));
+    }
   };
 
   void art_ltfu() {
@@ -1333,36 +1371,36 @@ struct ChildModelSimulation<Config> {
 
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
-        for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc1DS; ++hd) {
             if (a < hc2_agestart) {
               i_hc.hc_hiv_total(hd, a, s) += n_hc.hc1_hivpop(hd, cat, a, s);
             } else if (hd < hc2DS) {
               i_hc.hc_hiv_total(hd, a, s) += n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
             }
-          } // end hcTT
-        } // end hc1DS
-      } // end a
-    } // end NS
-
-    for (int s = 0; s <NS; ++s) {
-      for (int a = 0; a < hcAG_end; ++a) {
-        for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
-            if (a < hc2_agestart) {
-              i_hc.hc_hiv_dist(hd, cat, a, s) += n_hc.hc1_hivpop(hd, cat, a, s) / i_hc.hc_hiv_total(hd, a, s);
-            } else if (hd < hc2DS) {
-              i_hc.hc_hiv_dist(hd, cat, a, s) += n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) / i_hc.hc_hiv_total(hd, a, s);
-            }
-          } // end hcTT
-        } // end hc1DS
+          } // end hc1DS
+        } // end hcTT
       } // end a
     } // end NS
 
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
-        for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc1DS; ++hd) {
+            if (a < hc2_agestart) {
+              i_hc.hc_hiv_dist(hd, cat, a, s) += n_hc.hc1_hivpop(hd, cat, a, s) / i_hc.hc_hiv_total(hd, a, s);
+            } else if (hd < hc2DS) {
+              i_hc.hc_hiv_dist(hd, cat, a, s) += n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) / i_hc.hc_hiv_total(hd, a, s);
+            }
+          } // end hc1DS
+        } // end hcTT
+      } // end a
+    } // end NS
+
+    for (int s = 0; s < NS; ++s) {
+      for (int a = 0; a < hcAG_end; ++a) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc1DS; ++hd) {
             if (a < hc2_agestart) {
               auto ltfu_grad = (n_hc.hc1_artpop(2, hd, a, s) + n_hc.hc1_artpop(0, hd, a, s)) *
                                p_hc.hc_art_ltfu(t);
@@ -1380,9 +1418,9 @@ struct ChildModelSimulation<Config> {
                 i_hc.art_ltfu_grad(hd, cat, a, s) += ltfu_grad * 0.25;
               }
             }
-          } // end hcTT
-        } // end hc1DS
-      } // end a
+          } // end hc1DS
+        } // end hcTT
+      } // end hcAG_end
     } // end NS
   };
 
@@ -1392,15 +1430,15 @@ struct ChildModelSimulation<Config> {
 
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
-        for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc1DS; ++hd) {
             if (a < hc2_agestart) {
               n_hc.hc1_hivpop(hd, cat, a, s) += i_hc.art_ltfu_grad(hd, cat, a, s);
             } else if (hd < hc2DS) {
               n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) += i_hc.art_ltfu_grad(hd, cat, a, s);
             }
-          } // end hcTT
-        } // end hc1DS
+          } // end hc1DS
+        } // end hcTT
       } // end a
     } // end NS
   };
@@ -1411,16 +1449,16 @@ struct ChildModelSimulation<Config> {
 
     for (int s = 0; s < NS; ++s) {
       for (int a = 0; a < hcAG_end; ++a) {
-        for (int hd = 0; hd < hc1DS; ++hd) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hc1DS; ++hd) {
             if (a < hc2_agestart) {
               // hard coded two as this will only occur among children that are on ART more than a year
               n_hc.hc1_artpop(2, hd, a, s) -= i_hc.art_ltfu_grad(hd, cat, a, s);
             } else if (hd < hc2DS) {
               n_hc.hc2_artpop(2, hd, a - hc2_agestart, s) -= i_hc.art_ltfu_grad(hd, cat, a, s);
             }
-          } // end hcTT
-        } // end hc1DS
+          } // end hc1DS
+        } // end hcTT
       } // end a
     } // end NS
   };
@@ -1433,16 +1471,16 @@ struct ChildModelSimulation<Config> {
     if (p_hc.hc_art_is_age_spec(t)) {
       for (int s = 0; s < NS; ++s) {
         for (int a = 0; a < hcAG_end; ++a) {
-          for (int hd = 0; hd < hc1DS; ++hd) {
-            for (int cat = 0; cat < hcTT; ++cat) {
+          for (int cat = 0; cat < hcTT; ++cat) {
+            for (int hd = 0; hd < hc1DS; ++hd) {
               i_hc.hc_initByAge(hc_age_coarse[a]) += n_hc.hc_art_need_init(hd, cat, a, s) *
                                                           p_hc.hc_art_init_dist(a, t);
-            } // end hcTT
-          } // end hc1DS
+            } // end hc1DS
+          } // end hcTT
         } // end a
       } // end NS
 
-      for (int ag = 1; ag < hcAG_coarse; ++ag) {
+      for (int ag = 0; ag < hcAG_c; ++ag) {
         if (i_hc.hc_initByAge(ag) == 0.0) {
           i_hc.hc_adj(ag) = 1.0;
         } else {
@@ -1450,19 +1488,22 @@ struct ChildModelSimulation<Config> {
         }
       }
 
+      auto hc_art_val_sum = 0.0;
+      // hc_art_val_total is 0 for age-spec years, so this adds the non-age-spec total when t-1 is not age-spec
+      // and is 0 when t-1 is age-spec (age-disagg loop below handles that case).
+      auto hc_art_val_sum_last = p_hc.hc_art_val_total(t - 1);
+      for (int ag = 0; ag < hcAG_c; ++ag) {
+        hc_art_val_sum += p_hc.hc_art_val(ag, t);
+        hc_art_val_sum_last += p_hc.hc_art_val(ag, t - 1);
+      }
+
       for (int s = 0; s < NS; ++s) {
-        for (int cat = 0; cat < hcTT; ++cat) {
-          for (int a = 0; a < hcAG_end; ++a) {
+        for (int a = 0; a < hcAG_end; ++a) {
+          for (int cat = 0; cat < hcTT; ++cat) {
             for (int hd = 0; hd < hc1DS; ++hd) {
               auto& coarse_hc_adj = i_hc.hc_adj(hc_age_coarse[a]);
               auto& coarse_hc_art_scalar = i_hc.hc_art_scalar(hc_age_coarse[a]);
 
-              auto hc_art_val_sum = 0.0;
-              auto hc_art_val_sum_last = 0.0;
-              for (int hca = 0; hca < hcAG_coarse; ++hca) {
-                hc_art_val_sum += p_hc.hc_art_val(hca, t);
-                hc_art_val_sum_last += p_hc.hc_art_val(hca, t - 1);
-              }
               if (hc_art_val_sum + hc_art_val_sum_last <= 0.0) {
                 coarse_hc_art_scalar = 0.0;
               } else {
@@ -1470,7 +1511,6 @@ struct ChildModelSimulation<Config> {
               }
 
               auto art_initiates = coarse_hc_art_scalar * n_hc.hc_art_need_init(hd, cat, a, s);
-
 
               if (a < hc2_agestart) {
                 n_hc.hc1_artpop(0, hd, a, s) += art_initiates;
@@ -1480,38 +1520,42 @@ struct ChildModelSimulation<Config> {
                 n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) -=  art_initiates;
               }
             } // end hc1DS
-          } // end a
-        } // end hcTT
+          } // end hcTT
+        } // end a
       } // end  NS
     } else {
+      real_type hc_initByAge_total = 0.0;
       for (int s = 0; s < NS; ++s) {
         for (int a = 0; a < hcAG_end; ++a) {
-          for (int hd = 0; hd < hc1DS; ++hd) {
-            for (int cat = 0; cat < hcTT; ++cat) {
-              i_hc.hc_initByAge(0) += n_hc.hc_art_need_init(hd, cat, a, s) * p_hc.hc_art_init_dist(a, t);
-            } // end hcTT
-          } // end hc1DS
+          for (int cat = 0; cat < hcTT; ++cat) {
+            for (int hd = 0; hd < hc1DS; ++hd) {
+              hc_initByAge_total += n_hc.hc_art_need_init(hd, cat, a, s) * p_hc.hc_art_init_dist(a, t);
+            } // end hc1DS
+          } // end hcTT
         } // end a
       } // end  NS
 
-      if (i_hc.hc_initByAge(0) == 0.0) {
-        i_hc.hc_adj(0) = 1.0 ;
+      real_type hc_adj_total;
+      if (hc_initByAge_total == 0.0) {
+        hc_adj_total = 1.0;
       } else {
-        i_hc.hc_adj(0) =  n_hc.hc_art_init(0) / i_hc.hc_initByAge(0);
+        hc_adj_total = n_hc.hc_art_init_total / hc_initByAge_total;
       }
 
+      auto hc_art_val_sum = p_hc.hc_art_val_total(t) + p_hc.hc_art_val_total(t - 1);
+
       for (int s = 0; s < NS; ++s) {
-        for (int cat = 0; cat < hcTT; ++cat) {
-          for (int a = 0; a < hcAG_end; ++a) {
+        for (int a = 0; a < hcAG_end; ++a) {
+          for (int cat = 0; cat < hcTT; ++cat) {
             for (int hd = 0; hd < hc1DS; ++hd) {
-              auto hc_art_val_sum = p_hc.hc_art_val(0, t) + p_hc.hc_art_val(0, t - 1);
+              real_type hc_art_scalar_total;
               if (hc_art_val_sum <= 0) {
-                i_hc.hc_art_scalar(0) = 0.0;
+                hc_art_scalar_total = 0.0;
               } else {
-                i_hc.hc_art_scalar(0) = std::min(i_hc.hc_adj(0) * p_hc.hc_art_init_dist(a, t), 1.0);
+                hc_art_scalar_total = std::min(hc_adj_total * p_hc.hc_art_init_dist(a, t), 1.0);
               }
 
-              auto art_initiates = i_hc.hc_art_scalar(0) * n_hc.hc_art_need_init(hd, cat, a, s);
+              auto art_initiates = hc_art_scalar_total * n_hc.hc_art_need_init(hd, cat, a, s);
 
               if (a < hc2_agestart) {
                 n_hc.hc1_artpop(0, hd, a, s) += art_initiates;
@@ -1522,8 +1566,8 @@ struct ChildModelSimulation<Config> {
               }
 
             } // end hc1DS
-          } // end a
-        } // end hcTT
+          } // end hcTT
+        } // end a
       } // end  NS
     } // end if
   };
@@ -1533,17 +1577,19 @@ struct ChildModelSimulation<Config> {
     auto& n_hc = state_next.hc;
     auto& n_dp = state_next.dp;
 
-    for (int hd = 0; hd < hDS; ++hd) {
-      for (int a = 0; a < hcAG_end; ++a) {
-        for (int s = 0; s < NS; ++s) {
-          for (int cat = 0; cat < hcTT; ++cat) {
+    for (int a = 0; a < hcAG_end; ++a) {
+      for (int s = 0; s < NS; ++s) {
+        for (int cat = 0; cat < hcTT; ++cat) {
+          for (int hd = 0; hd < hDS; ++hd) {
             if (a < hc2_agestart) {
               n_ha.p_hiv_deaths(a, s) += n_hc.hc1_noart_aids_deaths(hd, cat, a, s);
             } else if (hd < hc2DS) {
               n_ha.p_hiv_deaths(a, s) +=  n_hc.hc2_noart_aids_deaths(hd, cat, a - hc2_agestart, s);
             }
-          } // end hcTT
+          } // end hDS
+        } // end hcTT
 
+        for (int hd = 0; hd < hDS; ++hd) {
           for (int dur = 0; dur < hTS; ++dur) {
             if (a < hc2_agestart) {
               n_ha.p_hiv_deaths(a, s) += n_hc.hc1_art_aids_deaths(dur, hd, a, s);
@@ -1551,9 +1597,9 @@ struct ChildModelSimulation<Config> {
               n_ha.p_hiv_deaths(a, s) += n_hc.hc2_art_aids_deaths(dur, hd, a - hc2_agestart, s);
             }
           } // end dur
-        } // end NS
-      } // end a
-    } // end hDS
+        } // end hDS
+      } // end NS
+    } // end a
 
     for (int a = 0; a < hcAG_end; ++a) {
       for (int s = 0; s < NS; ++s) {
@@ -1563,6 +1609,64 @@ struct ChildModelSimulation<Config> {
       }
     }
   };
+
+  void apply_goals_cure(int t){
+
+    auto& n_ha = state_next.ha;
+    auto& n_hc = state_next.hc;
+
+    real_type cured_proportion=0.0;
+    real_type cured = 0.0;
+
+     for (int s = 0; s < NS; ++s) {
+      cured_proportion =  intermediate.hv.cure_effect(s);
+      for (int a = 0; a < hcAG_end; ++a) {
+
+            //clhiv 0-4, not on art
+            if (a < hc2_agestart){
+              //clhiv 0-4, not on art
+              for (int cat = 0; cat < hcTT; ++cat) {
+                for (int hd = 0; hd < hc1DS; ++hd) {
+                  cured = cured_proportion * n_hc.hc1_hivpop(hd, cat, a, s);
+                  n_hc.hc1_hivpop(hd, cat, a, s) -= cured;
+                  n_ha.p_hivpop(a, s) -= cured;
+                }
+              }
+              //clhiv 0-4, on art
+              for (int hd = 0; hd < hc1DS; ++hd) {
+                  for (int dur = 0; dur < hTS; ++dur) {
+                     cured = cured_proportion * n_hc.hc1_artpop(dur, hd, a, s);
+                     n_hc.hc1_artpop(dur, hd, a, s) -= cured;
+                     n_ha.p_hivpop(a, s) -= cured;
+                  }
+              }
+          }
+          else{
+             //clhiv 5+, not on art
+              for (int hd = 0; hd < hc2DS; ++hd) {
+                  for (int cat = 0; cat < hcTT; ++cat) {
+                    cured = cured_proportion * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
+                    n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) -= cured;
+                    n_ha.p_hivpop(a, s) -= cured;
+                  }
+              }
+              //clhiv 5+, on art
+              for (int hd = 0; hd < hc2DS; ++hd) {
+               for (int dur = 0; dur < hTS; ++dur) {
+                  cured = cured_proportion * n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
+                  n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s) -= cured;
+                  n_ha.p_hivpop(a, s) -= cured;
+                }
+              }
+          }
+
+      }//a
+    }//s
+
+  };
+
+
+
 };
 
 }

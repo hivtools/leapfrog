@@ -3,6 +3,7 @@
     "p_idx_fertility_first": 15,
     "p_fertility_age_groups": 35,
     "p_idx_hiv_first_adult": 15,
+    "pAG_INCIDPOP": 35,
     "hIDX_15PLUS": 0
   },
   "not_overridable": {
@@ -12,6 +13,9 @@
     "PROJPERIOD_CALENDAR": 0,
     "PROJPERIOD_MIDYEAR": 1,
     "INCIDMOD_DIRECTINCID_HTS": 0,
-    "INCIDMOD_TRANSMRATE_HTS": 1
+    "INCIDMOD_TRANSMRATE_HTS": 1,
+    "ART_ENTRY_NUMBER_OR_PERCENT": 0,
+    "ART_ENTRY_INITIATION_RATE": 1,
+    "ART_ENTRY_PERCENT_BY_RISK_GROUP": 2
   }
 }

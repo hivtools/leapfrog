@@ -77,7 +77,6 @@ struct GeneralDemographicProjection<Config> {
     }
   };
 
-
   // private methods that we don't want people to call
   private:
   void run_ageing_and_mortality() {

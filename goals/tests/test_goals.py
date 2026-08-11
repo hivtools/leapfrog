@@ -1,13 +1,13 @@
 from deepdiff import DeepDiff
+from SpectrumCommon.Const.PJ.PJNTags import PJN_FinalYearTag, PJN_FirstYearTag
+from SpectrumCommon.Util.ConvertNumpy import modvars_to_numpy
+from SpectrumCommon.Util.LeapfrogDataMapping import modvars_to_leapfrog
+from Tools.ImportPJNZ.Importer import GB_ImportProjectionFromFile
 
 from leapfrog_goals import (
     get_goals_ss,
     run_goals,
 )
-from SpectrumCommon.Util.LeapfrogDataMapping import modvars_to_leapfrog
-from SpectrumCommon.Util.ConvertNumpy import modvars_to_numpy
-from Tools.ImportPJNZ.Importer import GB_ImportProjectionFromFile
-from SpectrumCommon.Const.PJ.PJNTags import PJN_FirstYearTag, PJN_FinalYearTag
 
 
 def assert_equal(obj1, obj2):
@@ -59,6 +59,7 @@ def test_goals_model(test_data):
         "hc1_art_aids_deaths",
         "hc2_art_aids_deaths",
         "hc_art_init",
+        "hc_art_init_total",
         "hc_art_need_init",
         "ctx_need",
         "infection_by_type",
@@ -72,4 +73,4 @@ def test_goals_model(test_data):
         "p_excess_deaths_nonaids_no_art",
     ]
     present = [var in returned_vars for var in expected_vars]
-    assert(all(present))
+    assert all(present)

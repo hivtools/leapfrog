@@ -75,7 +75,7 @@ struct AdultHivModelSimulation<Config> {
       // Note: In Spectrum, incidence rate by sex is calculated once per year, using
       // the previous year HIV negative population.
       // Incidence rate by age is calculated per time-step using the **current year**
-      // HIV negative population, rathern than the previous year HIV population.
+      // HIV negative population, rather than the previous year HIV population.
       // Rob Glaubius, 5 August 2022: https://github.com/mrc-ide/leaptfrog/issues/18
       calculate_annual_incidence_rate_by_sex();
     }
@@ -86,17 +86,20 @@ struct AdultHivModelSimulation<Config> {
     auto& i_ha = intermediate.ha;
 
     nda::fill(i_ha.grad, 0.0);
+    nda::fill(i_ha.grad_infections, 0.0);
     nda::fill(i_ha.gradART, 0.0);
     nda::fill(i_ha.h_hiv_deaths_age_sex, 0.0);
     nda::fill(i_ha.h_deaths_excess_nonaids_agesex, 0.0);
     run_disease_progression_and_mortality(hiv_step);
 
     if constexpr (ModelVariant::run_goals) {
-      if (hiv_step = opts.hts_per_year) {
-        calc_new_infections_agesex_goals(hiv_step);
+      if (hiv_step==0) {
+        state_next.hv.new_infections_dp = 0.0;//init new infections from DP
       }
-    }
-    else {
+      calc_new_infections_agesex_goals(hiv_step);
+
+    } else {
+
       if (p_ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS) {
         calc_new_infections_agesex(hiv_step);
       } else if (p_ha.incidence_model_choice == SS::INCIDMOD_TRANSMRATE_HTS){
@@ -111,12 +114,35 @@ struct AdultHivModelSimulation<Config> {
     if (t >= opts.ts_art_start) {
       run_art_progression_and_mortality(hiv_step);
       run_h_art_initiation(hiv_step);
+
+      if constexpr (ModelVariant::run_virgin) {
+        // Note: must be run before run_update_art_adult() because it
+        // relies on the proportion of population virgin before updating
+        run_update_art_virgin(hiv_step);
+      }
       run_update_art_adult(hiv_step);
     }
 
+    if constexpr (ModelVariant::run_virgin) {
+      // Note: must be run before run_update_hiv_adult() because it
+      // relies on the proportion of population virgin before updating
+      run_update_hiv_virgin(hiv_step);
+    }
     run_update_hiv_adult(hiv_step);
+
+    run_calc_p_hiv_deaths(hiv_step);
+    if constexpr (ModelVariant::run_virgin) {
+      run_remove_p_virgin_hiv_deaths(hiv_step);
+    }
     run_remove_p_hiv_deaths(hiv_step);
     run_wlhiv_births();
+
+    if constexpr (ModelVariant::run_goals) {
+      if ((t > pars.hv.goals_base_year_idx) && (hiv_step == opts.hts_per_year - 1)) {
+        apply_goals_cure();
+      }
+    }
+
   };
 
   // private methods that we don't want people to call
@@ -131,6 +157,17 @@ struct AdultHivModelSimulation<Config> {
     for (int s = 0; s < NS; ++s) {
       for (int a = p_ha.pIDX_INCIDPOP; a < p_ha.pIDX_INCIDPOP + p_ha.pAG_INCIDPOP; ++a) {
         i_ha.hiv_neg_aggregate(s) += c_dp.p_totpop(a, s) - c_ha.p_hivpop(a, s);
+      }
+
+      if constexpr(ModelVariant::run_virgin) {
+        // Remove virgin HIV negative from at risk population
+        const auto& c_vg = state_curr.vg;
+
+        const int vg_min_incid_age = std::max(0, p_ha.pIDX_INCIDPOP - SS::p_idx_virginpop_first);
+        const int vg_max_incid_age = std::min(SS::vAG, p_ha.pIDX_INCIDPOP + p_ha.pAG_INCIDPOP - SS::p_idx_virginpop_first);
+        for (int va = vg_min_incid_age; va < vg_max_incid_age; ++va) {
+          i_ha.hiv_neg_aggregate(s) -= c_vg.p_totpop_virgin(va, s) - c_vg.p_hivpop_virgin(va, s);
+        }
       }
     }
 
@@ -161,7 +198,14 @@ struct AdultHivModelSimulation<Config> {
                           (n_ha.h_hivpop(hm, ha, s) + artpop_hahm);
           }
 
-          auto deaths_hiv  = cd4mx_scale * p_ha.cd4_mortality(hm, ha, s) * n_ha.h_hivpop(hm, ha, s);
+          auto deaths_hiv = cd4mx_scale * p_ha.cd4_mortality(hm, ha, s) * n_ha.h_hivpop(hm, ha, s);
+          //capture the impact of AHD treament on hiv mortality
+          if constexpr (ModelVariant::run_goals) {
+            if ( (t > pars.hv.goals_base_year_idx) && (hm>=4) ) { // index 4 is CD4_100_199
+              deaths_hiv *= intermediate.hv.AHD_Tx_Impact;
+            }
+          }
+
           i_ha.h_hiv_deaths_age_sex(ha, s) += opts.dt * deaths_hiv;
           n_ha.h_hiv_deaths_no_art(hm, ha, s) += opts.dt * deaths_hiv;
 
@@ -188,6 +232,22 @@ struct AdultHivModelSimulation<Config> {
     auto& n_dp = state_next.dp;
     auto& i_ha = intermediate.ha;
 
+    // calculate HIV negative sexually active by age and sex
+    nda::fill(i_ha.hiv_negative_pop, 0.0);
+    for(int s = 0; s < NS; ++s) {
+      for (int a = SS::p_idx_hiv_first_adult; a < pAG; ++a) {
+        i_ha.hiv_negative_pop(a, s) = n_dp.p_totpop(a, s) - n_ha.p_hivpop(a, s);
+      }
+
+      if constexpr(ModelVariant::run_virgin) {
+        // Remove virgin HIV negative from at risk population
+        const auto& n_vg = state_next.vg;
+        for (int va = 0, a = SS::p_idx_virginpop_first; va < SS::vAG; ++va, ++a) {
+          i_ha.hiv_negative_pop(a, s) -= n_vg.p_totpop_virgin(va, s) - n_vg.p_hivpop_virgin(va, s);
+        }
+      }
+    } // end s
+
     // sum population sizes
     real_type Xhivn_s[NS];
     real_type Xhivn_incagerr[NS];
@@ -198,11 +258,11 @@ struct AdultHivModelSimulation<Config> {
       Xhivn_s[s] = 0.0;
       Xhivn_incagerr[s] = 0.0;
       for(int a = SS::pIDX_15to49; a < SS::pIDX_15to49 + SS::pAG_15to49; ++a) {
-        auto Xhivn_sa = n_dp.p_totpop(a, s) - n_ha.p_hivpop(a, s);
-        Xhivn_s[s] += Xhivn_sa;
-        Xhivn_incagerr[s] += p_ha.incidence_rate_ratio_age(a - p_ha.pIDX_INCIDPOP, s, t) * Xhivn_sa;
+        Xhivn_s[s] += i_ha.hiv_negative_pop(a, s);
+        Xhivn_incagerr[s] += p_ha.incidence_rate_ratio_age(a - p_ha.pIDX_INCIDPOP, s, t) * i_ha.hiv_negative_pop(a, s);
       }
 
+      // Calculate ART coverage among age 15-49
       for(int ha = SS::hIDX_15to49; ha < SS::hIDX_15to49 + SS::hAG_15to49 + 1; ++ha){
 
         // adjustment to first and last age group for partial year time step
@@ -240,16 +300,33 @@ struct AdultHivModelSimulation<Config> {
       } // end loop over ha
     } // end loop over s
 
-  real_type Xhivn = Xhivn_s[MALE] + Xhivn_s[FEMALE];
+    real_type Xhivn = Xhivn_s[MALE] + Xhivn_s[FEMALE];
 
-  // adjust HIV negative population for partial year time step
-  for(int s = 0; s < NS; s++){
-    Xhivn -= (n_dp.p_totpop(SS::pIDX_15to49, s) - n_ha.p_hivpop(SS::pIDX_15to49, s)) *
-      (1.0 - opts.dt * hiv_step);
-    Xhivn += (n_dp.p_totpop(SS::pIDX_15to49+SS::pAG_15to49, s) -
-              n_ha.p_hivpop(SS::pIDX_15to49+SS::pAG_15to49, s)) *
-      (1.0 - opts.dt * hiv_step);
-  }
+    // adjust HIV negative population for partial year time step
+    for(int s = 0; s < NS; s++){
+      Xhivn -= i_ha.hiv_negative_pop(SS::pIDX_15to49, s) * (1.0 - opts.dt * hiv_step);
+      Xhivn += i_ha.hiv_negative_pop(SS::pIDX_15to49+SS::pAG_15to49, s) * (1.0 - opts.dt * hiv_step);
+    }
+
+    /*
+      TO DO: Implement removal of virgin population from transmission rate model
+    if constexpr(ModelVariant::run_virgin) {
+
+      // Remove virgin population from HIV positive no-ART and ART populations
+      const auto& n_vg = state_next.vg;
+
+      const int vg_min_incid_age = std::max(0, SS::pIDX_15to49 - SS::p_idx_virginpop_first);
+      const int vg_max_incid_age = std::min(SS::vAG, SS::pIDX_15to49 + SS::pAG_15to49 - SS::p_idx_virginpop_first);
+      for (int va = vg_min_incid_age, a = vg_min_incid_age + SS::p_idx_virginpop_first;
+        va < vg_max_incid_age; ++va, ++a) {
+
+        // Remove virgin HIV negative from at risk population
+        const auto Xhivn_virgin_sa = n_vg.p_totpop_virgin(va, s) - n_vg.p_hivpop_virgin(va, s);
+        Xhivn_s[s] -= Xhivn_sa;
+        Xhivn_incagerr[s] -= p_ha.incidence_rate_ratio_age(a - p_ha.pIDX_INCIDPOP, s, t) * Xhivn_virgin_sa;
+      }
+    }
+    */
 
   real_type Xtot = Xhivn + Xhivp_noart + Xart;
   real_type prevcurr = (Xhivp_noart + Xart) / Xtot;
@@ -295,21 +372,31 @@ struct AdultHivModelSimulation<Config> {
     // 'current year' population [state_next] (vs. previous year
     // population used for overall incidence rate and incidence by sex)
 
+    nda::fill(i_ha.hiv_negative_pop, 0.0);
     for (int s = 0; s < NS; ++s) {
-      nda::fill(i_ha.hiv_negative_pop, 0.0);
       real_type Xhivn_incagerr = 0.0;
 
       for (int a = p_idx_hiv_first_adult; a < pAG; ++a) {
-        i_ha.hiv_negative_pop(a) = n_dp.p_totpop(a, s) - n_ha.p_hivpop(a, s);
+        i_ha.hiv_negative_pop(a, s) = n_dp.p_totpop(a, s) - n_ha.p_hivpop(a, s);
+      }
+
+      if constexpr(ModelVariant::run_virgin) {
+
+        // Remove virgin HIV negative from at risk population
+        const auto& n_vg = state_next.vg;
+
+        for (int va = 0, a = SS::p_idx_virginpop_first; va < SS::vAG; ++va, ++a) {
+          i_ha.hiv_negative_pop(a, s) -= n_vg.p_totpop_virgin(va, s) - n_vg.p_hivpop_virgin(va, s);
+        }
       }
 
       for (int a = adult_incid_first_age_group; a < adult_incid_last_age_group; ++a) {
         Xhivn_incagerr += p_ha.incidence_rate_ratio_age(a - p_idx_hiv_first_adult, s, t) *
-                          i_ha.hiv_negative_pop(a);
+                          i_ha.hiv_negative_pop(a, s);
       }
 
       for (int a = SS::p_idx_hiv_first_adult; a < pAG; ++a) {
-        i_ha.p_infections_ts(a, s) = i_ha.hiv_negative_pop(a) *
+        i_ha.p_infections_ts(a, s) = i_ha.hiv_negative_pop(a, s) *
                                      i_ha.incidence_rate_sex(s) *
                                      p_ha.incidence_rate_ratio_age(a - p_idx_hiv_first_adult, s, t) *
                                      i_ha.hiv_neg_aggregate(s) /
@@ -340,17 +427,17 @@ struct AdultHivModelSimulation<Config> {
       real_type Xhivn_incagerr = 0.0;
 
       for (int a = adult_incid_first_age_group; a < pAG; ++a) {
-        i_ha.hiv_negative_pop(a) = n_dp.p_totpop(a, s) - n_ha.p_hivpop(a, s);
+        i_ha.hiv_negative_pop(a, s) = n_dp.p_totpop(a, s) - n_ha.p_hivpop(a, s);
       }
 
       for (int a = adult_incid_first_age_group; a < adult_incid_last_age_group; ++a) {
         Xhivn_incagerr += p_ha.incidence_rate_ratio_age(a - adult_incid_first_age_group, s, t) *
-                          i_ha.hiv_negative_pop(a);
+                          i_ha.hiv_negative_pop(a, s);
       }
 
       for (int a = SS::p_idx_hiv_first_adult; a < pAG; ++a) {
         i_ha.p_infections_ts(a, s) =  n_hv.new_infections_goals(s) * // new infections from goals
-                                      i_ha.hiv_negative_pop(a) *
+                                      i_ha.hiv_negative_pop(a, s) *
                                       p_ha.incidence_rate_ratio_age(a - adult_incid_first_age_group, s, t)/
                                       Xhivn_incagerr;
       }
@@ -372,11 +459,18 @@ struct AdultHivModelSimulation<Config> {
           const auto new_infections = opts.dt * p_infections_a;
           n_ha.p_infections(a, s) += new_infections;
           n_ha.p_hivpop(a, s) += new_infections;
+
+          if constexpr (ModelVariant::run_goals) {
+            // Temporary, used for checking new infections updates in goals model
+            if (i == 0 && SS::pIDX_15to49 <= a && a < SS::pIDX_15to49 + SS::pAG_15to49) {
+                state_next.hv.new_infections_dp += new_infections;
+            }
+          }
         }
 
         // add p_infections to grad hivpop
         for (int hm = 0; hm < hDS; ++hm) {
-          i_ha.grad(hm, ha, s) += p_infections_ha * p_ha.cd4_initial_distribution(hm, ha, s);
+          i_ha.grad_infections(hm, ha, s) += p_infections_ha * p_ha.cd4_initial_distribution(hm, ha, s);
         }
       }
     }
@@ -387,13 +481,21 @@ struct AdultHivModelSimulation<Config> {
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
 
+
     for (int s = 0; s < NS; ++s) {
       for (int ha = 0; ha < hAG; ++ha) {
         for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
           for (int hu = 0; hu < hTS; ++hu) {
-            const real_type deaths_art = p_ha.art_mortality(hu, hm, ha, s) *
-                                         p_ha.art_mortality_time_rate_ratio(hu, t) *
-                                         n_ha.h_artpop(hu, hm, ha, s);
+            real_type deaths_art = p_ha.art_mortality(hu, hm, ha, s) *
+                                   p_ha.art_mortality_time_rate_ratio(hu, t) *
+                                   n_ha.h_artpop(hu, hm, ha, s);
+
+           //capture the impact of AHD treament on art mortality
+           if constexpr (ModelVariant::run_goals) {
+              if ( (t > pars.hv.goals_base_year_idx) && (hm>=4) ) { // index 4 is CD4_100_199
+                deaths_art *= intermediate.hv.AHD_Tx_Impact;
+              }
+            }
 
             const auto new_hiv_deaths_art = opts.dt * deaths_art;
             i_ha.h_hiv_deaths_age_sex(ha, s) += new_hiv_deaths_art;
@@ -415,7 +517,21 @@ struct AdultHivModelSimulation<Config> {
           // ART dropout
           if (p_ha.dropout_rate(t) > 0) {
             for (int hu = 0; hu < hTS; ++hu) {
-              const auto art_adult_dropout = p_ha.dropout_rate(t) * n_ha.h_artpop(hu, hm, ha, s);
+
+               real_type temp_art_adult_dropout = 0.0;
+               if constexpr (ModelVariant::run_goals) {
+                   if(t > pars.hv.goals_base_year_idx){
+                    temp_art_adult_dropout = -std::log(1.0 - pars.hv.art_interrupt_rate(t) *
+                                                      (1.0 - pars.hv.long_act_treat_cov(t) * pars.hv.long_act_treat_eff_ltfu)) *
+                                                      n_ha.h_artpop(hu, hm, ha, s);
+                   }
+               }
+               else{
+                  temp_art_adult_dropout = p_ha.dropout_rate(t) * n_ha.h_artpop(hu, hm, ha, s);
+              }
+
+              const auto art_adult_dropout = temp_art_adult_dropout;
+
               if (p_ha.dropout_recover_cd4 && hu >= 2 && hm >= 1) {
                 // recover people on ART >1 year to one higher CD4 category
                 i_ha.grad(hm - 1, ha, s) += art_adult_dropout;
@@ -432,139 +548,197 @@ struct AdultHivModelSimulation<Config> {
 
   void run_h_art_initiation(int hiv_step) {
     const auto& p_ha = pars.ha;
-    auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
 
     for (int s = 0; s < NS; ++s) {
-      real_type Xart_15plus = 0.0;
+      calc_art_eligibility(s);
 
-      nda::fill(i_ha.artelig_hm, 0.0);
-      real_type Xartelig_15plus = 0.0;
-
-      nda::fill(i_ha.expect_mort_artelig_hm, 0.0);
-      real_type expect_mort_artelig15plus = 0.0;
-
-      for (int ha = hIDX_15PLUS; ha < hAG; ++ha) {
-        for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
-          if (hm >= i_ha.anyelig_idx) {
-            // TODO: Implement special population ART eligibility
-            real_type prop_elig = 1.0;
-            real_type tmp_artelig = prop_elig * n_ha.h_hivpop(hm, ha, s);
-            i_ha.artelig_hahm(hm, ha - hIDX_15PLUS) = tmp_artelig;
-            i_ha.artelig_hm(hm) += tmp_artelig;
-            Xartelig_15plus += tmp_artelig;
-
-            real_type tmp_expect_mort = p_ha.cd4_mortality(hm, ha, s) * i_ha.artelig_hahm(hm, ha - hIDX_15PLUS);
-            i_ha.expect_mort_artelig_hm(hm) += tmp_expect_mort;
-            expect_mort_artelig15plus += tmp_expect_mort;
-          }
-
-          for (int hu = 0; hu < hTS; ++hu) {
-            Xart_15plus += n_ha.h_artpop(hu, hm, ha, s) +
-                           opts.dt * i_ha.gradART(hu, hm, ha, s);
-          }
-        }
-      }
-
-      // calculate number on ART at end of ts, based on number or percent
-      real_type art_interp_w = opts.dt * (hiv_step + 1.0);
-      real_type artnum_hts = 0.0;
-      if (opts.proj_period_int == PROJPERIOD_MIDYEAR && art_interp_w < 0.5) {
-        if (!p_ha.adults_on_art_is_percent(s, t - 2) && !p_ha.adults_on_art_is_percent(s, t - 1)) {
-          // case: both values are numbers
-          artnum_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2) +
-                       (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
-        } else if (p_ha.adults_on_art_is_percent(s, t - 2) && p_ha.adults_on_art_is_percent(s, t - 1)) {
-          // case: both values are percentages
-          const real_type artcov_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2) +
-                                       (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
-          artnum_hts = artcov_hts * (Xart_15plus + Xartelig_15plus);
-        } else if (!p_ha.adults_on_art_is_percent(s, t - 2) && p_ha.adults_on_art_is_percent(s, t - 1)) {
-          // case: value is percentage only at time t - 1
-          // transition from number to percentage
-          const real_type curr_coverage = Xart_15plus / (Xart_15plus + Xartelig_15plus);
-          const real_type artcov_hts = curr_coverage +
-                                       (p_ha.adults_on_art(s, t - 1) - curr_coverage) *
-                                       opts.dt / (0.5 - opts.dt * hiv_step);
-          // back to number
-          artnum_hts = artcov_hts * (Xart_15plus + Xartelig_15plus);
-        }
+      // How many people we aim to put on ART this time step.
+      // There are 3 ART entry options at the moment
+      // 1. Number or percent
+      // 2. Initiation rate
+      // 3. % by risk group - this is not implemented in AIM at the moment
+      //   so we fallback to number or %.
+      if (p_ha.art_entry_option == SS::ART_ENTRY_INITIATION_RATE) {
+        i_ha.artinit_hts = calc_artinit_from_initiation_rate(s);
       } else {
-        // If the projection period is calendar year (>= Spectrum v6.2),
-        // this condition is always followed, and it interpolates between
-        // end of last year and current year (+ 1.0).
-        // If projection period was mid-year (<= Spectrum v6.19), the second
-        // half of the projection year interpolates the first half of the
-        // calendar year (e.g. hts 7/10 for 2019 interpolates December 2018
-        // to December 2019)
-
-        if (opts.proj_period_int == PROJPERIOD_MIDYEAR) {
-          art_interp_w -= 0.5;
-        }
-
-        if (!p_ha.adults_on_art_is_percent(s, t - 1) && !p_ha.adults_on_art_is_percent(s, t)) {
-          // case: both values are numbers
-          artnum_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1) +
-                       art_interp_w * p_ha.adults_on_art(s, t);
-        } else if (p_ha.adults_on_art_is_percent(s, t - 1) && p_ha.adults_on_art_is_percent(s, t)) {
-          // case: both values are percentages
-          const real_type artcov_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1) +
-                                       art_interp_w * p_ha.adults_on_art(s, t);
-          // transition to number
-          artnum_hts = artcov_hts * (Xart_15plus + Xartelig_15plus);
-        } else if (!p_ha.adults_on_art_is_percent(s, t - 1) && p_ha.adults_on_art_is_percent(s, t)) {
-          // case: value is percentage only at time t
-          // transition from number to percentage
-          const real_type curr_coverage = Xart_15plus / (Xart_15plus + Xartelig_15plus);
-          const real_type artcov_hts = curr_coverage +
-                                       (p_ha.adults_on_art(s, t) - curr_coverage) *
-                                       opts.dt / (1.0 - art_interp_w + opts.dt);
-          // back to number
-          artnum_hts = artcov_hts * (Xart_15plus + Xartelig_15plus);
-        }
+        i_ha.artinit_hts = calc_artinit_from_number_or_percent(s, hiv_step);
       }
 
-      // Desired number to initiate on ART
-      const real_type artinit_hts = std::max(artnum_hts - Xart_15plus, 0.0);
-
-      // Use mixture of eligibility and expected mortality for initiation distribution
-      // Spectrum ART allocation is 2-step process
+      // Spectrum ART allocation is a 2-step process
       // 1. Allocate by CD4 category (weighted by 'eligible' and 'expected mortality')
       // 2. Allocate by age groups (weighted only by eligibility)
+      allocate_art_initiation_by_cd4();
+      allocate_art_initiation_by_age(s);
+    }
+  };
 
-      // Step 1: allocate ART by CD4 stage
-      for (int hm = i_ha.anyelig_idx; hm < hDS; ++hm) {
-        auto eligibility_by_stage = (1.0 - p_ha.initiation_mortality_weight) *
-                                    i_ha.artelig_hm(hm) /
-                                    Xartelig_15plus;
-        if(expect_mort_artelig15plus > 0){
-          auto expected_mortality_by_stage = p_ha.initiation_mortality_weight *
-            i_ha.expect_mort_artelig_hm(hm) /
-              expect_mort_artelig15plus;
-          i_ha.artinit_hm(hm) = artinit_hts * (eligibility_by_stage + expected_mortality_by_stage);
+  // Number eligible to start ART, their expected mortality, and the number
+  // already on ART at the end of this time step. All ART entry options need
+  // these to distribute initiations, and the number/percent option also needs
+  // them to size the treatment gap.
+  void calc_art_eligibility(int s) {
+    const auto& p_ha = pars.ha;
+    const auto& n_ha = state_next.ha;
+    auto& i_ha = intermediate.ha;
 
-        }else{
-          auto expected_mortality_by_stage = 0.0;
-          i_ha.artinit_hm(hm) = artinit_hts * (eligibility_by_stage + expected_mortality_by_stage);
+    i_ha.Xart_15plus = 0.0;
+    i_ha.Xartelig_15plus = 0.0;
+    i_ha.expect_mort_artelig15plus = 0.0;
+    nda::fill(i_ha.artelig_hm, 0.0);
+    nda::fill(i_ha.expect_mort_artelig_hm, 0.0);
 
+    for (int ha = hIDX_15PLUS; ha < hAG; ++ha) {
+      for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
+        if (hm >= i_ha.anyelig_idx) {
+          // TODO: Implement special population ART eligibility
+          const real_type prop_elig = 1.0;
+          const real_type artelig = prop_elig * n_ha.h_hivpop(hm, ha, s);
+          i_ha.artelig_hahm(hm, ha - hIDX_15PLUS) = artelig;
+          i_ha.artelig_hm(hm) += artelig;
+          i_ha.Xartelig_15plus += artelig;
+
+          const real_type expect_mort = p_ha.cd4_mortality(hm, ha, s) * artelig;
+          i_ha.expect_mort_artelig_hm(hm) += expect_mort;
+          i_ha.expect_mort_artelig15plus += expect_mort;
+        }
+
+        for (int hu = 0; hu < hTS; ++hu) {
+          i_ha.Xart_15plus += n_ha.h_artpop(hu, hm, ha, s) +
+                              opts.dt * i_ha.gradART(hu, hm, ha, s);
         }
       }
+    }
+  };
 
-      // Step 2: within CD4 category, allocate ART by age proportional to
-      // eligibility
-      for (int ha = hIDX_15PLUS; ha < hAG; ++ha) {
-        for (int hm = i_ha.anyelig_idx; hm < hDS; ++hm) {
-          if (i_ha.artelig_hm(hm) > 0.0) {
-            real_type artinit_hahm = i_ha.artinit_hm(hm) *
-                                     i_ha.artelig_hahm(hm, ha - hIDX_15PLUS) /
-                                     i_ha.artelig_hm(hm);
-            artinit_hahm = std::min(artinit_hahm, i_ha.artelig_hahm(hm, ha - hIDX_15PLUS));
-            artinit_hahm = std::min(artinit_hahm,
-                                    n_ha.h_hivpop(hm, ha, s) + opts.dt * i_ha.grad(hm, ha, s));
-            i_ha.grad(hm, ha, s) -= artinit_hahm / opts.dt;
-            i_ha.gradART(ART0MOS, hm, ha, s) += artinit_hahm / opts.dt;
-            n_ha.h_art_initiation(hm, ha, s) += artinit_hahm;
-          }
+  // ART entry option ART_ENTRY_INITIATION_RATE: initiations are a rate applied
+  // to the treatment gap (PLHIV, plus this year's new infections, minus those
+  // already on ART). Everything is read from the start-of-year state, matching
+  // the way the rate was estimated.
+  real_type calc_artinit_from_initiation_rate(int s) {
+    const auto& p_ha = pars.ha;
+    const auto& c_ha = state_curr.ha;
+
+    real_type new_infections = 0.0;
+    real_type plhiv = 0.0;
+    for (int ha = 0; ha < hAG; ++ha) {
+      const int a = ha + p_idx_hiv_first_adult;
+      new_infections += c_ha.p_infections(a, s);
+      plhiv += c_ha.p_hivpop(a, s);
+    }
+
+    const real_type treatment_gap = new_infections + plhiv;
+    return std::max(opts.dt * p_ha.art_initiation_rate(s, t) * treatment_gap, 0.0);
+  };
+
+  // ART entry option ART_ENTRY_NUMBER_OR_PERCENT
+  real_type calc_artinit_from_number_or_percent(int s, int hiv_step) {
+    const auto& p_ha = pars.ha;
+    auto& i_ha = intermediate.ha;
+
+    real_type art_interp_w = opts.dt * (hiv_step + 1.0);
+    real_type artnum_hts = 0.0;
+    if (opts.proj_period_int == PROJPERIOD_MIDYEAR && art_interp_w < 0.5) {
+      if (!p_ha.adults_on_art_is_percent(s, t - 2) && !p_ha.adults_on_art_is_percent(s, t - 1)) {
+        // case: both values are numbers
+        artnum_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2) +
+                     (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
+      } else if (p_ha.adults_on_art_is_percent(s, t - 2) && p_ha.adults_on_art_is_percent(s, t - 1)) {
+        // case: both values are percentages
+        const real_type artcov_hts = (0.5 - art_interp_w) * p_ha.adults_on_art(s, t - 2) +
+                                     (art_interp_w + 0.5) * p_ha.adults_on_art(s, t - 1);
+        artnum_hts = artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+      } else if (!p_ha.adults_on_art_is_percent(s, t - 2) && p_ha.adults_on_art_is_percent(s, t - 1)) {
+        // case: value is percentage only at time t - 1
+        // transition from number to percentage
+        const real_type curr_coverage = i_ha.Xart_15plus / (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+        const real_type artcov_hts = curr_coverage +
+                                     (p_ha.adults_on_art(s, t - 1) - curr_coverage) *
+                                     opts.dt / (0.5 - opts.dt * hiv_step);
+        // back to number
+        artnum_hts = artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+      }
+    } else {
+      // If the projection period is calendar year (>= Spectrum v6.2),
+      // this condition is always followed, and it interpolates between
+      // end of last year and current year (+ 1.0).
+      // If projection period was mid-year (<= Spectrum v6.19), the second
+      // half of the projection year interpolates the first half of the
+      // calendar year (e.g. hts 7/10 for 2019 interpolates December 2018
+      // to December 2019)
+
+      if (opts.proj_period_int == PROJPERIOD_MIDYEAR) {
+        art_interp_w -= 0.5;
+      }
+
+      if (!p_ha.adults_on_art_is_percent(s, t - 1) && !p_ha.adults_on_art_is_percent(s, t)) {
+        // case: both values are numbers
+        artnum_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1) +
+                     art_interp_w * p_ha.adults_on_art(s, t);
+      } else if (p_ha.adults_on_art_is_percent(s, t - 1) && p_ha.adults_on_art_is_percent(s, t)) {
+        // case: both values are percentages
+        const real_type artcov_hts = (1.0 - art_interp_w) * p_ha.adults_on_art(s, t - 1) +
+                                     art_interp_w * p_ha.adults_on_art(s, t);
+        // transition to number
+        artnum_hts = artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+      } else if (!p_ha.adults_on_art_is_percent(s, t - 1) && p_ha.adults_on_art_is_percent(s, t)) {
+        // case: value is percentage only at time t
+        // transition from number to percentage
+        const real_type curr_coverage = i_ha.Xart_15plus / (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+        const real_type artcov_hts = curr_coverage +
+                                     (p_ha.adults_on_art(s, t) - curr_coverage) *
+                                     opts.dt / (1.0 - art_interp_w + opts.dt);
+        // back to number
+        artnum_hts = artcov_hts * (i_ha.Xart_15plus + i_ha.Xartelig_15plus);
+      }
+    }
+
+    return std::max(artnum_hts - i_ha.Xart_15plus, 0.0);
+  };
+
+  // Step 1: allocate ART initiations by CD4 stage, weighting eligibility against
+  // expected mortality
+  void allocate_art_initiation_by_cd4() {
+    const auto& p_ha = pars.ha;
+    auto& i_ha = intermediate.ha;
+
+    for (int hm = i_ha.anyelig_idx; hm < hDS; ++hm) {
+      real_type eligibility_by_stage = 0.0;
+      if (i_ha.Xartelig_15plus > 0.0) {
+        eligibility_by_stage = (1.0 - p_ha.initiation_mortality_weight) *
+                               i_ha.artelig_hm(hm) /
+                               i_ha.Xartelig_15plus;
+      }
+
+      real_type expected_mortality_by_stage = 0.0;
+      if (i_ha.expect_mort_artelig15plus > 0.0) {
+        expected_mortality_by_stage = p_ha.initiation_mortality_weight *
+                                      i_ha.expect_mort_artelig_hm(hm) /
+                                      i_ha.expect_mort_artelig15plus;
+      }
+
+      i_ha.artinit_hm(hm) = i_ha.artinit_hts * (eligibility_by_stage + expected_mortality_by_stage);
+    }
+  };
+
+  // Step 2: within CD4 stage, allocate ART initiations by age proportional to
+  // eligibility, capped by the population actually available to initiate
+  void allocate_art_initiation_by_age(int s) {
+    auto& n_ha = state_next.ha;
+    auto& i_ha = intermediate.ha;
+
+    for (int ha = hIDX_15PLUS; ha < hAG; ++ha) {
+      for (int hm = i_ha.anyelig_idx; hm < hDS; ++hm) {
+        if (i_ha.artelig_hm(hm) > 0.0) {
+          real_type artinit_hahm = i_ha.artinit_hm(hm) *
+                                   i_ha.artelig_hahm(hm, ha - hIDX_15PLUS) /
+                                   i_ha.artelig_hm(hm);
+          artinit_hahm = std::min(artinit_hahm, i_ha.artelig_hahm(hm, ha - hIDX_15PLUS));
+          artinit_hahm = std::min(artinit_hahm,
+                                  n_ha.h_hivpop(hm, ha, s) + opts.dt * i_ha.grad(hm, ha, s));
+          i_ha.grad(hm, ha, s) -= artinit_hahm / opts.dt;
+          i_ha.gradART(ART0MOS, hm, ha, s) += artinit_hahm / opts.dt;
+          n_ha.h_art_initiation(hm, ha, s) += artinit_hahm;
         }
       }
     }
@@ -592,14 +766,13 @@ struct AdultHivModelSimulation<Config> {
     for (int s = 0; s < NS; ++s) {
       for (int ha = 0; ha < hAG; ++ha) {
         for (int hm = 0; hm < hDS; ++hm) {
-          n_ha.h_hivpop(hm, ha, s) += opts.dt * i_ha.grad(hm, ha, s);
+          n_ha.h_hivpop(hm, ha, s) += opts.dt * (i_ha.grad_infections(hm, ha, s) + i_ha.grad(hm, ha, s));
         }
       }
     }
   };
 
-  void run_remove_p_hiv_deaths(int hiv_step) {
-    auto& n_dp = state_next.dp;
+  void run_calc_p_hiv_deaths(int hiv_step) {
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
 
@@ -622,22 +795,94 @@ struct AdultHivModelSimulation<Config> {
           auto nonaids_excess_qx_ha = i_ha.h_deaths_excess_nonaids_agesex(ha, s) / i_ha.hivpop_ha(ha);
 
           for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
-            const real_type hivdeaths_a = n_ha.p_hivpop(a, s) * hivqx_ha;
+            auto deaths_aids_a = n_ha.p_hivpop(a, s) * hivqx_ha;
             auto deaths_nonaids_excess_a = n_ha.p_hivpop(a, s) * nonaids_excess_qx_ha;
 
-            n_ha.p_hiv_deaths(a, s) += hivdeaths_a;
-            n_ha.p_deaths_excess_nonaids(a, s) += deaths_nonaids_excess_a;
+            i_ha.deaths_hivpop_hts(a, s) = deaths_aids_a + deaths_nonaids_excess_a;
 
-            n_dp.p_totpop(a, s) -= hivdeaths_a + deaths_nonaids_excess_a;
-            n_ha.p_hivpop(a, s) -= hivdeaths_a + deaths_nonaids_excess_a;
+            n_ha.p_hiv_deaths(a, s) += deaths_aids_a;
+            n_ha.p_deaths_excess_nonaids(a, s) += deaths_nonaids_excess_a;
           }
 
         } else {
-          a += hAG_span[ha];
+          for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
+            i_ha.deaths_hivpop_hts(a, s) = 0.0;
+          }
         }
       }
     }
 
+  };
+
+  void run_remove_p_hiv_deaths(int hiv_step) {
+    auto& i_ha = intermediate.ha;
+    auto& n_dp = state_next.dp;
+    auto& n_ha = state_next.ha;
+    for (int s = 0; s < NS; ++s) {
+      for (int a = p_idx_hiv_first_adult; a < pAG; ++a) {
+        n_dp.p_totpop(a, s) -= i_ha.deaths_hivpop_hts(a, s);
+        n_ha.p_hivpop(a, s) -= i_ha.deaths_hivpop_hts(a, s);
+      }
+    }
+  }
+
+  void run_update_hiv_virgin(int hiv_step) {
+
+    // Implements progression, HIV mortality, and ART initiation in the
+    // virgin population proportional to the proportion of the total population
+    // that is virgin.
+    // Imposes the assumtion that same rates apply in the virgin population as
+    // in the adult population.
+
+    // Current implementation assumes h_hivpop_virgin stratification aligns
+    // to single-year age groups ("full stratification" rather than "coarse").
+    // Code requires updating to handle coarse virgin pop age groups.
+
+    const auto& n_ha = state_next.ha;
+    const auto& i_ha = intermediate.ha;
+    auto& n_vg = state_next.vg;
+
+    for (int s = 0; s < NS; ++s) {
+      for (int va = 0; va < SS::vAG; ++va) {
+        for (int hm = 0; hm < hDS; ++hm) {
+          auto prop_virgin = n_vg.h_hivpop_virgin(hm, va, s) / n_ha.h_hivpop(hm, va, s);
+          n_vg.h_hivpop_virgin(hm, va, s) += opts.dt * i_ha.grad(hm, va, s) * prop_virgin;
+        }
+      }
+    }
+  };
+
+  void run_update_art_virgin(int hiv_step) {
+    const auto& n_ha = state_next.ha;
+    const auto& i_ha = intermediate.ha;
+    auto& n_vg = state_next.vg;
+
+    for (int s = 0; s < NS; ++s) {
+      for (int va = 0; va < SS::vAG; ++va) {
+        for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
+          for (int hu = 0; hu < hTS; ++hu) {
+            auto prop_virgin = n_vg.h_artpop_virgin(hu, hm, va, s) / n_ha.h_artpop(hu, hm, va, s);
+            n_vg.h_artpop_virgin(hu, hm, va, s) += opts.dt * i_ha.gradART(hu, hm, va, s) * prop_virgin;
+          }
+        }
+      }
+    }
+  };
+
+  void run_remove_p_virgin_hiv_deaths(int hiv_step) {
+    const auto& i_ha = intermediate.ha;
+    const auto& n_ha = state_next.ha;
+    auto& n_vg = state_next.vg;
+    for (int s = 0; s < NS; ++s) {
+      for (int va = 0; va < SS::vAG; ++va) {
+        int a = va + SS::p_idx_virginpop_first; // age index in total population array
+        if (n_ha.p_hivpop(a, s) > 0.0) {
+          auto deaths_virginpop_a = i_ha.deaths_hivpop_hts(a, s) * n_vg.p_hivpop_virgin(va, s) / n_ha.p_hivpop(a, s);
+          n_vg.p_totpop_virgin(va, s) -= deaths_virginpop_a;
+          n_vg.p_hivpop_virgin(va, s) -= deaths_virginpop_a;
+        }
+      }
+    }
   };
 
   void run_wlhiv_births() {
@@ -646,8 +891,6 @@ struct AdultHivModelSimulation<Config> {
     const auto& c_ha = state_curr.ha;
     auto& n_ha = state_next.ha;
     auto& n_dp = state_next.dp;
-    auto& i_ha = intermediate.ha;
-
     real_type asfr_sum = 0.0;
     for (int a = 0; a < p_fertility_age_groups; ++a) {
       asfr_sum += p_dp.age_specific_fertility_rate(a, t);
@@ -683,25 +926,25 @@ struct AdultHivModelSimulation<Config> {
 
       for (int hd = 0; hd < hDS; ++hd) {
         df += p_ha.local_adj_factor *
-              p_ha.fert_mult_by_age(ha, t) *
-              p_ha.fert_mult_off_art(hd) *
-              (n_ha.h_hivpop(hd, ha, FEMALE) + c_ha.h_hivpop(hd, ha, FEMALE)) / 2;
+          p_ha.fert_mult_by_age(ha, t) *
+          p_ha.fert_mult_off_art(hd) *
+          (n_ha.h_hivpop(hd, ha, FEMALE) + c_ha.h_hivpop(hd, ha, FEMALE)) / 2;
 
         // women on ART less than 6 months use the off art fertility multiplier
         df += p_ha.local_adj_factor *
-              p_ha.fert_mult_by_age(ha, t) *
-              p_ha.fert_mult_off_art(hd) *
-              (n_ha.h_artpop(0, hd, ha, FEMALE) + c_ha.h_artpop(0, hd, ha, FEMALE)) / 2;
+          p_ha.fert_mult_by_age(ha, t) *
+          p_ha.fert_mult_off_art(hd) *
+          (n_ha.h_artpop(0, hd, ha, FEMALE) + c_ha.h_artpop(0, hd, ha, FEMALE)) / 2;
         for (int ht = 1; ht < hTS; ++ht) {
           df += p_ha.local_adj_factor *
-                p_ha.fert_mult_on_art(ha) *
-                (n_ha.h_artpop(ht, hd, ha, FEMALE) + c_ha.h_artpop(ht, hd, ha, FEMALE)) / 2;
+            p_ha.fert_mult_on_art(ha) *
+            (n_ha.h_artpop(ht, hd, ha, FEMALE) + c_ha.h_artpop(ht, hd, ha, FEMALE)) / 2;
         } // end hTS
       } // end hDS
 
       auto midyear_fertileHIV = (nHIVcurr + nHIVlast) / 2;
       if (midyear_fertileHIV > 0) {
-        df /= midyear_fertileHIV;
+        df = df / midyear_fertileHIV;
       } else {
         df = 1;
       }
@@ -713,6 +956,41 @@ struct AdultHivModelSimulation<Config> {
 
       n_ha.hiv_births += n_ha.hiv_births_by_mat_age(ha);
     } // end ha
+
+    if constexpr (ModelVariant::run_goals) {
+      if (t > pars.hv.goals_base_year_idx) {
+        n_ha.hiv_births *= (1-pars.hv.rn_cure_coverage_neonates(t)*pars.hv.rn_cure_effect_neonates);
+      }
+    }
+  };
+
+  void apply_goals_cure() {
+    auto& n_ha = state_next.ha;
+    const auto& i_ha = intermediate.ha;
+
+    for (int s = 0; s < NS; ++s) {
+      const real_type cured_proportion = intermediate.hv.cure_effect(s);
+
+      for (int ha = 0; ha < hAG; ++ha) {
+        const int a = ha + p_idx_hiv_first_adult;
+
+        // adults, PLHIV not on ART
+        for (int hm = 0; hm < hDS; ++hm) {
+          const real_type cured = cured_proportion * n_ha.h_hivpop(hm, ha, s);
+          n_ha.h_hivpop(hm, ha, s) -= cured;
+          n_ha.p_hivpop(a, s) -= cured;
+        }
+
+        // adults, PLHIV on ART
+        for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
+          for (int hu = 0; hu < hTS; ++hu) {
+            const real_type cured = cured_proportion * n_ha.h_artpop(hu, hm, ha, s);
+            n_ha.h_artpop(hu, hm, ha, s) -= cured;
+            n_ha.p_hivpop(a, s) -= cured;
+          }
+        }
+      } // ha
+    } // s
   };
 
 

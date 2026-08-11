@@ -128,6 +128,10 @@ struct Leapfrog {
       if constexpr (ModelVariant::run_hiv_simulation) {
         hiv_dp.run_hivpop_demographic_projection();
 
+	      if constexpr (ModelVariant::run_virgin) {
+	        hiv_dp.run_virginpop_demographic_projection();
+	      }
+
         if constexpr (ModelVariant::run_goals) {
           goals_sim.run_goals_pre_hiv_loop();
         }
@@ -135,8 +139,8 @@ struct Leapfrog {
         hiv_sim.run_hiv_adult_pre_hiv_loop();
 
         for (int hiv_step = 0; hiv_step < args.opts.hts_per_year; ++hiv_step) {
-          
-          //CDP: confirm order of innner calcs/ DP should be first to complete ART allocation 
+
+          //CDP: confirm order of innner calcs/ DP should be first to complete ART allocation
           //which is then used by goals
           //hiv_sim.run_hiv_adult_hiv_loop(hiv_step);
 
@@ -158,19 +162,15 @@ struct Leapfrog {
         child_sim.run_child_model_simulation();
       }
 
-      if constexpr (ModelVariant::run_goals) {
-        //goals_sim.run_goals_simulation();
-      }
-
       if (args.opts.proj_period_int == SS::PROJPERIOD_CALENDAR) {
         general_dp.run_end_year_migration();
 
         if constexpr (ModelVariant::run_hiv_simulation) {
           hiv_dp.run_hivpop_end_year_migration();
         }
-        if constexpr (ModelVariant::run_child_model) {
-          hiv_dp.run_hc_hivpop_end_year_migration();
-        }
+      }
+      if constexpr (ModelVariant::run_child_model) {
+        hiv_dp.run_hc_hivpop_end_year_migration();
       }
 
       if constexpr (ModelVariant::run_spectrum_model) {

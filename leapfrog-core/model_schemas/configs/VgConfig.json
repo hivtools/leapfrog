@@ -1,0 +1,50 @@
+{
+  "name": "Vg",
+  "long_name": "Virgin",
+  "namespace": "vg",
+  "enable_if": "run_virgin",
+  "state_space": {
+    "default": {
+      "vAG": 15,
+      "p_idx_virginpop_first": 15
+    },
+    "overrides": [
+      {
+        "applies_if": "age10_adult",
+        "vars": {	      
+          "vAG": 20,
+          "p_idx_virginpop_first": 10
+        }
+      }	
+    ]
+  },
+  "pars": {
+    "sexdebut_annual_prob": {
+      "num_type": "real_type",
+      "dims": ["SS::vAG", "SS::NS", "opts.proj_steps"],
+      "alias": {
+        "r": "sexdebut_annual_prob"
+      }
+    }
+  },
+  "intermediate": {
+  },
+  "state": {
+    "p_totpop_virgin": {
+      "num_type": "real_type",
+      "dims": ["SS::vAG", "SS::NS"]
+    },
+    "p_hivpop_virgin": {
+      "num_type": "real_type",
+      "dims": ["SS::vAG", "SS::NS"]
+    },
+    "h_hivpop_virgin": {
+      "num_type": "real_type",
+      "dims": ["SS::hDS", "SS::vAG", "SS::NS"]
+    },
+    "h_artpop_virgin": {
+      "num_type": "real_type",
+      "dims": ["SS::hTS", "SS::hDS", "SS::vAG", "SS::NS"]
+    }    
+  }
+}
