@@ -33,7 +33,7 @@
       "nPOC":2,
       "nHVINF":2,
       "nIntervn":43,
-      "nIntervnRN":53,
+      "nIntervnRN":57,
       "nPREP":9,
       "nPREPIntervn":9,
       "nPREPRG":10,
@@ -44,7 +44,9 @@
       "nRNPopSizes":35,
       "nRG_VMM":4,
       "nEligART":3,
-      "nIMP_DATA":2
+      "nIMP_DATA":2,
+      "nCOV":2,
+      "nIMPACTS":2
 
 
     }
@@ -347,7 +349,15 @@
       "dims": ["opts.proj_steps"]
     },
 
-    "therapeutic_vac_eff": {
+    "therapeutic_vac_duration": {
+      "num_type": "real_type"
+    },
+
+    "therapeutic_vac_reduce_inf": {
+      "num_type": "real_type"
+    },
+
+    "therapeutic_vac_reduce_mort": {
       "num_type": "real_type"
     },
 
@@ -371,6 +381,10 @@
     },
 
     "func_cure_reduce_mort": {
+      "num_type": "real_type"
+    },
+
+    "func_cure_duration": {
       "num_type": "real_type"
     }
 
@@ -631,14 +645,11 @@
       "dims": ["SS::nMAX_BEHAV_IMPACTS+1"]
     },
 
-    "cure_effect_adults": {
+    "cure_avg_cov_adults": {
       "num_type": "real_type",
       "dims": ["SS::nNS"]
     },
 
-    "cure_effect_children": {
-      "num_type": "real_type"
-    },
 
     "func_cure_impact_inf": {
       "num_type": "real_type",
@@ -646,7 +657,12 @@
     },
 
     
-    "func_cure_impact_mort": {
+    "func_cure_impact_mort_all": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
+    },
+
+     "func_cure_impact_mort_rg": {
       "num_type": "real_type",
       "dims": ["SS::nRG1","SS::nNS"]
     },
@@ -677,23 +693,6 @@
       "num_type": "real_type",
       "dims": ["SS::nVAC+1","SS::nRG+1","SS::nCD4+1","SS::nNS+1"]
     },
-
-
-    "pop_hiv_neg": {
-      "num_type": "real_type",
-      "dims": ["SS::nRG+1","SS::nNS+1"]
-    },
-
-    "cured_pop": {
-      "num_type": "real_type",
-      "dims": ["SS::nRG+1","SS::nNS+1"]
-    },
-
-    "cured_prop": {
-      "num_type": "real_type",
-      "dims": ["SS::nRG+1","SS::nNS+1"]
-    },
-
 
     "deaths": {
       "num_type": "real_type",
@@ -814,6 +813,57 @@
       "total_15HIVn": {
       "num_type": "real_type",
        "dims": ["SS::nNS+1"]
+    },
+
+     "prop_cured_all": {
+      "num_type": "real_type",
+      "dims": ["SS::nCOV" ]
+    },
+
+    "prop_cured_rg": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG", "SS::nCOV"]
+    },
+
+    "prop_cured_children": {
+      "num_type": "real_type",
+      "dims": ["SS::nCOV"]
+    },
+
+    "prop_cured_neonates": {
+      "num_type": "real_type",
+      "dims": ["SS::nCOV" ]
+    },
+   
+   
+    "prop_func_cured_HR": {
+      "num_type": "real_type",
+      "dims": ["SS::nCOV", "SS::nIMPACTS"]
+    },
+
+    "prop_func_cured_LR": {
+      "num_type": "real_type",
+      "dims": ["SS::nCOV", "SS::nIMPACTS"]
+    },
+
+    "prop_func_cured_children": {
+      "num_type": "real_type",
+      "dims": ["SS::nCOV", "SS::nIMPACTS"]
+    },
+
+    "prop_therapeutically_vaccinated": {
+      "num_type": "real_type",
+       "dims": ["SS::nCOV", "SS::nIMPACTS" ]
+    },
+
+    "cured_prop": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG+1","SS::nNS+1"]
+    },
+
+    
+    "total_new_cures": {
+      "num_type": "real_type"
     }
 
   }
