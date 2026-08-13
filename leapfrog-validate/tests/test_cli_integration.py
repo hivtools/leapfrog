@@ -100,7 +100,7 @@ def test_run_then_diff_of_a_ref_against_itself_passes(head_workspace, tmp_path):
     spec = INDICATORS["total_population"]
     arr_a = spec["extract"](output_a)
     arr_b = spec["extract"](output_b)
-    verdict = diff_indicator(arr_a, arr_b, "total_population", spec["atol"], spec["rtol"])
+    verdict = diff_indicator(arr_a, arr_b, "total_population", spec["tolerance"])
 
     assert verdict.passed, verdict.summary()
     assert verdict.max_abs_diff == 0.0
