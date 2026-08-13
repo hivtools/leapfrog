@@ -980,6 +980,7 @@ struct AdultHivModelSimulation<Config> {
     for (int s = 0; s < NS; ++s) {
       // cure cov includes adjustment for the proportion already received cured over period of duration
       const real_type cure_cov = intermediate.hv.cure_avg_cov_adults(s);
+      const real_type cure_cov_impact = intermediate.hv.cure_avg_cov_adults_impact(s);
       const real_type cure_eff = pars.hv.rn_cure_effect(0);
       real_type cured = 0.0;
 
@@ -989,7 +990,7 @@ struct AdultHivModelSimulation<Config> {
         // adults, PLHIV not on ART
         for (int hm = 0; hm < hDS; ++hm) {
           //for impact, use proportion for costing, with efficacy applied
-          cured = cure_cov * cure_eff * n_ha.h_hivpop(hm, ha, s);
+          cured = cure_cov_impact * n_ha.h_hivpop(hm, ha, s);
 
           // do not remove more than 99 % of the current compartment
           cured = std::min(cured, 0.99 * n_ha.h_hivpop(hm, ha, s));
@@ -1013,7 +1014,7 @@ struct AdultHivModelSimulation<Config> {
           for (int hu = 0; hu < hTS; ++hu) {
 
           // for impact, use proportion for costing, with efficacy applied
-          cured = cure_cov * cure_eff * n_ha.h_artpop(hu, hm, ha, s);
+          cured = cure_cov_impact * n_ha.h_artpop(hu, hm, ha, s);
 
           // do not remove more than 99 % of the current compartment
           cured = std::min(cured, 0.99 * n_ha.h_artpop(hu, hm, ha, s));
