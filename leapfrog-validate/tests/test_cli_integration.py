@@ -1,0 +1,78 @@
+"""Integration tests driving the CLI/library primitives end-to-end.
+
+Per the PRD's Testing Decisions, the primary seam is process/run/diff
+invoked against small, non-sensitive PJNZ fixtures, asserting on the
+resulting pass/fail verdict -- not on any one indicator extractor's
+internals. This actually builds leapfrogr (R + the C++ core it wraps) at
+a real git ref, so it needs R and network access to CRAN/r-universe; it's
+skipped when Rscript isn't on PATH rather than faked with a mock.
+"""
+
+import shutil
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from leapfrog_validate import build, git_utils, model_run, params
+from leapfrog_validate.diff import diff_indicator
+from leapfrog_validate.indicators import INDICATORS
+
+requires_r = pytest.mark.skipif(shutil.which("Rscript") is None, reason="R is not installed")
+
+REPO_ROOT = git_utils.find_repo_root(Path(__file__).parent)
+FIXTURE_PJNZ = REPO_ROOT / "leapfrogr" / "inst" / "pjnz" / "france_default.PJNZ"
+
+
+@pytest.fixture(scope="module")
+def head_sha():
+    return git_utils.resolve_ref(REPO_ROOT, "HEAD")
+
+
+@pytest.fixture(scope="module")
+def head_worktree(head_sha, tmp_path_factory):
+    cache_dir = tmp_path_factory.mktemp("leapfrog-validate-cache")
+    worktree = git_utils.ensure_worktree(REPO_ROOT, head_sha, cache_dir)
+    yield worktree
+    subprocess.run(
+        ["git", "-C", str(REPO_ROOT), "worktree", "remove", "--force", str(worktree)],
+        check=False,
+    )
+
+
+@pytest.fixture(scope="module")
+def head_workspace(head_worktree):
+    return build.build_leapfrogr(head_worktree)
+
+
+@requires_r
+def test_build_params_produces_a_readable_h5(head_workspace, tmp_path):
+    output = tmp_path / "params.h5"
+    params.build_params(head_workspace, FIXTURE_PJNZ, output)
+    assert output.exists()
+    assert output.stat().st_size > 0
+
+
+@requires_r
+def test_run_then_diff_of_a_ref_against_itself_passes(head_workspace, tmp_path):
+    """The walking-skeleton acceptance case: same ref twice must PASS.
+
+    This exercises build-params -> run -> diff exactly as a developer would
+    invoke them, and pins down the "identical refs never falsely fail"
+    correctness property the tolerance formula depends on.
+    """
+    params_path = tmp_path / "params.h5"
+    params.build_params(head_workspace, FIXTURE_PJNZ, params_path)
+
+    output_a = tmp_path / "output-a.h5"
+    output_b = tmp_path / "output-b.h5"
+    model_run.run_model(head_workspace, params_path, output_a, "Spectrum")
+    model_run.run_model(head_workspace, params_path, output_b, "Spectrum")
+
+    spec = INDICATORS["total_population"]
+    arr_a = spec["extract"](output_a)
+    arr_b = spec["extract"](output_b)
+    verdict = diff_indicator(arr_a, arr_b, "total_population", spec["atol"], spec["rtol"])
+
+    assert verdict.passed, verdict.summary()
+    assert verdict.max_abs_diff == 0.0
