@@ -10,10 +10,11 @@ from pathlib import Path
 
 
 class GitError(RuntimeError):
-    pass
+    """Raised when a git ref/SHA can't be resolved or a worktree can't be created."""
 
 
 def find_repo_root(start: Path | None = None) -> Path:
+    """Return the git repository root containing `start` (default: cwd)."""
     start = start or Path.cwd()
     result = subprocess.run(
         ["git", "-C", str(start), "rev-parse", "--show-toplevel"],

@@ -16,11 +16,14 @@ import numpy as np
 
 
 def extract_total_population(output_h5: Path) -> np.ndarray:
+    """Read the p_totpop array (age x sex x year) out of a raw output.h5."""
     with h5py.File(output_h5, "r") as f:
         return f["p_totpop"][()]
 
 
 class IndicatorSpec(TypedDict):
+    """A leapfrog extractor plus the tolerance it's judged against."""
+
     extract: Callable[[Path], np.ndarray]
     atol: float
     rtol: float

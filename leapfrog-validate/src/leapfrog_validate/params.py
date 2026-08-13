@@ -9,10 +9,11 @@ _SCRIPT = Path(__file__).parent / "r_scripts" / "build_params.R"
 
 
 class ParamsBuildError(RuntimeError):
-    pass
+    """Raised when processing a PJNZ file via Rscript fails."""
 
 
 def build_params(workspace: BuildWorkspace, pjnz: Path, output: Path) -> None:
+    """Process `pjnz` at `workspace`'s ref, writing a params.h5 artifact."""
     # Resolve to absolute before handing off: the Rscript subprocess doesn't
     # run from the caller's directory (see model_run.run_model), so a
     # relative path here would land relative to wherever that subprocess

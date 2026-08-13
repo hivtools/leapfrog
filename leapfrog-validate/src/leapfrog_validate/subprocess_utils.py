@@ -16,6 +16,7 @@ def run_checked(
     env: dict | None = None,
     error_context: str = "",
 ) -> subprocess.CompletedProcess:
+    """Run `cmd`, raising `error_cls` with full command/cwd/stdout/stderr on a nonzero exit."""
     result = subprocess.run(cmd, cwd=cwd, env=env, capture_output=True, text=True, check=False)
     if result.returncode != 0:
         msg = (

@@ -37,6 +37,7 @@ def set_cache_dir(
         ),
     ] = DEFAULT_CACHE_DIR,
 ) -> None:
+    """Stash --cache-dir and the current repo root for every subcommand to read."""
     ctx.obj = {"cache_dir": cache_dir, "repo_root": git_utils.find_repo_root()}
 
 
@@ -97,6 +98,7 @@ def diff_cmd(
 
 
 def main() -> None:
+    """Entry point registered as the `leapfrog-validate` console script."""
     app()
 
 

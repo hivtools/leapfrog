@@ -9,10 +9,11 @@ _SCRIPT = Path(__file__).parent / "r_scripts" / "run_model.R"
 
 
 class ModelRunError(RuntimeError):
-    pass
+    """Raised when running the model via Rscript fails."""
 
 
 def run_model(workspace: BuildWorkspace, params: Path, output: Path, configuration: str) -> None:
+    """Run the model against `params` at `workspace`'s ref, writing raw output.h5."""
     # Resolve to absolute before handing off: the Rscript subprocess runs
     # with cwd=workspace.worktree (below), not the caller's directory, so a
     # relative path here would land inside the cached build workspace

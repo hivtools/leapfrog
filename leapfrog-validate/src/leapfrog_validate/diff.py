@@ -15,6 +15,8 @@ import numpy as np
 
 @dataclass
 class Verdict:
+    """Pass/fail result of diffing one indicator between two artifacts."""
+
     indicator: str
     passed: bool
     max_abs_diff: float
@@ -22,6 +24,7 @@ class Verdict:
     n_failed: int
 
     def summary(self) -> str:
+        """One-line PASS/FAIL report suitable for CLI output."""
         status = "PASS" if self.passed else "FAIL"
         return (
             f"{status}  {self.indicator}: max|delta|={self.max_abs_diff:.6g}, "
@@ -35,6 +38,7 @@ def hybrid_tolerance_pass_mask(a: np.ndarray, b: np.ndarray, atol: float, rtol: 
 
 
 def diff_indicator(a: np.ndarray, b: np.ndarray, indicator: str, atol: float, rtol: float) -> Verdict:
+    """Diff two same-shaped indicator arrays and roll up to a single Verdict."""
     if a.shape != b.shape:
         msg = f"Shape mismatch for indicator '{indicator}': {a.shape} vs {b.shape}"
         raise ValueError(msg)

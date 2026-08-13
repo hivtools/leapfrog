@@ -13,7 +13,7 @@ from leapfrog_validate.subprocess_utils import run_checked
 
 
 class BuildError(RuntimeError):
-    pass
+    """Raised when generating C++ headers or installing leapfrogr fails."""
 
 
 @dataclass(frozen=True)

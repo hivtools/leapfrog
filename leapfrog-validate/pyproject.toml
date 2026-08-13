@@ -67,21 +67,8 @@ select = [
   "YTT",
 ]
 ignore = [
-  # Allow non-abstract empty methods in abstract base classes
-  "B027",
-  # Allow boolean positional values in function calls, like `dict.get(... True)`
-  "FBT003",
-  # Ignore checks for possible passwords
-  "S105", "S106", "S107",
-  # Ignore complexity
-  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
-  # Don't require docstrings everywhere for now
-  "D100", "D101", "D102", "D103", "D104", "D105",
-  # Ignore shadowing
-  "A001", "A002", "A003",
-  # Allow print for CLI output
-  "T201",
-  # Allow subprocess calls with variable args (build orchestration is the point of this tool)
+  # Shelling out to git/R/uv with argument lists is this tool's whole job,
+  # not untrusted input reaching a shell -- no shell=True anywhere.
   "S603", "S607",
 ]
 unfixable = [
@@ -93,5 +80,6 @@ unfixable = [
 ban-relative-imports = "all"
 
 [tool.ruff.lint.per-file-ignores]
-# Tests can use magic values, assertions, and relative imports
-"tests/**/*" = ["PLR2004", "S101", "TID252"]
+# Tests can use magic values, assertions, relative imports, and skip
+# docstrings on individual test functions (the test name says what it does).
+"tests/**/*" = ["PLR2004", "S101", "TID252", "D100", "D101", "D102", "D103"]
