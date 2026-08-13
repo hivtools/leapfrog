@@ -167,7 +167,7 @@ struct ChildModelSimulation<Config> {
 
     if constexpr (ModelVariant::run_goals) {
       if (t > pars.hv.goals_base_year_idx) {
-        apply_goals_cure(t);
+        apply_goals_cure_children(t);
       }
     }
 
@@ -1093,6 +1093,15 @@ struct ChildModelSimulation<Config> {
 
           // ctx reduction on mortality for those on ART
           hc_death_rate *= i_hc.ctx_mean(art_flag);
+          //impact of new products
+          if constexpr (ModelVariant::run_goals) {
+            if (t > pars.hv.goals_base_year_idx) {
+               //impacts on art mortality, by risk group: functional cure
+                hc_death_rate *= intermediate.hv.func_cure_child_impact_mort;
+                //impacts on art mortality: therapeutic_vaccine
+                hc_death_rate *= 1 - state_next.hv.prop_therapeutically_vaccinated(0, 1);
+            }
+          }
 
           if (a < hc2_agestart) {
             bool any_hc1_art_deaths = hc_death_rate * n_hc.hc1_artpop(t_art_idx, hd, a, s) >= 0;
@@ -1610,16 +1619,15 @@ struct ChildModelSimulation<Config> {
     }
   };
 
-  void apply_goals_cure(int t){
+  void apply_goals_cure_children(int t){
 
     auto& n_ha = state_next.ha;
     auto& n_hc = state_next.hc;
 
-    real_type cured_proportion=0.0;
     real_type cured = 0.0;
 
      for (int s = 0; s < NS; ++s) {
-      cured_proportion =  intermediate.hv.cure_effect(s);
+
       for (int a = 0; a < hcAG_end; ++a) {
 
             //clhiv 0-4, not on art
@@ -1627,17 +1635,59 @@ struct ChildModelSimulation<Config> {
               //clhiv 0-4, not on art
               for (int cat = 0; cat < hcTT; ++cat) {
                 for (int hd = 0; hd < hc1DS; ++hd) {
-                  cured = cured_proportion * n_hc.hc1_hivpop(hd, cat, a, s);
-                  n_hc.hc1_hivpop(hd, cat, a, s) -= cured;
-                  n_ha.p_hivpop(a, s) -= cured;
+
+                    // for impact, use proportion for costing, with efficacy applied
+                    cured = pars.hv.rn_cure_coverage_children(t) *
+                            pars.hv.rn_cure_effect(0) *
+                            n_hc.hc1_hivpop(hd, cat, a, s) *
+                            (1 - state_next.hv.prop_cured_children(1));
+
+                    // do not remove more than 99 % of the current compartment
+                    cured = std::min(cured, 0.99 * n_hc.hc1_hivpop(hd, cat, a, s));
+
+                    n_hc.hc1_hivpop(hd, cat, a, s) -= cured;
+                    n_ha.p_hivpop(a, s) -= cured;
+
+                    // for costing, use proportion for costing, without efficacy applied
+                    cured = pars.hv.rn_cure_coverage_children(t) *
+                            n_hc.hc1_hivpop(hd, cat, a, s) *
+                            (1 - state_next.hv.prop_cured_children(1));
+
+                    // do not remove more than 99 % of the current compartment
+                    cured = std::min(cured, 0.99 * n_hc.hc1_hivpop(hd, cat, a, s));
+
+                    // add to total for costing
+                    state_next.hv.total_new_cures += cured;
                 }
               }
-              //clhiv 0-4, on art
+              // clhiv 0-4, on art
               for (int hd = 0; hd < hc1DS; ++hd) {
                   for (int dur = 0; dur < hTS; ++dur) {
-                     cured = cured_proportion * n_hc.hc1_artpop(dur, hd, a, s);
-                     n_hc.hc1_artpop(dur, hd, a, s) -= cured;
-                     n_ha.p_hivpop(a, s) -= cured;
+
+                    // for impact, use proportion for costing, with efficacy applied
+                    cured = pars.hv.rn_cure_coverage_children(t) *
+                            pars.hv.rn_cure_effect(0) *
+                            n_hc.hc1_artpop(dur, hd, a, s) *
+                            (1 - state_next.hv.prop_cured_children(1));
+
+                    // do not remove more than 99 % of the current compartment
+                    cured = std::min(cured, 0.99 * n_hc.hc1_artpop(dur, hd, a, s));
+
+                    n_hc.hc1_artpop(dur, hd, a, s) -= cured;
+                    n_ha.p_hivpop(a, s) -= cured;
+
+                    // for costing, use proportion for costing, without efficacy applied
+                    cured = pars.hv.rn_cure_coverage_children(t) *
+                            n_hc.hc1_artpop(dur, hd, a, s) *
+                            (1 - state_next.hv.prop_cured_children(1));
+
+                    // do not remove more than 99 % of the current compartment
+                    cured = std::min(cured, 0.99 * n_hc.hc1_artpop(dur, hd, a, s));
+
+                    // add to total for costing
+                    state_next.hv.total_new_cures += cured;
+
+
                   }
               }
           }
@@ -1645,17 +1695,56 @@ struct ChildModelSimulation<Config> {
              //clhiv 5+, not on art
               for (int hd = 0; hd < hc2DS; ++hd) {
                   for (int cat = 0; cat < hcTT; ++cat) {
-                    cured = cured_proportion * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
+                     //for impact, use proportion for costing, with efficacy applied
+                    cured = pars.hv.rn_cure_coverage_children(t) *
+                            pars.hv.rn_cure_effect(0) *
+                            n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) *
+                            (1 - state_next.hv.prop_cured_children(1));
+
+                    // do not remove more than 99 % of the current compartment
+                    cured = std::min(cured, 0.99 * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s));
+
                     n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) -= cured;
                     n_ha.p_hivpop(a, s) -= cured;
+
+                    //for costing, use proportion for costing, without efficacy applied
+                    cured = pars.hv.rn_cure_coverage_children(t) *
+                            n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) *
+                            (1 - state_next.hv.prop_cured_children(1));
+
+                    // do not remove more than 99 % of the current compartment
+                    cured = std::min(cured, 0.99 * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s));
+
+                    //add to total for costing
+                    state_next.hv.total_new_cures += cured;
                   }
               }
               //clhiv 5+, on art
               for (int hd = 0; hd < hc2DS; ++hd) {
                for (int dur = 0; dur < hTS; ++dur) {
-                  cured = cured_proportion * n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
+                  //for impact, use proportion for costing, with efficacy applied
+                  cured = pars.hv.rn_cure_coverage_children(t) *
+                          pars.hv.rn_cure_effect(0) *
+                           n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s) *
+                          (1 - state_next.hv.prop_cured_children(1));
+
+                   // do not remove more than 99 % of the current compartment
+                  cured = std::min(cured, 0.99 * n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s));
+
                   n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s) -= cured;
                   n_ha.p_hivpop(a, s) -= cured;
+
+                  //for costing, use proportion for costing, without efficacy applied
+                  cured = pars.hv.rn_cure_coverage_children(t) *
+                          n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s) *
+                          (1 - state_next.hv.prop_cured_children(1));
+
+                  // do not remove more than 99 % of the current compartment
+                  cured = std::min(cured, 0.99 * n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s));
+
+                  //add to total for costing
+                  state_next.hv.total_new_cures += cured;
+
                 }
               }
           }
