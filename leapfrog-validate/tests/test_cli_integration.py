@@ -54,6 +54,34 @@ def test_build_params_produces_a_readable_h5(head_workspace, tmp_path):
 
 
 @requires_r
+def test_build_params_relative_output_resolves_against_caller_cwd(head_workspace, tmp_path, monkeypatch):
+    """Regression test.
+
+    A relative -o path must land next to where the user ran the command,
+    not inside the cached build worktree the Rscript subprocess happens to
+    run from (see params.build_params).
+    """
+    monkeypatch.chdir(tmp_path)
+    params.build_params(head_workspace, FIXTURE_PJNZ, Path("relative_params.h5"))
+
+    assert (tmp_path / "relative_params.h5").exists()
+    assert not (head_workspace.worktree / "relative_params.h5").exists()
+
+
+@requires_r
+def test_run_relative_output_resolves_against_caller_cwd(head_workspace, tmp_path, monkeypatch):
+    """Same regression as above, for run's --output (see model_run.run_model)."""
+    params_path = tmp_path / "params.h5"
+    params.build_params(head_workspace, FIXTURE_PJNZ, params_path)
+
+    monkeypatch.chdir(tmp_path)
+    model_run.run_model(head_workspace, params_path, Path("relative_output.h5"), "Spectrum")
+
+    assert (tmp_path / "relative_output.h5").exists()
+    assert not (head_workspace.worktree / "relative_output.h5").exists()
+
+
+@requires_r
 def test_run_then_diff_of_a_ref_against_itself_passes(head_workspace, tmp_path):
     """The walking-skeleton acceptance case: same ref twice must PASS.
 
