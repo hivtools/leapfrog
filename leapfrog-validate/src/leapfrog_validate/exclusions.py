@@ -15,7 +15,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-Range = tuple[int, int]
+# An inclusive (min, max) index bound -- unlike Python's own half-open range().
+InclusiveBounds = tuple[int, int]
 
 
 @dataclass(frozen=True)
@@ -30,9 +31,9 @@ class Exclusion:
     pjnz: str
     reason: str
     link: str
-    year: Range | None = None
-    sex: Range | None = None
-    age: Range | None = None
+    year: InclusiveBounds | None = None
+    sex: InclusiveBounds | None = None
+    age: InclusiveBounds | None = None
 
     def __post_init__(self) -> None:
         """Reject an entry missing a reason or a link."""
@@ -44,7 +45,7 @@ class Exclusion:
             raise ValueError(msg)
 
 
-def _axis_mask(size: int, bounds: Range | None) -> np.ndarray:
+def _axis_mask(size: int, bounds: InclusiveBounds | None) -> np.ndarray:
     if bounds is None:
         return np.ones(size, dtype=bool)
     lo, hi = bounds
