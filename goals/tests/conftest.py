@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pytest
 
-
 _TEST_DATA = Path(__file__).parent / "resources"
 
 

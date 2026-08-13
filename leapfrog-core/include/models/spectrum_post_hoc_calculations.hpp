@@ -64,7 +64,6 @@ struct SpectrumPostHocCalculations<Config> {
   void calculate_nonaids_deaths() {
     auto& n_ha = state_next.ha;
     auto& n_sp = state_next.sp;
-    auto& i_sp = intermediate.sp;
 
     for (int s = 0; s < NS; ++s) {
 
@@ -74,25 +73,24 @@ struct SpectrumPostHocCalculations<Config> {
 
       int a = p_idx_hiv_first_adult;
       for (int ha = 0; ha < hAG; ++ha) {
-        i_sp.hiv_art_adult_sa = 0.0;
-        i_sp.hiv_untreated_adult_sa = 0.0;
+        real_type hiv_art_adult_sa = 0.0;
+        real_type hiv_untreated_adult_sa = 0.0;
 
         for (int hm = 0; hm < hDS; ++hm) {
-          i_sp.hiv_untreated_adult_sa += n_ha.h_hivpop(hm, ha, s);
+          hiv_untreated_adult_sa += n_ha.h_hivpop(hm, ha, s);
           for (int hu = 0; hu < hTS; ++hu) {
-            i_sp.hiv_art_adult_sa += n_ha.h_artpop(hu, hm, ha, s);
+            hiv_art_adult_sa += n_ha.h_artpop(hu, hm, ha, s);
           }
         }
 
-        if (i_sp.hiv_art_adult_sa + i_sp.hiv_untreated_adult_sa > 0) {
-          i_sp.artcov_adult_sa = i_sp.hiv_art_adult_sa / (i_sp.hiv_art_adult_sa + i_sp.hiv_untreated_adult_sa);
-        } else {
-          i_sp.artcov_adult_sa = 0.0;
+        real_type artcov_adult_sa = 0.0;
+        if (hiv_art_adult_sa + hiv_untreated_adult_sa > 0) {
+          artcov_adult_sa = hiv_art_adult_sa / (hiv_art_adult_sa + hiv_untreated_adult_sa);
         }
 
         for (int i = 0; i < hAG_span[ha]; ++i, ++a) {
-          n_sp.p_deaths_nonaids_artpop(a, s) = n_ha.p_deaths_background_hivpop(a, s) * i_sp.artcov_adult_sa;
-          n_sp.p_deaths_nonaids_hivpop(a, s) = n_ha.p_deaths_background_hivpop(a, s) * (1.0 - i_sp.artcov_adult_sa);
+          n_sp.p_deaths_nonaids_artpop(a, s) = n_ha.p_deaths_background_hivpop(a, s) * artcov_adult_sa;
+          n_sp.p_deaths_nonaids_hivpop(a, s) = n_ha.p_deaths_background_hivpop(a, s) * (1.0 - artcov_adult_sa);
         }
       }
     }

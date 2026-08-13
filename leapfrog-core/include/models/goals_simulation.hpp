@@ -3835,6 +3835,7 @@ private:
 
     const auto& p_hc = pars.hc;
     auto& i_hc = intermediate.hc;
+    auto& n_hc = state_next.hc;
 
     const auto& p_hv = pars.hv;
     auto& i_hv = intermediate.hv;
@@ -4046,8 +4047,8 @@ private:
 
         case RN_HIV_TEST_ANC:  // HIV testing for all women attending ANC
         {
-          pop_reached = (i_hc.need_PMTCT > 0.0)
-              ? n_dp.births * (i_hc.on_PMTCT / i_hc.need_PMTCT) : 0.0;
+          pop_reached = (n_hc.pmtct_need > 0.0)
+              ? n_dp.births * (i_hc.on_PMTCT / n_hc.pmtct_need) : 0.0;
           break;
         }
 

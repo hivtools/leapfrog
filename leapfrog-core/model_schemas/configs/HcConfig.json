@@ -56,7 +56,7 @@
           "hc_age_coarse_cd4": [0, 0, 0, 1, 1, 2, 2, 2, 2, 2]
         }
       }
-    ]    
+    ]
   },
   "pars": {
       "hc_nosocomial_infections_by_age": {
@@ -310,34 +310,7 @@
       "num_type": "real_type",
       "dims": ["SS::hBF_coarse"]
     },
-    "retained": {
-      "num_type": "real_type"
-    },
-    "hc_death_rate": {
-      "num_type": "real_type"
-    },
-    "asfr_sum": {
-      "num_type": "real_type"
-    },
-    "births_sum": {
-      "num_type": "real_type"
-    },
-    "sumARV": {
-      "num_type": "real_type"
-    },
-    "need_PMTCT": {
-      "num_type": "real_type"
-    },
     "on_PMTCT": {
-      "num_type": "real_type"
-    },
-    "num_wlhiv_lt200": {
-      "num_type": "real_type"
-    },
-    "num_wlhiv_200to350": {
-      "num_type": "real_type"
-    },
-    "num_wlhiv_gte350": {
       "num_type": "real_type"
     },
     "num_wlhiv": {
@@ -350,12 +323,6 @@
       "num_type": "real_type"
     },
     "prop_wlhiv_gte350": {
-      "num_type": "real_type"
-    },
-    "prop_wlhiv_lt350": {
-      "num_type": "real_type"
-    },
-    "excessratio": {
       "num_type": "real_type"
     },
     "excessratio_bf": {
@@ -373,28 +340,10 @@
     "optB_bf_transmission_rate": {
       "num_type": "real_type"
     },
-    "retained_on_ART": {
-      "num_type": "real_type"
-    },
-    "retained_started_ART": {
-      "num_type": "real_type"
-    },
     "perinatal_transmission_rate": {
       "num_type": "real_type"
     },
-    "receiving_PMTCT": {
-      "num_type": "real_type"
-    },
-    "no_PMTCT": {
-      "num_type": "real_type"
-    },
     "perinatal_transmission_rate_bf_calc": {
-      "num_type": "real_type"
-    },
-    "age_weighted_hivneg": {
-      "num_type": "real_type"
-    },
-    "age_weighted_infections": {
       "num_type": "real_type"
     },
     "incidence_rate_wlhiv": {
@@ -403,19 +352,7 @@
     "perinatal_transmission_from_incidence": {
       "num_type": "real_type"
     },
-    "bf_at_risk": {
-      "num_type": "real_type"
-    },
     "bf_incident_hiv_transmission_rate": {
-      "num_type": "real_type"
-    },
-    "percent_no_treatment": {
-      "num_type": "real_type"
-    },
-    "percent_on_treatment": {
-      "num_type": "real_type"
-    },
-    "bf_scalar": {
       "num_type": "real_type"
     },
     "ctx_mean": {
@@ -495,6 +432,9 @@
     "pmtct_coverage_at_delivery": {
       "num_type": "real_type",
       "dims": ["SS::hPS"]
+    },
+    "pmtct_need": {
+      "num_type": "real_type"
     }
   }
 }
