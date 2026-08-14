@@ -507,7 +507,7 @@ public:
    if( (t > p_hv.goals_base_year_idx) && (hiv_step == opts.hts_per_year - 1) ){
       calc_HIV_cure_avg_cov_impact(t);//for use in dp/aim
       calc_HIV_cure_avg_cov(t);//for use in dp/aim
-      calc_HIV_cure(t);
+      calc_HIV_cure(t);//cure state transitions
    }
   }
 
@@ -1847,6 +1847,15 @@ public:
           for (int hd = CD4_GT500; hd <= CD4_LT50_ART; ++hd) {
             for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) {
               
+              //for costing, use proportion for costing, no efficacy applied
+              //eligible adults
+              new_cured = n_hv.adults(v, rg, hd, s) * cure_cov;
+
+              // do not remove more than 99 % of the current compartment
+              new_cured = std::min(new_cured, 0.99 * n_hv.adults(v, rg, hd, s));
+
+              n_hv.total_new_cures += new_cured;
+
               //for impact, use proportion for costing, with efficacy applied
               //eligible adults
               elig = n_hv.adults(v, rg, hd, s);
@@ -1861,16 +1870,6 @@ public:
                 n_hv.adults(v, rg, hd, s) -= new_cured;
                 n_hv.adults(v, rg, CD4_NEG, s) += new_cured;
               }
-
-              //for costing, use proportion for costing, no efficacy applied
-              //eligible adults
-              new_cured = n_hv.adults(v, rg, hd, s) * cure_cov;
-
-              // do not remove more than 99 % of the current compartment
-              new_cured = std::min(new_cured, 0.99 * n_hv.adults(v, rg, hd, s));
-
-              n_hv.total_new_cures += new_cured;
-
 
             }  // v
 
