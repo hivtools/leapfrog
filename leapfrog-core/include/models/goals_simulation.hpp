@@ -152,16 +152,13 @@ private:
     VAC_DEGREEACTION = 1,
 
     VAC_COV_ALLRISK = 0,
-    VAC_COV_SINGLE = 1,
 
     VAC_TARGET_HIV_ALL = 0,
     VAC_TARGET_HIV_NEG = 1,
 
     CURE_COV_ALLRISK = 0,
-    CURE_COV_SINGLE = 1,
 
     VMM_COV_ALLRISK = 0,
-    VMM_COV_SINGLE = 1,
 
     POC_CD4 = 0,
     POC_VL = 1,
@@ -254,12 +251,12 @@ private:
     RN_CONDOM_SUPPLY = 51,
     RN_ANC_TESTING = 52,
 
-    RN_MAX_INTERVN = 52,
-
     RN_CURE_CHILDREN = 53,
     RN_LONG_ACT_TREAT = 54,
     RN_THERAPEUTIC_VAC = 55,
     RN_FUNC_CURE = 56,
+
+    RN_MAX_INTERVN = 56,
 
     RN_DIRECT_COSTS = 57,
     RN_PROGRAM_COSTS = 58,
@@ -780,7 +777,7 @@ public:
 
     i_hv.i_idu_share_prop = p_hv.b_idu_share_prop(t_behav);
 
-    nda::fill(i_hv.func_cure_impact_inf, 1.0);
+    nda::fill(i_hv.func_cure_impact_inf, 0.0);
     nda::fill(i_hv.func_cure_impact_mort_rg, 1.0);
     nda::fill(i_hv.func_cure_impact_mort_all, 1.0);
   }
