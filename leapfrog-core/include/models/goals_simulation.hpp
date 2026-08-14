@@ -780,7 +780,7 @@ public:
 
     i_hv.i_idu_share_prop = p_hv.b_idu_share_prop(t_behav);
 
-    nda::fill(i_hv.func_cure_impact_inf, 1.0);
+    nda::fill(i_hv.func_cure_impact_inf, 0.0);
     nda::fill(i_hv.func_cure_impact_mort_rg, 1.0);
     nda::fill(i_hv.func_cure_impact_mort_all, 1.0);
   }
