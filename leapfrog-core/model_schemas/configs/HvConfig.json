@@ -645,11 +645,15 @@
       "dims": ["SS::nMAX_BEHAV_IMPACTS+1"]
     },
 
-    "cure_avg_cov_adults": {
+    "cure_avg_cov_adults_impact": {
       "num_type": "real_type",
       "dims": ["SS::nNS"]
     },
 
+    "cure_avg_cov_adults": {
+      "num_type": "real_type",
+      "dims": ["SS::nNS"]
+    },
 
     "func_cure_impact_inf": {
       "num_type": "real_type",

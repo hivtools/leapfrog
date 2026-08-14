@@ -1,6 +1,6 @@
 [project]
 name = "leapfrog-goals"
-version = "0.0.13"
+version = "1.0.0"
 description = "Python interface for Leapfrog Goals model"
 readme = "README.md"
 authors = [
@@ -40,8 +40,8 @@ dev = [
 
 # Uncomment and set file path to use local development versions
 #[tool.uv.sources]
-#avenir-spectrum-common = { path = "C:\\work\\LeapFrog\\V9\\SpectrumEngine\\SpectrumCommon", editable = true }
-#avenir-spectrum-import-pjnz = { path = "C:\\work\\LeapFrog\\V9\\SpectrumEngine\\Tools\\ImportPJNZ", editable = true }
+#avenir-spectrum-common = { path = "C:\\work\\LeapFrog\\V10\\SpectrumEngine\\SpectrumCommon", editable = true }
+#avenir-spectrum-import-pjnz = { path = "C:\\work\\LeapFrog\\V10\\SpectrumEngine\\Tools\\ImportPJNZ", editable = true }
 
 # Needed for full C++17 support on macOS
 [tool.cibuildwheel.macos.environment]
