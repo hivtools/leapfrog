@@ -4223,6 +4223,13 @@ private:
           break;
         }
 
+         case RN_LONG_ACT_TREAT:  // long acting treatment, on ART
+        {
+          elig        = hahc_total_art;
+          pop_reached = p_hv.long_act_treat_cov(t) * elig;
+
+          break;
+        }
 
         case RN_FUNC_CURE:  // HIV functional cure, on ART
         {
