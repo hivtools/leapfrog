@@ -675,6 +675,13 @@ public:
     std::cout << "total HIVp 15 year old, F (#) t " << t << " " << n_hv.total_15HIVp(1) << " "
               << std::endl;
 
+    std::cout << "average impact cure, M (%) t " << t << " " << 100*i_hv.cure_avg_cov_adults_impact(S_MALE) << " "
+              << std::endl;    
+              
+      std::cout << "average impact cure, F (%) t " << t << " " << 100*i_hv.cure_avg_cov_adults_impact(S_FEMALE) << " "
+              << std::endl;            
+
+
     // plhiv = i_hv.pop_hivpos_adults + i_hv.total_pop_hivpos;
     // total_pop = i_hv.dp_totpop_1549(S_MALE) + i_hv.dp_totpop_1549(S_FEMALE);
     // prev = plhiv / total_pop;
@@ -1514,12 +1521,12 @@ public:
     n_hv.prop_cured_children(cov_type) = 0.0;
     n_hv.prop_cured_neonates(cov_type) = 0.0;
     //RGs, men
-    for (int rg = RG_LRH; rg <= RG_MSM; ++rg) {
+    for (int rg = RG_NONE; rg <= RG_MSM; ++rg) {
       n_hv.prop_cured_rg(rg,cov_type) = 0.0;
     }
     int nr = 0;
     //RGs, women
-    for (int rg = RG_LRH; rg <= RG_IDU; ++rg) {
+    for (int rg = RG_NONE; rg <= RG_IDU; ++rg) {
       nr = rg + RG_NONE_F3;
       n_hv.prop_cured_rg(nr,cov_type) = 0.0;
     }
@@ -1546,11 +1553,11 @@ public:
       n_hv.prop_cured_children(cov_type) = p_hv.rn_cure_coverage_children(t);
       n_hv.prop_cured_neonates(cov_type) = p_hv.rn_cure_coverage_neonates(t);
       //RGs, men
-      for (int rg = RG_LRH; rg <= RG_MSM; ++rg) {
+      for (int rg = RG_NONE; rg <= RG_MSM; ++rg) {
         n_hv.prop_cured_rg(rg,cov_type) = p_hv.rn_cure_coverage_rg(rg,t);
       }
       //RGs, women
-      for (int rg = RG_LRH; rg <= RG_IDU; ++rg) {
+      for (int rg = RG_NONE; rg <= RG_IDU; ++rg) {
         nr = rg + RG_NONE_F3;
         n_hv.prop_cured_rg(nr,cov_type) = p_hv.rn_cure_coverage_rg(nr,t);
       }
@@ -1561,12 +1568,12 @@ public:
         n_hv.prop_cured_children(cov_type) = 1.0;
         n_hv.prop_cured_neonates(cov_type) = 1.0;
          //RGs, men
-        for (int rg = RG_LRH; rg <= RG_MSM; ++rg) {
+        for (int rg = RG_NONE; rg <= RG_MSM; ++rg) {
           n_hv.prop_cured_rg(rg, cov_type) = 1.0;
         }
 
         //RGs, women
-        for (int rg = RG_LRH; rg <= RG_MSM; ++rg) {
+        for (int rg = RG_NONE; rg <= RG_MSM; ++rg) {
           nr = rg + RG_NONE_F3;
           n_hv.prop_cured_rg(nr, cov_type) = 1.0;
         }
@@ -1577,11 +1584,11 @@ public:
           n_hv.prop_cured_children(cov_type) *= 1.0 - p_hv.rn_cure_coverage_children(t - d ) * ((cov_type == PROP_FOR_IMPACT) ?  p_hv.rn_cure_effect(VAC_EFF) : 1.0);
           n_hv.prop_cured_neonates(cov_type) *= 1.0 - p_hv.rn_cure_coverage_neonates(t - d) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.rn_cure_effect(VAC_EFF) : 1.0);
           //RGs, men
-          for (int rg = RG_LRH; rg <= RG_MSM; ++rg) {
+          for (int rg = RG_NONE; rg <= RG_MSM; ++rg) {
            n_hv.prop_cured_rg(rg, cov_type) *= 1.0 - p_hv.rn_cure_coverage_rg(rg, t - d) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.rn_cure_effect(VAC_EFF) : 1.0);
           }
           //RGs,women
-          for (int rg = RG_LRH; rg <= RG_IDU; ++rg) {
+          for (int rg = RG_NONE; rg <= RG_IDU; ++rg) {
             nr = rg + RG_NONE_F3;
             n_hv.prop_cured_rg(nr, cov_type) *= 1.0 - p_hv.rn_cure_coverage_rg(nr, t - d) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.rn_cure_effect(VAC_EFF) : 1.0);
           }
@@ -1591,12 +1598,12 @@ public:
         n_hv.prop_cured_children(cov_type) = 1.0 - n_hv.prop_cured_children(cov_type);
         n_hv.prop_cured_neonates(cov_type) = 1.0 - n_hv.prop_cured_neonates(cov_type);
         //RGs, men
-        for (int rg = RG_LRH; rg <= RG_MSM; ++rg) {
+        for (int rg = RG_NONE; rg <= RG_MSM; ++rg) {
           n_hv.prop_cured_rg(rg, cov_type) = 1.0 - n_hv.prop_cured_rg(rg, cov_type);
         }
 
         //RGs, women
-        for (int rg = RG_LRH; rg <= RG_IDU; ++rg) {
+        for (int rg = RG_NONE; rg <= RG_IDU; ++rg) {
           nr = rg + RG_NONE_F3;
           n_hv.prop_cured_rg(nr,cov_type) = 1.0 - n_hv.prop_cured_rg(nr, cov_type);
         }
@@ -1698,8 +1705,8 @@ public:
                           n_hv.adults(VAC_ALL, rg, CD4_NEG, S_MALE);
 
             i_hv.cure_avg_cov_adults_impact(S_MALE) += ((hv_plhiv > 0.0) ? (hv_plhiv_rg / hv_plhiv) : 0.0) *
-                                                p_hv.rn_cure_coverage_rg(rg, t) *
-                                                n_hv.prop_cured_rg(rg, PROP_FOR_IMPACT);
+                                                        p_hv.rn_cure_coverage_rg(rg, t) *
+                                                        n_hv.prop_cured_rg(rg, PROP_FOR_IMPACT);
         }
 
         i_hv.cure_avg_cov_adults_impact(S_MALE) = std::clamp(i_hv.cure_avg_cov_adults_impact(S_MALE), 0.0, 1.0);
@@ -1708,16 +1715,16 @@ public:
         hv_plhiv =   n_hv.adults(VAC_ALL, RG_ALL, CD4_ALL, S_FEMALE) -
                      n_hv.adults(VAC_ALL, RG_ALL, CD4_NEG, S_FEMALE);
 
-        for (int rg = RG_NONE; rg <= RG_MSM; ++rg) {
+        for (int rg = RG_NONE; rg <= RG_IDU; ++rg) {
            nr = rg + RG_NONE_F3;
 
            hv_plhiv_rg = n_hv.adults(VAC_ALL, rg, CD4_ALL, S_FEMALE) -
                          n_hv.adults(VAC_ALL, rg, CD4_NEG, S_FEMALE);
 
            i_hv.cure_avg_cov_adults_impact(S_FEMALE) += ((hv_plhiv > 0.0) ? (hv_plhiv_rg / hv_plhiv) : 0.0) *
-                                                  p_hv.rn_cure_coverage_rg(nr, t) *
-                                                  n_hv.prop_cured_rg(nr, PROP_FOR_IMPACT);
-        }
+                                                          p_hv.rn_cure_coverage_rg(nr, t) *
+                                                          n_hv.prop_cured_rg(nr, PROP_FOR_IMPACT);
+                }
 
         i_hv.cure_avg_cov_adults_impact(S_FEMALE) = std::clamp(i_hv.cure_avg_cov_adults_impact(S_FEMALE), 0.0, 1.0);
 
@@ -3879,7 +3886,7 @@ private:
 
     const auto& p_hc = pars.hc;
     auto& i_hc = intermediate.hc;
-    auto& n_hc = state_next.hc;
+    auto& n_hc = state_curr.hc;
 
     const auto& p_hv = pars.hv;
     auto& i_hv = intermediate.hv;
@@ -4091,8 +4098,8 @@ private:
 
         case RN_HIV_TEST_ANC:  // HIV testing for all women attending ANC
         {
-          pop_reached = (n_hc.pmtct_need > 0.0)
-              ? n_dp.births * (i_hc.on_PMTCT / n_hc.pmtct_need) : 0.0;
+          pop_reached = (n_hc.pmtct_need > 0.0) ?
+                        n_dp.births * (i_hc.on_PMTCT / n_hc.pmtct_need) : 0.0;
           break;
         }
 
