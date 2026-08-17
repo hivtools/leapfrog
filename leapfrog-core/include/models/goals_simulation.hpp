@@ -3886,7 +3886,7 @@ private:
 
     const auto& p_hc = pars.hc;
     auto& i_hc = intermediate.hc;
-    auto& n_hc = state_curr.hc;
+    auto& n_hc = state_next.hc;
 
     const auto& p_hv = pars.hv;
     auto& i_hv = intermediate.hv;
