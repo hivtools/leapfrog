@@ -315,6 +315,10 @@ private:
     IMP_INF = 0,
     IMP_MORT = 1,
 
+    ART_FSW_ELIG = 0,
+    ART_MSM_ELIG = 1,
+    ART_IDU_ELIG = 2,
+
   };
 
   // function args
@@ -3277,10 +3281,6 @@ public:
     real_type new_art_cap;
     real_type sum1;
 
-    const int FSW_ELIG = 0.0;
-    const int MSM_ELIG = 0.0;
-    const int IDU_ELIG = 0.0;
-
     for (int rg = RG_NONE; rg <= RG_TOTAL1; ++rg) {
       for (int s = S_MALE; s <= S_FEMALE; ++s) {
         kp_cd4_elig[rg][s] = true;
@@ -3345,20 +3345,20 @@ public:
     }
 
     // set rg eligibility and year
-    if (p_hv.pop_elig_treat(FSW_ELIG) == 1) {
-      if (p_hv.pop_elig_year(FSW_ELIG)-opts.proj_start_year+1 <= t) {
+    if (p_hv.pop_elig_treat(ART_FSW_ELIG) == 1) {
+      if (p_hv.pop_elig_year(ART_FSW_ELIG)-opts.proj_start_year+1 <= t) {
         kp_cd4_elig[RG_HRH][S_FEMALE] = false;
       }
     }
 
-    if (p_hv.pop_elig_treat(MSM_ELIG) == 1) {
-      if (p_hv.pop_elig_year(MSM_ELIG)-opts.proj_start_year+1 <= t) {
+    if (p_hv.pop_elig_treat(ART_MSM_ELIG) == 1) {
+      if (p_hv.pop_elig_year(ART_MSM_ELIG)-opts.proj_start_year+1 <= t) {
         kp_cd4_elig[RG_MSM][S_MALE] = false;
       }
     }
 
-    if (p_hv.pop_elig_treat(IDU_ELIG) == 1) {
-      if (p_hv.pop_elig_year(IDU_ELIG)-opts.proj_start_year+1 <= t) {
+    if (p_hv.pop_elig_treat(ART_IDU_ELIG) == 1) {
+      if (p_hv.pop_elig_year(ART_IDU_ELIG)-opts.proj_start_year+1 <= t) {
         kp_cd4_elig[RG_IDU][S_MALE] = false;
         kp_cd4_elig[RG_IDU][S_FEMALE] = false;
       }
@@ -4250,7 +4250,7 @@ private:
                       n_hv.adults(VAC_ALL, rg, hd, S_FEMALE);
             }
 
-             pop_reached = p_hv.func_cure_HR_cov(t) * elig;
+             pop_reached += p_hv.func_cure_HR_cov(t) * elig;
 
             } //hd
           } //s
