@@ -1728,7 +1728,7 @@ struct ChildModelSimulation<Config> {
 
                   //add to total for costing
                   state_next.hv.total_new_cures += cured;
-                  
+
                   //for impact, use proportion for costing, with efficacy applied
                   cured = pars.hv.rn_cure_coverage_children(t) *
                           n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s) *
