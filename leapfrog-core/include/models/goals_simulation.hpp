@@ -4244,7 +4244,7 @@ private:
                       n_hv.adults(VAC_ALL, rg, hd, S_FEMALE);
             }
 
-            pop_reached = p_hv.func_cure_LR_cov(t) * elig;
+            pop_reached += p_hv.func_cure_LR_cov(t) * elig;
 
             //adults, HR
             elig = 0.0;
