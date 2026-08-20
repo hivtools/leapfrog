@@ -595,17 +595,17 @@ struct ChildModelSimulation<Config> {
       }
 
       // i_hc.perinatal_transmission_rate_bf_calc is the transmission that has already occurred due to perinatal transmission
-      // percent_no_treatment is the percentage of women who are still vulnerable to HIV transmission to their babies
-      real_type percent_no_treatment = 1 - i_hc.perinatal_transmission_rate_bf_calc - i_hc.bf_transmission_rate(index);
+      // percent_off_treatment is the percentage of women who are still vulnerable to HIV transmission to their babies
+      real_type percent_off_treatment = 1 - i_hc.perinatal_transmission_rate_bf_calc - i_hc.bf_transmission_rate(index);
 
       if (index > 0) {
         for (int bf = 0; bf < index; ++bf) {
-          percent_no_treatment -= i_hc.bf_transmission_rate(bf);
+          percent_off_treatment -= i_hc.bf_transmission_rate(bf);
         }
       }
 
       for (int hp = 0; hp < hPS; hp++) {
-        percent_no_treatment -= i_hc.PMTCT_coverage(hp);
+        percent_off_treatment -= i_hc.PMTCT_coverage(hp);
 
         if (hp <= OPTION_B) continue;
         // SDNVP stratifies transmission by CD4, but spectrum only uses one
@@ -619,11 +619,11 @@ struct ChildModelSimulation<Config> {
 
       // No treatment
       if (p_hc.breastfeeding_duration_no_art(bf, t) < 1) {
-        percent_no_treatment = std::max(percent_no_treatment, 0.0);
+        percent_off_treatment = std::max(percent_off_treatment, 0.0);
         auto untreated_vertical_bf_tr = i_hc.prop_wlhiv_lt200 * p_hc.vertical_transmission_rate(4, 1) +
                                         i_hc.prop_wlhiv_200to350 * p_hc.vertical_transmission_rate(2, 1) +
                                         i_hc.prop_wlhiv_gte350 * p_hc.vertical_transmission_rate(0, 1);
-        i_hc.bf_transmission_rate(index) += bf_scalar * percent_no_treatment *
+        i_hc.bf_transmission_rate(index) += bf_scalar * percent_off_treatment *
                                             untreated_vertical_bf_tr *
                                             2 * (1 - p_hc.breastfeeding_duration_no_art(bf, t));
 
@@ -640,7 +640,7 @@ struct ChildModelSimulation<Config> {
         n_hc.mtct_by_source_tr(BPLUS_BEFORE_DROPOUT,index+1) += tr_before;
 
         //Never on ART
-        auto art_naive = percent_no_treatment -
+        auto art_naive = percent_off_treatment -
           i_hc.PMTCT_during_dropout -
           i_hc.PMTCT_before_dropout;
         n_hc.mtct_by_source_tr(NO_ART,index+1) += bf_scalar * art_naive *
