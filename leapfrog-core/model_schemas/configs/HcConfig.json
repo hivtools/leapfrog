@@ -83,7 +83,7 @@
         "num_type": "real_type",
         "dims": ["SS::hc2DS", "SS::hc2AG_c", "SS::NS"]
       },
-      "ctx_val": {
+      "cotrim_val": {
         "num_type": "real_type",
         "dims": ["opts.proj_steps"]
       },
@@ -171,7 +171,7 @@
         "num_type": "real_type",
         "dims": ["opts.proj_steps"]
       },
-      "ctx_val_is_percent": {
+      "cotrim_val_is_percent": {
         "num_type": "int",
         "dims": ["opts.proj_steps"]
       },
@@ -203,7 +203,7 @@
         "num_type": "real_type",
         "dims": ["opts.proj_steps"]
       },
-      "ctx_effect": {
+      "cotrim_effect": {
         "num_type": "real_type",
         "dims": ["3"]
       },
@@ -355,7 +355,7 @@
     "bf_incident_hiv_transmission_rate": {
       "num_type": "real_type"
     },
-    "ctx_mean": {
+    "cotrim_mean": {
       "num_type": "real_type",
       "dims": ["3"]
     },
@@ -410,7 +410,7 @@
       "num_type": "real_type",
       "dims": ["SS::hc1DS", "SS::hcTT", "SS::hcAG_end", "SS::NS"]
     },
-    "ctx_need": {
+    "cotrim_need": {
       "num_type": "real_type"
     },
     "infection_by_type": {

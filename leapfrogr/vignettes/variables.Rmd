@@ -136,8 +136,8 @@ In 5 structs as part of the `Parameters`, named `Demography`, `Incidence`, `Natu
 | adol_cd4_mort      | children.hc2_cd4_mort                    | Probability of mortality by CD4 stage, age, and sex for 5-14 year olds                                                                                                |
 | paed_cd4_prog      | children.hc1_cd4_prog                    | Probability of progressing to the subsequent CD4 stage for 0-4 year olds                                                                                              |
 | adol_cd4_prog      | children.hc2_cd4_prog                    | Probability of progressing to the subsequent CD4 stage for 5-14 year olds                                                                                             |
-| ctx_effect         | children.ctx_effect                      | Effectiveness of cotrimoxazole at averting mortality                                                                                                                  |
-| ctx_val            | children.ctx_val                         | Number of children receiving cotrimoxazole                                                                                                                            |
+| ctx_effect         | children.cotrim_effect                   | Effectiveness of cotrimoxazole at averting mortality                                                                                                                  |
+| ctx_val            | children.cotrim_val                      | Number of children receiving cotrimoxazole                                                                                                                            |
 | paed_art_elig_age  | children.hc_art_elig_age                 | Age at which children are eligible for ART by year                                                                                                                    |
 | paed_art_elig_cd4  | children.hc_art_elig_cd4                 | CD4 at which children are eligible for ART by year                                                                                                                    |
 | mort_art_rr        | children.hc_art_mort_rr                  | Mortality rate ratios by age and treatment duration                                                                                                                   |
@@ -195,9 +195,8 @@ In 5 structs as part of the `Parameters`, named `Demography`, `Incidence`, `Natu
 |                  | hiv_births                 | Number of births to WLHIV by year                                                          |
 |                  | hc_art_need_init           | Children who are eligible for ART by CD4, transmsission, age, sex, and year                |
 |                  | hc_art_init                | Number of new ART initiates by five year age group.                                        |
-|                  | ctx_need                   | Number of children in need of cotrim                                                       |
-|                  | infecton_by_type           | Number of paediatric HIV infections by type of infection (peri vs bf) and age at infection.|
-|                  | ctx_need                   | Number of children in need of cotrim                                                       |
+|                  | cotrim_need                | Number of children in need of cotrim                                                       |
+|                  | infecton_by_type           | Number of paediatric HIV infections by type of infection (peri vs bf) and age at infection.|                                                    |
 |                  | mtct_by_source_tr          | Transmission rate by maternal treatement history (stacked bar output)                      |
 |                  | mtct_by_source_women       | Number of pregnant WLHIV by maternal treatement history (stacked bar output)               |
 |                  | mtct_by_source_hc_infections | Number of paediatric infections by maternal treatement history (stacked bar output)      |

@@ -18,7 +18,7 @@ test_that("Child model can be run for all years", {
       "hc1_artpop", "hc2_artpop",
       "hc1_noart_aids_deaths", "hc2_noart_aids_deaths",
       "hc1_art_aids_deaths", "hc2_art_aids_deaths",
-      "hc_art_init", "hc_art_init_total", "hc_art_need_init", "ctx_need", "infection_by_type",
+      "hc_art_init", "hc_art_init_total", "hc_art_need_init", "cotrim_need", "infection_by_type",
       "mtct_by_source_tr", "mtct_by_source_women",
       "mtct_by_source_hc_infections", "pmtct_coverage_at_delivery",
       "prevalence_15to49_hts", "incidence_15to49_hts", "artcoverage_15to49_hts",
@@ -65,7 +65,7 @@ test_that("Coarse child model can be run for all years", {
       "hc1_artpop", "hc2_artpop",
       "hc1_noart_aids_deaths", "hc2_noart_aids_deaths",
       "hc1_art_aids_deaths", "hc2_art_aids_deaths",
-      "hc_art_init", "hc_art_init_total", "hc_art_need_init", "ctx_need", "infection_by_type",
+      "hc_art_init", "hc_art_init_total", "hc_art_need_init", "cotrim_need", "infection_by_type",
       "mtct_by_source_tr", "mtct_by_source_women",
       "mtct_by_source_hc_infections", "pmtct_coverage_at_delivery",
       "prevalence_15to49_hts", "incidence_15to49_hts", "artcoverage_15to49_hts",
@@ -348,10 +348,10 @@ test_that("Children in need of cotrim aligns", {
 
   out <- run_model(parameters, "ChildModel", 1970:2030)
 
-  spec <- utils$ctx_need
+  spec <- utils$cotrim_need
   dt <- data.frame(year = 1970:2030,
                    spec = as.numeric(unlist(spec)),
-                   lfrog = out$ctx_need)
+                   lfrog = out$cotrim_need)
   dt <- dt %>%
     dplyr::mutate(diff = spec - lfrog)
 

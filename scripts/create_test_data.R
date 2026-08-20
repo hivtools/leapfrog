@@ -108,7 +108,7 @@ aids_deathsart <- array(0, dim = c(15,2,61), dimnames = list(age = 0:14, sex = c
 aids_deathsart[,'male',] <- dat$data$aids_deaths_art_single_age$data[as.character(0:14),"male",]
 aids_deathsart[,'female',] <- dat$data$aids_deaths_art_single_age$data[as.character(0:14),"female",]
 
-spec_ctx_need <- dat$data$child_art_calc$data["both", "Children needing cotrim (0-14): ",]
+spec_cotrim_need <- dat$data$child_art_calc$data["both", "Children needing cotrim (0-14): ",]
 
 out <- list(dp = dp,
             pjnz = pjnz_child,
@@ -117,7 +117,7 @@ out <- list(dp = dp,
             offtrt = df$off_treatment,
             deaths_noart = aids_deathsnoart,
             deaths_art = aids_deathsart,
-            ctx_need = as.numeric(unlist(spec_ctx_need)))
+            cotrim_need = as.numeric(unlist(spec_cotrim_need)))
 
 save_parameters(parameters, testthat::test_path("testdata/child_parms_full.h5"))
 save_parameters(parameters_coarse, testthat::test_path("testdata/child_parms_coarse.h5"))

@@ -262,16 +262,16 @@ prepare_art_elig <- function(dat, pars, dim_vars, proj_years, year_idx) {
 
 prepare_cotrim_effect <- function(dat, pars, dim_vars) {
   ##cotrim is effective for five years for children not on ART and for four years for children on ART
-  ctx_yrs_no_art = 5
-  ctx_yrs_art = 4
+  cotrim_yrs_no_art = 5
+  cotrim_yrs_art = 4
 
-  ctx_effect <- pars$effect_treat_child
-  off_art_ctx <- sum(as.numeric(unlist(ctx_effect["no art", ]))) / ctx_yrs_no_art
-  on_art_ctx_lte12mo <- sum(as.numeric(unlist(ctx_effect["art", 1])))
-  on_art_ctx_gte12mo <- sum(as.numeric(unlist(ctx_effect["art", 2:5]))) /  ctx_yrs_art
-  array(data = c(off_art_ctx, on_art_ctx_lte12mo, on_art_ctx_gte12mo),
+  cotrim_effect <- pars$effect_treat_child
+  off_art_cotrim <- sum(as.numeric(unlist(cotrim_effect["no art", ]))) / cotrim_yrs_no_art
+  on_art_cotrim_lte12mo <- sum(as.numeric(unlist(cotrim_effect["art", 1])))
+  on_art_cotrim_gte12mo <- sum(as.numeric(unlist(cotrim_effect["art", 2:5]))) /  cotrim_yrs_art
+  array(data = c(off_art_cotrim, on_art_cotrim_lte12mo, on_art_cotrim_gte12mo),
         dim = c(3),
-        dimnames = list(ctx_effect = c("Off ART", "On ART, lte12mo", "On ART, gte12mo")))
+        dimnames = list(cotrim_effect = c("Off ART", "On ART, lte12mo", "On ART, gte12mo")))
 }
 
 prepare_art_mort <- function(dat, pars, dim_vars) {
@@ -435,12 +435,12 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
   hc_art_init_dist <- pars$child_art_dist
 
   ## Cotrim coverage
-  ctx_val_is_percent <- as.integer(pars$child_art_by_age_group_pernum["Cotrim", ] == 1)
-  ctx_val <- pars$child_treat_inputs["Cotrim", ]
-  if (any(ctx_val_is_percent == 1)) {
-    ctx_val[ctx_val_is_percent == 1] <- ctx_val[ctx_val_is_percent == 1] / 100
+  cotrim_val_is_percent <- as.integer(pars$child_art_by_age_group_pernum["Cotrim", ] == 1)
+  cotrim_val <- pars$child_treat_inputs["Cotrim", ]
+  if (any(cotrim_val_is_percent == 1)) {
+    cotrim_val[cotrim_val_is_percent == 1] <- cotrim_val[cotrim_val_is_percent == 1] / 100
   }
-  ctx_effect <- prepare_cotrim_effect(dat, pars, dim_vars)
+  cotrim_effect <- prepare_cotrim_effect(dat, pars, dim_vars)
 
   ## ART coverage
   art <- pars$child_treat_inputs
@@ -469,7 +469,7 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
     hc2_cd4_mort = hc2_cd4_mort,
     hc1_cd4_prog = hc1_cd4_prog,
     hc2_cd4_prog = hc2_cd4_prog,
-    ctx_val = ctx_val,
+    cotrim_val = cotrim_val,
     hc_art_elig_age = hc_art_elig_age,
     hc_art_elig_cd4 = hc_art_elig_cd4,
     hc_art_mort_rr = hc_art_mort_rr,
@@ -491,7 +491,7 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
     mat_prev_input = mat_prev_input,
     prop_lt200 = prop_lt200,
     prop_gte350 = prop_gte350,
-    ctx_val_is_percent = ctx_val_is_percent,
+    cotrim_val_is_percent = cotrim_val_is_percent,
     hc_art_is_age_spec = hc_art_is_age_spec,
     abortion = abortion,
     patients_reallocated = patients_reallocated,
@@ -499,7 +499,7 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
     fert_infections = fert_infections,
     fert_hivnpop = fert_hivnpop,
     total_births = total_births,
-    ctx_effect = ctx_effect,
+    cotrim_effect = cotrim_effect,
     hc_art_start = hc_art_start,
     hc_age_specific_fertility_rate = hc_age_specific_fertility_rate
   )
