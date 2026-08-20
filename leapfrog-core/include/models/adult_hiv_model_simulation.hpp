@@ -90,18 +90,18 @@ struct AdultHivModelSimulation<Config> {
     nda::fill(i_ha.gradART, 0.0);
     nda::fill(i_ha.h_hiv_deaths_age_sex, 0.0);
     nda::fill(i_ha.h_deaths_excess_nonaids_agesex, 0.0);
-    run_disease_progression_and_mortality(hiv_step);
+    run_disease_progression_and_mortality();
 
     if constexpr (ModelVariant::run_goals) {
       if (hiv_step==0) {
         state_next.hv.new_infections_dp = 0.0;//init new infections from DP
       }
-      calc_new_infections_agesex_goals(hiv_step);
+      calc_new_infections_agesex_goals();
 
     } else {
 
       if (p_ha.incidence_model_choice == SS::INCIDMOD_DIRECTINCID_HTS) {
-        calc_new_infections_agesex(hiv_step);
+        calc_new_infections_agesex();
       } else if (p_ha.incidence_model_choice == SS::INCIDMOD_TRANSMRATE_HTS){
         calc_new_infections_incidmod_transmrate(hiv_step);
       } else {
@@ -109,32 +109,32 @@ struct AdultHivModelSimulation<Config> {
       }
     }
 
-    add_new_hiv_infections(hiv_step);
+    add_new_hiv_infections();
 
     if (t >= opts.ts_art_start) {
-      run_art_progression_and_mortality(hiv_step);
+      run_art_progression_and_mortality();
       run_h_art_initiation(hiv_step);
 
       if constexpr (ModelVariant::run_virgin) {
         // Note: must be run before run_update_art_adult() because it
         // relies on the proportion of population virgin before updating
-        run_update_art_virgin(hiv_step);
+        run_update_art_virgin();
       }
-      run_update_art_adult(hiv_step);
+      run_update_art_adult();
     }
 
     if constexpr (ModelVariant::run_virgin) {
       // Note: must be run before run_update_hiv_adult() because it
       // relies on the proportion of population virgin before updating
-      run_update_hiv_virgin(hiv_step);
+      run_update_hiv_virgin();
     }
-    run_update_hiv_adult(hiv_step);
+    run_update_hiv_adult();
 
-    run_calc_p_hiv_deaths(hiv_step);
+    run_calc_p_hiv_deaths();
     if constexpr (ModelVariant::run_virgin) {
-      run_remove_p_virgin_hiv_deaths(hiv_step);
+      run_remove_p_virgin_hiv_deaths();
     }
-    run_remove_p_hiv_deaths(hiv_step);
+    run_remove_p_hiv_deaths();
     run_wlhiv_births();
 
     if constexpr (ModelVariant::run_goals) {
@@ -179,7 +179,7 @@ struct AdultHivModelSimulation<Config> {
 
   };
 
-  void run_disease_progression_and_mortality(int hiv_step) {
+  void run_disease_progression_and_mortality() {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
@@ -359,7 +359,7 @@ struct AdultHivModelSimulation<Config> {
     }
   }
 
-  void calc_new_infections_agesex(int hiv_step) {
+  void calc_new_infections_agesex() {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
     auto& n_dp = state_next.dp;
@@ -405,7 +405,7 @@ struct AdultHivModelSimulation<Config> {
     }
   };
 
-  void calc_new_infections_agesex_goals(int hiv_step) {
+  void calc_new_infections_agesex_goals() {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
     auto& n_dp = state_next.dp;
@@ -444,7 +444,7 @@ struct AdultHivModelSimulation<Config> {
     }
   };
 
-  void add_new_hiv_infections(int hiv_step) {
+  void add_new_hiv_infections() {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
@@ -476,7 +476,7 @@ struct AdultHivModelSimulation<Config> {
     }
   };
 
-  void run_art_progression_and_mortality(int hiv_step) {
+  void run_art_progression_and_mortality() {
     const auto& p_ha = pars.ha;
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
@@ -753,7 +753,7 @@ struct AdultHivModelSimulation<Config> {
     }
   };
 
-  void run_update_art_adult(int hiv_step) {
+  void run_update_art_adult() {
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
 
@@ -768,7 +768,7 @@ struct AdultHivModelSimulation<Config> {
     }
   };
 
-  void run_update_hiv_adult(int hiv_step) {
+  void run_update_hiv_adult() {
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
 
@@ -781,7 +781,7 @@ struct AdultHivModelSimulation<Config> {
     }
   };
 
-  void run_calc_p_hiv_deaths(int hiv_step) {
+  void run_calc_p_hiv_deaths() {
     auto& n_ha = state_next.ha;
     auto& i_ha = intermediate.ha;
 
@@ -823,7 +823,7 @@ struct AdultHivModelSimulation<Config> {
 
   };
 
-  void run_remove_p_hiv_deaths(int hiv_step) {
+  void run_remove_p_hiv_deaths() {
     auto& i_ha = intermediate.ha;
     auto& n_dp = state_next.dp;
     auto& n_ha = state_next.ha;
@@ -835,7 +835,7 @@ struct AdultHivModelSimulation<Config> {
     }
   }
 
-  void run_update_hiv_virgin(int hiv_step) {
+  void run_update_hiv_virgin() {
 
     // Implements progression, HIV mortality, and ART initiation in the
     // virgin population proportional to the proportion of the total population
@@ -861,7 +861,7 @@ struct AdultHivModelSimulation<Config> {
     }
   };
 
-  void run_update_art_virgin(int hiv_step) {
+  void run_update_art_virgin() {
     const auto& n_ha = state_next.ha;
     const auto& i_ha = intermediate.ha;
     auto& n_vg = state_next.vg;
@@ -878,7 +878,7 @@ struct AdultHivModelSimulation<Config> {
     }
   };
 
-  void run_remove_p_virgin_hiv_deaths(int hiv_step) {
+  void run_remove_p_virgin_hiv_deaths() {
     const auto& i_ha = intermediate.ha;
     const auto& n_ha = state_next.ha;
     auto& n_vg = state_next.vg;
