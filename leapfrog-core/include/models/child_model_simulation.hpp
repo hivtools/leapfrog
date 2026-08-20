@@ -31,12 +31,8 @@ struct ChildModelSimulation<Config> {
   static constexpr int pAG = SS::pAG;
   static constexpr int hDS = SS::hDS;
   static constexpr int hTS = SS::hTS;
-  static constexpr int hAG = SS::hAG;
-  static constexpr auto hAG_span = SS::hAG_span;
-  static constexpr int PROJPERIOD_MIDYEAR = SS::PROJPERIOD_MIDYEAR;
   static constexpr int MALE = SS::MALE;
   static constexpr int FEMALE = SS::FEMALE;
-  static constexpr int ART0MOS = SS::ART0MOS;
   static constexpr int hc2_agestart = SS::hc2_agestart;
   static constexpr int hcAG_end = SS::hcAG_end;
   static constexpr int hc_infant = SS::hc_infant;
@@ -47,15 +43,11 @@ struct ChildModelSimulation<Config> {
   static constexpr int hPS = SS::hPS;
   static constexpr int hBF = SS::hBF;
   static constexpr int hcAG_c = SS::hcAG_c;
-  static constexpr int p_idx_fertility_first = SS::p_idx_fertility_first;
   static constexpr int hAG_fertility = SS::hAG_fertility;
-  static constexpr int p_idx_hiv_first_adult = SS::p_idx_hiv_first_adult;
   static constexpr auto hc_age_coarse = SS::hc_age_coarse;
   static constexpr auto hc_age_coarse_cd4 = SS::hc_age_coarse_cd4;
   static constexpr auto hc1_to_hc2_cd4_transition = SS::hc1_to_hc2_cd4_transition;
   static constexpr auto mtct_source = SS::mtct_source;
-  static constexpr auto hVT = SS::hVT;
-  static constexpr auto hVT_dropout = SS::hVT_dropout;
 
   enum Index {
     // PVT categories (including those tracked by stacked bar)
@@ -167,7 +159,7 @@ struct ChildModelSimulation<Config> {
 
     if constexpr (ModelVariant::run_goals) {
       if (t > pars.hv.goals_base_year_idx) {
-        apply_goals_cure_children(t);
+        apply_goals_cure_children();
       }
     }
 
@@ -446,8 +438,8 @@ struct ChildModelSimulation<Config> {
     if (p_hc.mat_prev_input(t)) {
       for (int a = 0; a < hAG_fertility; ++a) {
         auto asfr_weight = p_hc.hc_age_specific_fertility_rate(a, t) / asfr_sum;
-        age_weighted_hivneg += asfr_weight * p_hc.adult_female_hivnpop(a, t); // HIV negative 15-49 women weighted for ASFR
-        age_weighted_infections += asfr_weight * p_hc.adult_female_infections(a, t); // newly infected 15-49 women, weighted for ASFR
+        age_weighted_hivneg += asfr_weight * p_hc.fert_hivnpop(a, t); // HIV negative 15-49 women weighted for ASFR
+        age_weighted_infections += asfr_weight * p_hc.fert_infections(a, t); // newly infected 15-49 women, weighted for ASFR
       } // end a
 
       if (age_weighted_hivneg > 0.0) {
@@ -595,17 +587,17 @@ struct ChildModelSimulation<Config> {
       }
 
       // i_hc.perinatal_transmission_rate_bf_calc is the transmission that has already occurred due to perinatal transmission
-      // percent_no_treatment is the percentage of women who are still vulnerable to HIV transmission to their babies
-      real_type percent_no_treatment = 1 - i_hc.perinatal_transmission_rate_bf_calc - i_hc.bf_transmission_rate(index);
+      // percent_off_treatment is the percentage of women who are still vulnerable to HIV transmission to their babies
+      real_type percent_off_treatment = 1 - i_hc.perinatal_transmission_rate_bf_calc - i_hc.bf_transmission_rate(index);
 
       if (index > 0) {
         for (int bf = 0; bf < index; ++bf) {
-          percent_no_treatment -= i_hc.bf_transmission_rate(bf);
+          percent_off_treatment -= i_hc.bf_transmission_rate(bf);
         }
       }
 
       for (int hp = 0; hp < hPS; hp++) {
-        percent_no_treatment -= i_hc.PMTCT_coverage(hp);
+        percent_off_treatment -= i_hc.PMTCT_coverage(hp);
 
         if (hp <= OPTION_B) continue;
         // SDNVP stratifies transmission by CD4, but spectrum only uses one
@@ -619,11 +611,11 @@ struct ChildModelSimulation<Config> {
 
       // No treatment
       if (p_hc.breastfeeding_duration_no_art(bf, t) < 1) {
-        percent_no_treatment = std::max(percent_no_treatment, 0.0);
+        percent_off_treatment = std::max(percent_off_treatment, 0.0);
         auto untreated_vertical_bf_tr = i_hc.prop_wlhiv_lt200 * p_hc.vertical_transmission_rate(4, 1) +
                                         i_hc.prop_wlhiv_200to350 * p_hc.vertical_transmission_rate(2, 1) +
                                         i_hc.prop_wlhiv_gte350 * p_hc.vertical_transmission_rate(0, 1);
-        i_hc.bf_transmission_rate(index) += bf_scalar * percent_no_treatment *
+        i_hc.bf_transmission_rate(index) += bf_scalar * percent_off_treatment *
                                             untreated_vertical_bf_tr *
                                             2 * (1 - p_hc.breastfeeding_duration_no_art(bf, t));
 
@@ -640,7 +632,7 @@ struct ChildModelSimulation<Config> {
         n_hc.mtct_by_source_tr(BPLUS_BEFORE_DROPOUT,index+1) += tr_before;
 
         //Never on ART
-        auto art_naive = percent_no_treatment -
+        auto art_naive = percent_off_treatment -
           i_hc.PMTCT_during_dropout -
           i_hc.PMTCT_before_dropout;
         n_hc.mtct_by_source_tr(NO_ART,index+1) += bf_scalar * art_naive *
@@ -852,7 +844,7 @@ struct ChildModelSimulation<Config> {
     auto& n_ha = state_next.ha;
 
     // Births from the last 18 months are eligible
-    n_hc.ctx_need = n_ha.hiv_births * 1.5;
+    n_hc.cotrim_need = n_ha.hiv_births * 1.5;
 
     // All children 1.5-4 eligible
     for (int s = 0; s < NS; ++s) {
@@ -860,9 +852,9 @@ struct ChildModelSimulation<Config> {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc1DS; ++hd) {
             if (a == age_1) {
-              n_hc.ctx_need += n_hc.hc1_hivpop(hd, cat, a, s) * 0.5;
+              n_hc.cotrim_need += n_hc.hc1_hivpop(hd, cat, a, s) * 0.5;
             } else {
-              n_hc.ctx_need += n_hc.hc1_hivpop(hd, cat, a, s);
+              n_hc.cotrim_need += n_hc.hc1_hivpop(hd, cat, a, s);
             }
           }
         }
@@ -875,9 +867,9 @@ struct ChildModelSimulation<Config> {
         for (int hd = 0; hd < hc1DS; ++hd) {
           for (int dur = 0; dur < hTS; ++dur) {
             if (a == age_1) {
-              n_hc.ctx_need += n_hc.hc1_artpop(dur, hd, a, s) * 0.5;
+              n_hc.cotrim_need += n_hc.hc1_artpop(dur, hd, a, s) * 0.5;
             } else {
-              n_hc.ctx_need += n_hc.hc1_artpop(dur, hd, a, s) ;
+              n_hc.cotrim_need += n_hc.hc1_artpop(dur, hd, a, s) ;
             }
           } // end hTS
         } // end hc1DS
@@ -891,7 +883,7 @@ struct ChildModelSimulation<Config> {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc2DS; ++hd) {
             if (a < p_hc.hc_art_elig_age(t) || hd >= p_hc.hc_art_elig_cd4(a, t - 1)) {
-              n_hc.ctx_need += c_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
+              n_hc.cotrim_need += c_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
             }
           } // end hc2DS
         } // end hcTT
@@ -904,10 +896,10 @@ struct ChildModelSimulation<Config> {
     auto& n_hc = state_next.hc;
     auto& i_hc = intermediate.hc;
 
-    if (p_hc.ctx_val_is_percent(t)) {
-      i_hc.ctx_mean(art_flag) = 1 - p_hc.ctx_effect(art_flag) * p_hc.ctx_val(t);
-    } else if (n_hc.ctx_need > 0) {
-      i_hc.ctx_mean(art_flag) = 1 - p_hc.ctx_effect(art_flag) * p_hc.ctx_val(t) / n_hc.ctx_need;
+    if (p_hc.cotrim_val_is_percent(t)) {
+      i_hc.cotrim_mean(art_flag) = 1 - p_hc.cotrim_effect(art_flag) * p_hc.cotrim_val(t);
+    } else if (n_hc.cotrim_need > 0) {
+      i_hc.cotrim_mean(art_flag) = 1 - p_hc.cotrim_effect(art_flag) * p_hc.cotrim_val(t) / n_hc.cotrim_need;
     }
   };
 
@@ -923,7 +915,7 @@ struct ChildModelSimulation<Config> {
       for (int a = 0; a < hc2_agestart; ++a) {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc1DS; ++hd) {
-            auto hiv_deaths_strat = i_hc.ctx_mean(art_flag) * n_hc.hc1_hivpop(hd, cat, a, s) * p_hc.hc1_cd4_mort(hd, cat, a);
+            auto hiv_deaths_strat = i_hc.cotrim_mean(art_flag) * n_hc.hc1_hivpop(hd, cat, a, s) * p_hc.hc1_cd4_mort(hd, cat, a);
             i_hc.hc_posthivmort(hd, cat, a, s) = n_hc.hc1_hivpop(hd, cat, a, s) - hiv_deaths_strat;
           }
         }
@@ -934,7 +926,7 @@ struct ChildModelSimulation<Config> {
       for (int a = hc2_agestart; a < hcAG_end; ++a) {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc2DS; ++hd) {
-            auto hiv_deaths_strat = i_hc.ctx_mean(art_flag) * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) *
+            auto hiv_deaths_strat = i_hc.cotrim_mean(art_flag) * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) *
                                     p_hc.hc2_cd4_mort(hd, cat, a - hc2_agestart);
             i_hc.hc_posthivmort(hd, cat, a, s) = n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) -
                                                 hiv_deaths_strat;
@@ -985,7 +977,7 @@ struct ChildModelSimulation<Config> {
       for (int a = 0; a < hc2_agestart; ++a) {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc1DS; ++hd) {
-            auto cd4_deaths_grad = i_hc.ctx_mean(art_flag) * n_hc.hc1_hivpop(hd, cat, a, s) *
+            auto cd4_deaths_grad = i_hc.cotrim_mean(art_flag) * n_hc.hc1_hivpop(hd, cat, a, s) *
                                    p_hc.hc1_cd4_mort(hd, cat, a);
             i_hc.hc_grad(hd, cat, a, s) -= cd4_deaths_grad;
             n_hc.hc1_noart_aids_deaths(hd, cat, a, s) += cd4_deaths_grad;
@@ -998,7 +990,7 @@ struct ChildModelSimulation<Config> {
       for (int a = hc2_agestart; a < hcAG_end; ++a) {
         for (int cat = 0; cat < hcTT; ++cat) {
           for (int hd = 0; hd < hc2DS; ++hd) {
-            auto cd4_mort_grad = i_hc.ctx_mean(art_flag) *
+            auto cd4_mort_grad = i_hc.cotrim_mean(art_flag) *
                                  n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) *
                                  p_hc.hc2_cd4_mort(hd, cat, a - hc2_agestart);
             i_hc.hc_grad(hd, cat, a, s) -= cd4_mort_grad;
@@ -1090,8 +1082,8 @@ struct ChildModelSimulation<Config> {
             }
           }
 
-          // ctx reduction on mortality for those on ART
-          hc_death_rate *= i_hc.ctx_mean(art_flag);
+          // cotrim reduction on mortality for those on ART
+          hc_death_rate *= i_hc.cotrim_mean(art_flag);
           //impact of new products
           if constexpr (ModelVariant::run_goals) {
             if (t > pars.hv.goals_base_year_idx) {
@@ -1158,9 +1150,9 @@ struct ChildModelSimulation<Config> {
               }
             }
 
-            // ctx reduction on mortality for those on ART
+            // cotrim reduction on mortality for those on ART
             // NOTE: ART initiation calculations don't include the effect of cotrim (TODO: verify)
-            // hc_death_rate *= i_hc.ctx_mean(art_flag);
+            // hc_death_rate *= i_hc.cotrim_mean(art_flag);
             if (a < hc2_agestart) {
               bool any_hc1_art_deaths = hc_death_rate * n_hc.hc1_artpop(dur, hd, a, s) >= 0;
               if (any_hc1_art_deaths) {
@@ -1618,7 +1610,7 @@ struct ChildModelSimulation<Config> {
     }
   };
 
-  void apply_goals_cure_children(int t){
+  void apply_goals_cure_children() {
 
     auto& n_ha = state_next.ha;
     auto& n_hc = state_next.hc;
@@ -1644,7 +1636,7 @@ struct ChildModelSimulation<Config> {
 
                     // add to total for costing
                     state_next.hv.total_new_cures += cured;
-                    
+
                     // for impact, use proportion for costing, with efficacy applied
                     cured = pars.hv.rn_cure_coverage_children(t) *
                             n_hc.hc1_hivpop(hd, cat, a, s) *
