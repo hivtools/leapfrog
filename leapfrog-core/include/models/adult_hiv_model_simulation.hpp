@@ -527,16 +527,18 @@ struct AdultHivModelSimulation<Config> {
           if (p_ha.dropout_rate(t) > 0) {
             for (int hu = 0; hu < hTS; ++hu) {
 
-               real_type temp_art_adult_dropout = 0.0;
-               if constexpr (ModelVariant::run_goals) {
-                   if(t > pars.hv.goals_base_year_idx){
-                    temp_art_adult_dropout = -std::log(1.0 - pars.hv.art_interrupt_rate(t) *
-                                                      (1.0 - pars.hv.long_act_treat_cov(t) * pars.hv.long_act_treat_eff_ltfu)) *
-                                                      n_ha.h_artpop(hu, hm, ha, s);
-                   }
-               }
-               else{
+              real_type temp_art_adult_dropout = 0.0;
+              if constexpr (ModelVariant::run_goals) {
+                if (t > pars.hv.goals_base_year_idx) {
+                  temp_art_adult_dropout = -std::log(1.0 - pars.hv.art_interrupt_rate(t) *
+                                                    (1.0 - pars.hv.long_act_treat_cov(t) * pars.hv.long_act_treat_eff_ltfu)) *
+                                                    n_ha.h_artpop(hu, hm, ha, s);
+                } else {
                   temp_art_adult_dropout = p_ha.dropout_rate(t) * n_ha.h_artpop(hu, hm, ha, s);
+                }
+              }
+              else {
+                temp_art_adult_dropout = p_ha.dropout_rate(t) * n_ha.h_artpop(hu, hm, ha, s);
               }
 
               const auto art_adult_dropout = temp_art_adult_dropout;
@@ -989,7 +991,7 @@ struct AdultHivModelSimulation<Config> {
 
         // adults, PLHIV not on ART
         for (int hm = 0; hm < hDS; ++hm) {
-          
+
           // for costing, use proportion for costing, without efficacy applied
           cured = cure_cov * n_ha.h_hivpop(hm, ha, s);
 
