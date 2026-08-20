@@ -382,10 +382,8 @@ public:
     }
 
     // set these rates to vars in goals
-    if (t > p_hv.goals_base_year_idx) {
-      calc_HIV_mort_adjustments(t);
-    }
-
+    calc_HIV_mort_adjustments(t);
+  
      // adjust coverage of cure interventons according to duration
     if (t > p_hv.goals_base_year_idx) {
       //new products, coverage with duration/waning and efficacy, for impact
@@ -1494,7 +1492,7 @@ public:
                        / (p_hv.epi_inf_mult_art(1) - 0.05));
 
     if(t > p_hv.goals_base_year_idx){
-     i_hv.alpha_mult = 1 - std::min(0.5, 0.5 * (p_hv.epi_inf_mult_art(1)
+      i_hv.alpha_mult = 1 - std::min(0.5, 0.5 * (p_hv.epi_inf_mult_art(1)
                           - p_hv.epi_inf_mult_art(t)
                               * (1.0 - p_hv.rn_poc_cov(POC_VL, t) * p_hv.rn_poc_effect(POC_VL))
                               * (1.0 - p_hv.long_act_treat_cov(t) * p_hv.long_act_treat_eff_vls))
@@ -1674,7 +1672,10 @@ public:
         }
 
         n_hv.prop_therapeutically_vaccinated(cov_type, IMP_INF) = 1.0 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_INF);
-        n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1.0 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
+        //for mortality use [1 - proportion protected] for mortality adjustment in adult_sim
+        n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
+      
+       
 
        }
 
@@ -2344,7 +2345,8 @@ public:
             mort_hiv = i_hv.art_alpha(hd, s);
             //impacts on art mortality, by risk group: functional cure
             mort_hiv *= i_hv.func_cure_impact_mort_rg(rg, s);
-            //impacts on art mortality: therapeutic_vaccine, i_hv.alpha_mult
+            //impacts on art mortality: therapeutic_vaccine
+             mort_hiv *= n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_MORT);
           };
 
           // Entrants 15 years from and DP and Aging out rate
@@ -3293,7 +3295,7 @@ public:
     // do LTFU dynamics, before achieving a CD4 coverage
     // convert the LTFU % to a per-capita annual rate
     ltfu = -std::log(1.0 - p_hv.art_interrupt_rate(t));
-    if(t > p_hv.goals_base_year_idx){
+    if( (t > p_hv.goals_base_year_idx) && (p_hv.long_act_treat_cov(t) > 0)){
       ltfu = -std::log(1.0 - p_hv.art_interrupt_rate(t)*(1.0 - p_hv.long_act_treat_cov(t) * p_hv.long_act_treat_eff_ltfu));
     }
 

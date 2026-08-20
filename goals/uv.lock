@@ -38,7 +38,7 @@ wheels = [
 
 [[package]]
 name = "avenir-spectrum-common"
-version = "0.1.23"
+version = "0.1.24"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "avenir-common" },
@@ -50,9 +50,9 @@ dependencies = [
     { name = "requests" },
     { name = "ujson" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fc/84/7d5a47a0d1b8719055f2c63dfd5503b4184777f482f420301a7744196792/avenir_spectrum_common-0.1.23.tar.gz", hash = "sha256:33a55324616651ae9fc08382b90e1dff50ce341dc49f4e8d53b318d0688cdedf", size = 657671, upload-time = "2026-08-20T13:47:56.239Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2a/41/28534adb7de37f093c2d2e85e841e1ab1479d97ac979d446c5cd437da685/avenir_spectrum_common-0.1.24.tar.gz", hash = "sha256:b0ff3424656e40fb6e10bbf463069fe0d11630ee31bb2d406ca99bbdcb380356", size = 657624, upload-time = "2026-08-20T15:35:13.408Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/48/b6/868641b64ffde922a863117d96340855199c987ef7fc28c93456944f354e/avenir_spectrum_common-0.1.23-py3-none-any.whl", hash = "sha256:14f28fc659426d583829f66c4bc1fc1b71fbdf2fef6cc27c607be78bb564c01a", size = 735155, upload-time = "2026-08-20T13:47:54.626Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/5a/74340ef0cb7a0ced9b661ca0f631d4dd65b8e74b742fd4e5675debbbac2c/avenir_spectrum_common-0.1.24-py3-none-any.whl", hash = "sha256:4b3e5d55bcea2493f2566e6b4c6a3afbf901ac11050da63d9a5529306eb170fc", size = 735161, upload-time = "2026-08-20T15:35:15.379Z" },
 ]
 
 [[package]]
