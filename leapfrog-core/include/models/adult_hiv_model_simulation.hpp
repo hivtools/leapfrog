@@ -502,7 +502,7 @@ struct AdultHivModelSimulation<Config> {
                 //impacts on art mortality, by risk group: functional cure
                 deaths_art *= intermediate.hv.func_cure_impact_mort_all(s);
                 //impacts on art mortality: therapeutic_vaccine
-                deaths_art *= 1 - state_next.hv.prop_therapeutically_vaccinated(0, 1);
+                deaths_art *= state_next.hv.prop_therapeutically_vaccinated(0, 1);
               }
             }
 

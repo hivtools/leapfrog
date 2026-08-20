@@ -789,6 +789,10 @@ public:
     nda::fill(i_hv.func_cure_impact_inf, 0.0);
     nda::fill(i_hv.func_cure_impact_mort_rg, 1.0);
     nda::fill(i_hv.func_cure_impact_mort_all, 1.0);
+
+    n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_INF) = 0.0;
+    n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_MORT) = 1.0;
+
   }
 
   void init_vars_hiv_loop() {
@@ -1544,7 +1548,7 @@ public:
 
     //therapeutic vaccine
     n_hv.prop_therapeutically_vaccinated(cov_type, IMP_INF) = 0.0;
-    n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 0.0;
+    n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1.0;
 
     if( t > p_hv.goals_base_year_idx ){
       //cure
@@ -1660,6 +1664,7 @@ public:
       dur_max = dur;
 
       n_hv.prop_therapeutically_vaccinated(cov_type, IMP_INF)  = p_hv.therapeutic_vac_cov(t) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.therapeutic_vac_reduce_inf : 1.0);
+      //mortality impact: use [1 - proportion protected] for art mortality adjustment
       n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = p_hv.therapeutic_vac_cov(t) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.therapeutic_vac_reduce_mort : 1.0);
       if(dur > 0){
 
@@ -1672,13 +1677,13 @@ public:
         }
 
         n_hv.prop_therapeutically_vaccinated(cov_type, IMP_INF) = 1.0 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_INF);
-        //for mortality use [1 - proportion protected] for mortality adjustment in adult_sim
-        n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
+        n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
       
-       
+      }
 
-       }
-
+      //mortality impact: use [1 - proportion protected] for art mortality adjustment
+      n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
+      
     }
 
   }
@@ -2346,7 +2351,7 @@ public:
             //impacts on art mortality, by risk group: functional cure
             mort_hiv *= i_hv.func_cure_impact_mort_rg(rg, s);
             //impacts on art mortality: therapeutic_vaccine
-             mort_hiv *= n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_MORT);
+            mort_hiv *= n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_MORT);
           };
 
           // Entrants 15 years from and DP and Aging out rate
