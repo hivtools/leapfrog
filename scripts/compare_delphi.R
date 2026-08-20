@@ -60,7 +60,7 @@ actual <- lapply(delphi_params, deserialize_tensor_to_r)
 ## the adult model, so we are expecting differences in these values
 dont_compare <- c("matPrevInput", "propLt200",
                   "propGte350", "matHivBirths",
-                  "adultFemaleInfections", "totalBirths")
+                  "fertInfections", "totalBirths")
 
 compare <- names(actual)[!(names(actual) %in% dont_compare)]
 

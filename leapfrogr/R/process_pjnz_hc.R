@@ -22,17 +22,17 @@ prepare_bypass_adult_model <- function(dat, pars, dim_vars, year_idx, bypass_adu
   }
 
   hivnpop <- totpop - hivpop
-  adult_female_infections_full <- inc
+  fert_infections_full <- inc
 
   list(mat_hiv_births = mat_hiv_births,
        mat_prev_input = mat_prev_input,
        hivnpop = hivnpop,
-       adult_female_infections = adult_female_infections_full,
+       fert_infections = fert_infections_full,
        prop_gte350 = prop_gte350,
        prop_lt200 = prop_lt200)
 }
 
-prepare_coarse_stratification <- function(asfr, hivnpop, adult_female_infections, fp) {
+prepare_coarse_stratification <- function(asfr, hivnpop, fert_infections, fp) {
   coarse_age_groups <- cut(
     15:49,
     breaks = c(
@@ -43,17 +43,17 @@ prepare_coarse_stratification <- function(asfr, hivnpop, adult_female_infections
   )
   list(
     hivnpop = as.array(rowsum(hivnpop, group = coarse_age_groups)),
-    adult_female_infections = as.array(rowsum(adult_female_infections, group = coarse_age_groups)),
+    fert_infections = as.array(rowsum(fert_infections, group = coarse_age_groups)),
     asfr = as.array(rowsum(asfr, group = coarse_age_groups)),
     fert_rat = fp$fert_rat_coarse,
     frr_art6mos = fp$frr_art6mos_coarse
   )
 }
 
-prepare_full_stratification <- function(asfr, hivnpop, adult_female_infections, fp) {
+prepare_full_stratification <- function(asfr, hivnpop, fert_infections, fp) {
   list(
     hivnpop = hivnpop,
-    adult_female_infections = adult_female_infections,
+    fert_infections = fert_infections,
     asfr = asfr,
     fert_rat = fp$fert_rat_full,
     frr_art6mos = fp$frr_art6mos_full
@@ -364,18 +364,18 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
   prop_lt200 <- bypass$prop_lt200
   infant_pop <- pars$big_pop[as.character(1:2), , ]
   hivnpop <- bypass$hivnpop
-  adult_female_infections <- bypass$adult_female_infections
+  fert_infections <- bypass$fert_infections
 
   #############################################################
   # Births to WLHIV
   #############################################################
   subparms <- if (use_coarse_age_groups) {
-    prepare_coarse_stratification(asfr, hivnpop, adult_female_infections, fp)
+    prepare_coarse_stratification(asfr, hivnpop, fert_infections, fp)
   } else {
-    prepare_full_stratification(asfr, hivnpop, adult_female_infections, fp)
+    prepare_full_stratification(asfr, hivnpop, fert_infections, fp)
   }
-  adult_female_hivnpop <- subparms$hivnpop
-  adult_female_infections <- subparms$adult_female_infections
+  fert_hivnpop <- subparms$hivnpop
+  fert_infections <- subparms$fert_infections
   hc_age_specific_fertility_rate <- subparms$asfr
 
   abortion <- prepare_abortion_input(dat, pars, dim_vars, proj_years)
@@ -496,8 +496,8 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
     abortion = abortion,
     patients_reallocated = patients_reallocated,
     hc_art_ltfu = hc_art_ltfu,
-    adult_female_infections = adult_female_infections,
-    adult_female_hivnpop = adult_female_hivnpop,
+    fert_infections = fert_infections,
+    fert_hivnpop = fert_hivnpop,
     total_births = total_births,
     ctx_effect = ctx_effect,
     hc_art_start = hc_art_start,
