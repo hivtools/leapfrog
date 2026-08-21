@@ -1,0 +1,85 @@
+[project]
+name = "leapfrog-validate"
+version = "0.1.0"
+description = "Compare leapfrog model output across git refs and against Spectrum"
+readme = "README.md"
+authors = [
+    { name = "Rob Ashton", email = "robertashton94@gmail.com" },
+]
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.12.5",
+    "h5py>3.11.0",
+    "numpy>1.24.4",
+]
+
+[project.scripts]
+leapfrog-validate = "leapfrog_validate.cli:main"
+
+[project.urls]
+Documentation = "https://github.com/hivtools/leapfrog#readme"
+Issues = "https://github.com/hivtools/leapfrog/issues"
+Source = "https://github.com/hivtools/leapfrog"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/leapfrog_validate"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+  "A",
+  "ARG",
+  "B",
+  "C",
+  "D",
+  "DTZ",
+  "E",
+  "EM",
+  "F",
+  "FBT",
+  "I",
+  "ICN",
+  "ISC",
+  "N",
+  "PLC",
+  "PLE",
+  "PLR",
+  "PLW",
+  "Q",
+  "RUF",
+  "S",
+  "T",
+  "TID",
+  "UP",
+  "W",
+  "YTT",
+]
+ignore = [
+  # Shelling out to git/R/uv with argument lists is this tool's whole job,
+  # not untrusted input reaching a shell -- no shell=True anywhere.
+  "S603", "S607",
+]
+unfixable = [
+  # Don't touch unused imports
+  "F401",
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.per-file-ignores]
+# Tests can use magic values, assertions, relative imports, and skip
+# docstrings on individual test functions (the test name says what it does).
+"tests/**/*" = ["PLR2004", "S101", "TID252", "D100", "D101", "D102", "D103"]
