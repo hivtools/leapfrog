@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from leapfrog_validate import build, git_utils, model_run, params
+from leapfrog_validate import build, classify, git_utils, model_run, params
 from leapfrog_validate.diff import diff_indicator
 from leapfrog_validate.indicators import INDICATORS
 
@@ -22,6 +22,10 @@ requires_r = pytest.mark.skipif(shutil.which("Rscript") is None, reason="R is no
 
 REPO_ROOT = git_utils.find_repo_root(Path(__file__).parent)
 FIXTURE_PJNZ = REPO_ROOT / "leapfrogr" / "inst" / "pjnz" / "france_default.PJNZ"
+_PJNZ_DIR = REPO_ROOT / "leapfrogr" / "inst" / "pjnz"
+BWA_ADULT_FIXTURE = _PJNZ_DIR / "bwa_aim-adult-art-no-special-elig_v6.13_2022-04-18.PJNZ"
+BWA_NUMPMTCT_FIXTURE = _PJNZ_DIR / "bwa_aim-no-special-elig-numpmtct.PJNZ"
+GOALS_FIXTURE = REPO_ROOT / "goals" / "tests" / "resources" / "SouthAfrica.PJNZ"
 
 
 @pytest.fixture(scope="module")
@@ -104,3 +108,29 @@ def test_run_then_diff_of_a_ref_against_itself_passes(head_workspace, tmp_path):
 
     assert verdict.passed, verdict.summary()
     assert verdict.max_abs_diff == 0.0
+
+
+@requires_r
+@pytest.mark.parametrize("pjnz", [FIXTURE_PJNZ, BWA_ADULT_FIXTURE, BWA_NUMPMTCT_FIXTURE])
+def test_domain_tags_for_aim_only_fixtures(head_workspace, pjnz):
+    """Ground truth verified empirically: all three AIM-only fixtures carry non-zero PMTCT/cotrim inputs."""
+    assert classify.domain_tags(head_workspace, pjnz) == frozenset({"has_pmtct", "has_cotrim"})
+
+
+@requires_r
+def test_domain_tags_raises_for_goals_fixture_with_current_process_pjnz_limitation(head_workspace):
+    """Regression-locking, not a desired outcome.
+
+    `leapfrog::process_pjnz()` currently errors on this Goals-enabled PJNZ
+    inside `process_pjnz_ha` (unrelated to this classifier -- see ticket
+    16's comments). `domain_tags` surfaces that as `ClassifyError` rather
+    than guessing tags, which is the correct behaviour either way; this
+    pins down that it fails loudly instead of silently.
+    """
+    with pytest.raises(classify.ClassifyError):
+        classify.domain_tags(head_workspace, GOALS_FIXTURE)
+
+
+@requires_r
+def test_classify_combines_shape_and_domain_tags_for_a_real_fixture(head_workspace):
+    assert classify.classify(head_workspace, FIXTURE_PJNZ) == frozenset({"aim_only", "has_pmtct", "has_cotrim"})
