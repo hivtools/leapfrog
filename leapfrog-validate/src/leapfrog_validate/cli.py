@@ -11,7 +11,8 @@ import typer
 
 from leapfrog_validate import build, git_utils, indicators, model_run, params
 from leapfrog_validate.build import BuildWorkspace
-from leapfrog_validate.diff import diff_indicator
+from leapfrog_validate.diff import Verdict, diff_indicator
+from leapfrog_validate.exclusions import exclusion_mask
 
 app = typer.Typer(help="Compare leapfrog model output across git refs.")
 
@@ -77,24 +78,43 @@ def run_cmd(
     typer.echo(f"Wrote {output}")
 
 
+def _diff_one(name: str, a: Path, b: Path, pjnz: str | None) -> Verdict:
+    spec = indicators.INDICATORS[name]
+    arr_a = spec["extract"](a)
+    arr_b = spec["extract"](b)
+    exclude = exclusion_mask(arr_a.shape, spec["exclusions"], pjnz) if pjnz is not None else None
+    return diff_indicator(arr_a, arr_b, name, spec["tolerance"], exclude=exclude)
+
+
 @app.command("diff")
 def diff_cmd(
     a: Annotated[Path, typer.Argument(exists=True)],
     b: Annotated[Path, typer.Argument(exists=True)],
-    indicator: Annotated[str, typer.Option(help="Indicator to compare.")] = "total_population",
+    indicator: Annotated[
+        str | None,
+        typer.Option(help="Single indicator to compare. Defaults to all five blessed indicators."),
+    ] = None,
+    pjnz: Annotated[
+        str | None,
+        typer.Option(help="PJNZ identifier to match against each indicator's exclusion list."),
+    ] = None,
 ) -> None:
-    """Diff two output.h5 artifacts on --indicator and print a pass/fail verdict."""
-    if indicator not in indicators.INDICATORS:
+    """Diff two output.h5 artifacts and print a pass/fail verdict per indicator.
+
+    Fails overall (non-zero exit) if any indicator fails -- strict AND
+    rollup, per ticket 07's Answer.
+    """
+    if indicator is not None and indicator not in indicators.INDICATORS:
         choices = ", ".join(sorted(indicators.INDICATORS))
         typer.echo(f"Invalid indicator '{indicator}'. Choose from: {choices}", err=True)
         raise typer.Exit(2)
 
-    spec = indicators.INDICATORS[indicator]
-    arr_a = spec["extract"](a)
-    arr_b = spec["extract"](b)
-    verdict = diff_indicator(arr_a, arr_b, indicator, spec["atol"], spec["rtol"])
-    typer.echo(verdict.summary())
-    raise typer.Exit(0 if verdict.passed else 1)
+    names = [indicator] if indicator is not None else sorted(indicators.INDICATORS)
+    verdicts = [_diff_one(name, a, b, pjnz) for name in names]
+    for verdict in verdicts:
+        typer.echo(verdict.summary())
+
+    raise typer.Exit(0 if all(v.passed for v in verdicts) else 1)
 
 
 def main() -> None:
