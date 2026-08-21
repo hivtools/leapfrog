@@ -9,7 +9,7 @@ from typing import Annotated
 
 import typer
 
-from leapfrog_validate import build, git_utils, indicators, model_run, params
+from leapfrog_validate import build, classify, git_utils, indicators, manifest, model_run, params
 from leapfrog_validate.build import BuildWorkspace
 from leapfrog_validate.diff import Verdict, diff_indicator
 from leapfrog_validate.exclusions import exclusion_mask
@@ -76,6 +76,35 @@ def run_cmd(
     workspace = _prepare_ref(ctx.obj["repo_root"], ctx.obj["cache_dir"], ref)
     model_run.run_model(workspace, params_path, output, configuration)
     typer.echo(f"Wrote {output}")
+
+
+@app.command("classify")
+def classify_cmd(
+    ctx: typer.Context,
+    ref: Annotated[str, typer.Argument(help="Git ref or SHA to build leapfrogr at.")],
+    pjnz: Annotated[Path, typer.Argument(exists=True, help="PJNZ file to classify.")],
+    manifest_path: Annotated[
+        Path | None,
+        typer.Option(
+            "--manifest", exists=True, help="JSON manifest of tags that can't be derived from file contents."
+        ),
+    ] = None,
+) -> None:
+    """Print PJNZ's derived shape/domain/manifest tags, one per line, sorted.
+
+    Shape/manifest tags are checked before building leapfrogr at REF, so a
+    bad PJNZ/manifest fails fast rather than after a multi-minute build.
+    """
+    manifest_data = manifest.load_manifest(manifest_path) if manifest_path is not None else {}
+    tags = classify.shape_tags(pjnz)
+    if manifest_data:
+        tags |= manifest.manifest_tags(manifest_data, pjnz)
+
+    workspace = _prepare_ref(ctx.obj["repo_root"], ctx.obj["cache_dir"], ref)
+    tags |= classify.domain_tags(workspace, pjnz)
+
+    for tag in sorted(tags):
+        typer.echo(tag)
 
 
 def _diff_one(name: str, a: Path, b: Path, pjnz: str | None) -> Verdict:
