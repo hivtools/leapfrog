@@ -635,7 +635,9 @@ struct AdultHivModelSimulation<Config> {
     for (int ha = 0; ha < hAG; ++ha) {
       const int a = ha + p_idx_hiv_first_adult;
       new_infections += c_ha.p_infections(a, s);
-      plhiv += c_ha.p_hivpop(a, s);
+      for (int hm = 0; hm < hDS; ++hm) {
+        plhiv += c_ha.h_hivpop(hm, ha, s);
+      }
     }
 
     const real_type treatment_gap = new_infections + plhiv;

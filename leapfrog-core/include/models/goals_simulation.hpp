@@ -3454,26 +3454,10 @@ public:
         }
 
         for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) {
-          if (pars.ha.art_entry_option == SS::ART_ENTRY_INITIATION_RATE) {
-            // Initiations are a rate applied to the treatment gap: PLHIV, plus
-            // this year's new infections, minus those already on ART.
-            const real_type new_infections = c_hv.new_inf_vrs(v, rg, s);
-            real_type plhiv = 0.0;
-            for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
-              plhiv += c_hv.adults(v, rg, hd, s);
-            }
-
-            const real_type treatment_gap = new_infections + plhiv;
-            start_art[v][rg][s] = std::max(
-                opts.dt * pars.ha.art_initiation_rate(s, t) * treatment_gap, 0.0);
-          } else {
-            // Coverage target: initiate however many are needed to reach the
-            // input number/percent on ART.
-            start_art[v][rg][s] =
+          start_art[v][rg][s] =
                 (not_receiving_art_vrs[v][rg][s] + receiving_art_vrs[v][rg][s])
                     * art_cov[rg][s] - receiving_art_vrs[v][rg][s];
-          }
-
+        
           // allocate new ART according to eligibility (Prop1) and mortality
           // (Prop2)
           for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
