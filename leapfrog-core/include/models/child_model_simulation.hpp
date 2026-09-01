@@ -1090,7 +1090,8 @@ struct ChildModelSimulation<Config> {
                //impacts on art mortality, by risk group: functional cure
                 hc_death_rate *= intermediate.hv.func_cure_child_impact_mort;
                 //impacts on art mortality: therapeutic_vaccine
-                hc_death_rate *= 1 - state_next.hv.prop_therapeutically_vaccinated(0, 1);
+                //(stored value is already [1 - proportion protected]; see adult_hiv_model_simulation)
+                hc_death_rate *= state_next.hv.prop_therapeutically_vaccinated(0, 1);
             }
           }
 

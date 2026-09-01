@@ -390,6 +390,18 @@ public:
       calc_proportion_with_efficacy(t, true);
       //new products, coverage with duration/waning and without efficacy, for costing
       calc_proportion_with_efficacy(t, false);
+
+      // HIV-cure transmission reduction depends only on the proportions computed
+      // above, so set it here so every HIV sub-step's new-infection calc sees it
+      set_cured_prop_transmission();
+
+      // therapeutic vaccine reduces on-ART infectiousness; prop_therapeutically_vaccinated
+      // is only known now, so fold it into mult_art (base value set in init_vars_pre_hiv_loop)
+      const real_type tvac_inf_mult =
+          1.0 - n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_INF);
+      for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
+        n_hv.mult_art(hd) *= tvac_inf_mult;
+      }
     }
 
   }
@@ -739,8 +751,10 @@ public:
       if (t > p_hv.goals_base_year_idx) {
         n_hv.mult_art(hd) = p_hv.epi_inf_mult_art(t) *
                             p_hv.epi_infectiousness(INF_ASYMPT) *
-                            (1.0 - p_hv.rn_poc_cov(POC_VL, t) * p_hv.rn_poc_effect(POC_VL)) *
-                            (1.0 - n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_INF));
+                            (1.0 - p_hv.rn_poc_cov(POC_VL, t) * p_hv.rn_poc_effect(POC_VL));
+        // the therapeutic-vaccine reduction on on-ART infectiousness is folded
+        // into mult_art by run_goals_pre_hiv_loop(), once
+        // calc_proportion_with_efficacy() has computed prop_therapeutically_vaccinated
       }
     }
 
@@ -790,6 +804,8 @@ public:
     nda::fill(i_hv.func_cure_impact_mort_rg, 1.0);
     nda::fill(i_hv.func_cure_impact_mort_all, 1.0);
 
+    nda::fill(n_hv.cured_prop, 0.0);  // HIV-cure transmission reduction, set in run_goals_pre_hiv_loop
+
     n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_INF) = 0.0;
     n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_MORT) = 1.0;
 
@@ -805,8 +821,6 @@ public:
     nda::fill(n_hv.prevalence, 0.0);  // prevalence for each rg,  t
 
     nda::fill(n_hv.new_inf_vrs, 0.0);  // new infections for each t, by v,r,s, for goals
-
-    nda::fill(n_hv.cured_prop, 0.0);
 
     nda::fill(i_hv.new_vaccinations, 0.0); //for each t, by v,r,s, for goals
     nda::fill(i_hv.vac_effect, 0.0);
@@ -1789,6 +1803,35 @@ public:
 
   }
 
+  // Proportion of PLHIV in each risk group effectively removed from onward
+  // transmission by HIV cure. Depends only on prop_cured_* (populated by
+  // calc_proportion_with_efficacy), so it is set before the HIV loop and held
+  // for every sub-step's new-infection calculation. calc_HIV_cure() re-derives
+  // the same value locally when it applies the state transitions.
+  void set_cured_prop_transmission() {
+    auto& n_hv = state_next.hv;
+    const auto& p_hv = pars.hv;
+
+    nda::fill(n_hv.cured_prop, 0.0);
+
+    for (int s = S_MALE; s <= S_FEMALE; ++s) {
+      for (int rg = RG_NONE; rg <= RG_MSM; ++rg) {
+        if (s == S_FEMALE && rg >= RG_MSM) {
+          continue;  // no female MSM
+        }
+
+        const int nr = (s == S_FEMALE) ? rg + RG_NONE_F3 : rg;
+
+        real_type cured = n_hv.prop_cured_all(PROP_FOR_IMPACT);
+        if (p_hv.rn_cure_coverage_type != CURE_COV_ALLRISK) {
+          cured = n_hv.prop_cured_rg(nr, PROP_FOR_IMPACT);
+        }
+
+        n_hv.cured_prop(rg, s) = std::clamp(cured, 0.0, 1.0);
+      }
+    }
+  }
+
   void calc_HIV_cure(int t) {
     auto& n_hv = state_next.hv;
     auto& c_hv = state_curr.hv;
@@ -1903,13 +1946,11 @@ public:
     auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
 
-    real_type plhiv[nNS] = {};
     real_type plhiv_on_art[nNS] = {};
     real_type art_prop[RG_MSM+1][nNS] = {};
-    real_type plhiv_rs[RG_MSM+1][nNS] = {};
     real_type plhiv_on_art_rs[RG_MSM+1][nNS] = {};
 
-    //plhiv, and plhiv on art by rg and s
+    // on-ART PLHIV by risk group and sex (accumulate over CD4 stages)
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
       for (int rg = RG_LRH; rg <= RG_MSM; ++rg) {
 
@@ -1917,21 +1958,22 @@ public:
           continue;
         }
 
-        //plhiv
-        for (int hd = CD4_GT500; hd <= CD4_LT50_ART; ++hd) {
-          plhiv_rs[rg][s] = n_hv.adults(VAC_ALL, rg, hd, s);
-          plhiv[s] += n_hv.adults(VAC_ALL, rg, hd, s);
-        }
-
-        //plhiv, not on art
         for (int hd = CD4_GT500_ART; hd <= CD4_LT50_ART; ++hd) {
-          plhiv_on_art_rs[rg][s] = n_hv.adults(VAC_ALL, rg, hd, s);
+          plhiv_on_art_rs[rg][s] += n_hv.adults(VAC_ALL, rg, hd, s);
           plhiv_on_art[s] += n_hv.adults(VAC_ALL, rg, hd, s);
         }
+      }
+    }
 
-        art_prop[rg][s] = (plhiv_on_art[s] > 0.0) ? (plhiv_on_art_rs[rg][s]/plhiv_on_art[s]) : 0.0;
+    // risk-group share of on-ART PLHIV, once the per-sex totals are complete
+    for (int s = S_MALE; s <= S_FEMALE; ++s) {
+      for (int rg = RG_LRH; rg <= RG_MSM; ++rg) {
 
+        if (s == S_FEMALE && rg >= RG_MSM) {
+          continue;
+        }
 
+        art_prop[rg][s] = (plhiv_on_art[s] > 0.0) ? (plhiv_on_art_rs[rg][s] / plhiv_on_art[s]) : 0.0;
       }
     }
 
@@ -1939,7 +1981,6 @@ public:
     nda::fill(i_hv.func_cure_impact_mort_rg, 1.0);
     nda::fill(i_hv.func_cure_impact_mort_all, 1.0);
 
-    real_type plhiv_rgs = 0.0;
     real_type plhiv_on_art_rgs = 0.0;
     if(p_hv.func_cure_HR_cov(t) > 0.0){
       //high risk
@@ -2008,7 +2049,7 @@ public:
       i_hv.func_cure_impact_inf(RG_IDU,S_MALE) = art_prop[RG_IDU][S_MALE] * n_hv.prop_func_cured_HR(PROP_FOR_IMPACT, IMP_INF);
       i_hv.func_cure_impact_inf(RG_IDU,S_FEMALE) = art_prop[RG_IDU][S_FEMALE] * n_hv.prop_func_cured_HR(PROP_FOR_IMPACT, IMP_INF);
       //msm
-      i_hv.func_cure_impact_inf(RG_MSM,S_MALE) = art_prop[RG_HRH][S_MALE] * n_hv.prop_func_cured_HR(PROP_FOR_IMPACT, IMP_INF);
+      i_hv.func_cure_impact_inf(RG_MSM,S_MALE) = art_prop[RG_MSM][S_MALE] * n_hv.prop_func_cured_HR(PROP_FOR_IMPACT, IMP_INF);
     }
 
     if(p_hv.func_cure_LR_cov(t) > 0.0){
@@ -2915,7 +2956,7 @@ public:
                                    * (1.0 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(rg, t))
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
                                    * (1.0 - p_hv.prep_cov(S_MALE, rg, t) * i_hv.prep_effect(rg, s))
-                                   * (1.0 - n_hv.cured_prop(S_MALE, S_MALE))
+                                   * (1.0 - n_hv.cured_prop(rg, S_MALE))
                                    * (1.0 - i_hv.func_cure_impact_inf(rg, S_MALE))),
                               p_hv.b_sex_acts(rg, t)
                           )
