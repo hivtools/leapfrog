@@ -383,7 +383,7 @@ public:
 
     // set these rates to vars in goals
     calc_HIV_mort_adjustments(t);
-  
+
      // adjust coverage of cure interventons according to duration
     if (t > p_hv.goals_base_year_idx) {
       //new products, coverage with duration/waning and efficacy, for impact
@@ -650,7 +650,7 @@ public:
     std::cout << "prev goals1 (%) t " << t << " " << 100.00 * prev << " "
               << std::endl;
 
-    prev = n_hv.prevalence(RG_ALL, S_ALL);  // n_hv.total_prevalence;
+    prev = n_hv.prevalence(RG_ALL, S_ALL);
 
     std::cout << "prev goals2 (%) t " << t << " " << 100.00 * prev << " "
               << std::endl;
@@ -678,10 +678,10 @@ public:
               << std::endl;
 
     std::cout << "average impact cure, M (%) t " << t << " " << 100*i_hv.cure_avg_cov_adults_impact(S_MALE) << " "
-              << std::endl;    
-              
+              << std::endl;
+
       std::cout << "average impact cure, F (%) t " << t << " " << 100*i_hv.cure_avg_cov_adults_impact(S_FEMALE) << " "
-              << std::endl;            
+              << std::endl;
 
 
     // plhiv = i_hv.pop_hivpos_adults + i_hv.total_pop_hivpos;
@@ -805,11 +805,8 @@ public:
     nda::fill(n_hv.prevalence, 0.0);  // prevalence for each rg,  t
 
     nda::fill(n_hv.new_inf_vrs, 0.0);  // new infections for each t, by v,r,s, for goals
-    n_hv.total_new_vaccinations = 0.0;
 
     nda::fill(n_hv.cured_prop, 0.0);
-
-    n_hv.total_prevalence = 0.0;  // total prevalence for each t
 
     nda::fill(i_hv.new_vaccinations, 0.0); //for each t, by v,r,s, for goals
     nda::fill(i_hv.vac_effect, 0.0);
@@ -1678,12 +1675,12 @@ public:
 
         n_hv.prop_therapeutically_vaccinated(cov_type, IMP_INF) = 1.0 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_INF);
         n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
-      
+
       }
 
       //mortality impact: use [1 - proportion protected] for art mortality adjustment
       n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
-      
+
     }
 
   }

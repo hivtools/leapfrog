@@ -338,7 +338,7 @@
    "long_act_treat_eff_ltfu": {
       "num_type": "real_type"
     },
-   
+
     "art_interrupt_rate": {
       "num_type": "real_type",
       "dims": ["opts.proj_steps"]
@@ -660,7 +660,7 @@
       "dims": ["SS::nRG1","SS::nNS"]
     },
 
-    
+
     "func_cure_impact_mort_all": {
       "num_type": "real_type",
       "dims": ["SS::nNS"]
@@ -745,10 +745,6 @@
     "prevalence": {
       "num_type": "real_type",
       "dims": ["SS::nRG+1","SS::nNS+1"]
-    },
-
-    "total_prevalence": {
-      "num_type": "real_type"
     },
 
     "newly_on_art": {
@@ -838,8 +834,8 @@
       "num_type": "real_type",
       "dims": ["SS::nCOV" ]
     },
-   
-   
+
+
     "prop_func_cured_HR": {
       "num_type": "real_type",
       "dims": ["SS::nCOV", "SS::nIMPACTS"]
@@ -865,7 +861,7 @@
       "dims": ["SS::nRG+1","SS::nNS+1"]
     },
 
-    
+
     "total_new_cures": {
       "num_type": "real_type"
     }
