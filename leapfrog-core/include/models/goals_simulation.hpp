@@ -390,7 +390,7 @@ public:
       calc_proportion_with_efficacy(t, true);
 
       //set the impact of therapeutic vaccine on art transmission multiplier 
-      set_therapeutically_vaccinated_transmission();
+      //set_therapeutically_vaccinated_transmission();
 
       //set the proportion cured - they have no risk of transmission
       set_cured_prop_transmission();
@@ -1974,7 +1974,7 @@ public:
         }
 
         //use same average for all RGs, by sex, but may expand to be risk group specific 
-        art_prop[rg][s] = (all_pop_rs[rg][s] > 0.0) ? (plhiv_on_art_rs[rg][s] / all_pop_rs[rg][s]) : 0.0;
+        art_prop[rg][s] = 1.0; //(all_pop_rs[rg][s] > 0.0) ? (plhiv_on_art_rs[rg][s] / all_pop_rs[rg][s]) : 0.0;
       }
     }
 
@@ -2068,7 +2068,6 @@ public:
     if(p_hv.func_cure_children_cov(t) > 0.0){
       i_hv.func_cure_child_impact_mort *= 1.0 - n_hv.prop_func_cured_children(PROP_FOR_IMPACT, IMP_MORT);
     }
-
 
   }
 
@@ -2599,10 +2598,18 @@ public:
 
         // on ART
         for (int hd = CD4_GT500_ART; hd <= CD4_LT50_ART; ++hd) {
-          rMultNumerator += n_hv.mult_art(hd-hOnArt) * n_hv.adults(VAC_ALL, rg, hd, s);
+          rMultNumerator += n_hv.mult_art(hd-hOnArt) 
+                            * (1.0 - n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_INF))
+                            * (1.0 - i_hv.func_cure_impact_inf(rg, s)) 
+                            * n_hv.adults(VAC_ALL, rg, hd, s);
+                            
           rMultDenominator += n_hv.adults(VAC_ALL, rg, hd, s);
 
-          rMultNumeratorAll += n_hv.mult_art(hd-hOnArt) * n_hv.adults(VAC_ALL, rg, hd, s);
+          rMultNumeratorAll += n_hv.mult_art(hd-hOnArt)
+                               * (1.0 - n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_INF))
+                               * (1.0 - i_hv.func_cure_impact_inf(rg, s)) 
+                               * n_hv.adults(VAC_ALL, rg, hd, s);
+
           rMultDenominatorAll += n_hv.adults(VAC_ALL, rg, hd, s);
 
         }
@@ -2632,7 +2639,11 @@ public:
 
       // on ART
       for (int hd = CD4_GT500_ART; hd <= CD4_LT50_ART; ++hd) {
-        rMultNumeratorAll += n_hv.mult_art(hd-hOnArt) * n_hv.adults(VAC_ALL, rg, hd, S_MALE);
+        rMultNumeratorAll += n_hv.mult_art(hd-hOnArt)
+                             * (1.0 - n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_INF))
+                             * (1.0 - i_hv.func_cure_impact_inf(rg, S_MALE)) 
+                             * n_hv.adults(VAC_ALL, rg, hd, S_MALE);
+                             
         rMultDenominatorAll += n_hv.adults(VAC_ALL, rg, hd, S_MALE);
       }
 
@@ -2856,7 +2867,7 @@ public:
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
                                    * (1.0 - p_hv.prep_cov(S_MALE, rg, t) * i_hv.prep_effect(rg, s))
                                    * (1.0 - n_hv.cured_prop(rg, S_MALE))
-                                   * (1.0 - i_hv.func_cure_impact_inf(rg, S_FEMALE))),
+                                   * (1.0 - 0.0*i_hv.func_cure_impact_inf(rg, S_FEMALE))),
                               p_hv.b_sex_acts(rg, t) * SexActsRatioM
                           )
                       + (1.0 - PrevF),
@@ -2907,7 +2918,7 @@ public:
                                  (1.0 - p_hv.prep_cov(S_FEMALE, rg, t) * i_hv.prep_effect(rg, s))
                                  * (1.0 - vmm_coverage * p_hv.rn_vmm_effect)
                                  * (1.0 - n_hv.cured_prop(rg, S_FEMALE))
-                                 * (1.0 - i_hv.func_cure_impact_inf(rg, S_MALE))),
+                                 * (1.0 - 0.0*i_hv.func_cure_impact_inf(rg, S_MALE))),
                             p_hv.b_sex_acts(rg, t) * SexActsRatioF
                         )
                     + (1.0 - PrevM),
@@ -2959,7 +2970,7 @@ public:
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
                                    * (1.0 - p_hv.prep_cov(S_MALE, rg, t) * i_hv.prep_effect(rg, s))
                                    * (1.0 - n_hv.cured_prop(rg, S_MALE))
-                                   * (1.0 - i_hv.func_cure_impact_inf(rg, S_MALE))),
+                                   * (1.0 - 0.0*i_hv.func_cure_impact_inf(rg, S_MALE))),
                               p_hv.b_sex_acts(rg, t)
                           )
                       + (1.0 - PrevM),
@@ -3052,7 +3063,7 @@ public:
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
                                    * (1.0 - p_hv.prep_cov(S_MALE, rg, t) * i_hv.prep_effect(rg, S_MALE))
                                    * (1.0 - n_hv.cured_prop(rg, S_MALE))
-                                   * (1.0 - i_hv.func_cure_impact_inf(rg, S_FEMALE))),
+                                   * (1.0 - 0.0*i_hv.func_cure_impact_inf(rg, S_FEMALE))),
                               p_hv.b_sex_acts(rg, t) * SexActsRatioM
                           )
                       + (1.0 - PrevF),
@@ -3069,7 +3080,7 @@ public:
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
                                    * (1.0 - p_hv.prep_cov(S_FEMALE, rg, t) * i_hv.prep_effect(rg, S_FEMALE))
                                    * (1.0 - n_hv.cured_prop(rg, S_FEMALE))
-                                   * (1.0 - i_hv.func_cure_impact_inf(rg, S_MALE))),
+                                   * (1.0 - 0.0*i_hv.func_cure_impact_inf(rg, S_MALE))),
                               p_hv.b_sex_acts(rg, t) * SexActsRatioF
                           )
                       + (1.0 - PrevM),
