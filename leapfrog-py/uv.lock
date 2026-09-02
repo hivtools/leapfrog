@@ -83,7 +83,7 @@ wheels = [
 
 [[package]]
 name = "leapfrog-py"
-version = "1.0.15"
+version = "1.0.16"
 source = { editable = "." }
 dependencies = [
     { name = "h5py" },
