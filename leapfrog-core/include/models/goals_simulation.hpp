@@ -1953,14 +1953,13 @@ public:
         }
 
         all_pop_rs[rg][s] = n_hv.adults(VAC_ALL, rg, CD4_ALL, s);
-        const int hOnArt = 7;
-        for (int hd = CD4_GT500; hd <= CD4_LT50_ART; ++hd) {
+        for (int hd = CD4_GT500_ART; hd <= CD4_LT50_ART; ++hd) {
 
           //plhiv, on art
-          plhiv_on_art[s] += n_hv.adults(VAC_ALL, rg, hd + hOnArt, s);
+          plhiv_on_art[s] += n_hv.adults(VAC_ALL, rg, hd, s);
 
           //plhiv, on art, by rg
-          plhiv_on_art_rs[rg][s] += n_hv.adults(VAC_ALL, rg, hd + hOnArt, s);
+          plhiv_on_art_rs[rg][s] += n_hv.adults(VAC_ALL, rg, hd, s);
         }
 
       }
