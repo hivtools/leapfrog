@@ -460,13 +460,16 @@ public:
     if (has_plhiv == true) {
       // calc prevalence used for new infections calc
       calc_prevalence();
-      // force of infection multipliers
-      calc_r_multiplier();
+
       //effect of functional cure on transmission
       if( (hiv_step == 0) && (t >= opts.ts_art_start) && (t > p_hv.goals_base_year_idx) ){
         calc_HIV_func_cure_effect(t);//impact vars for functional cure
         calc_HIV_cure(t);//state transitions in goals due to cure
       }
+
+      // force of infection multipliers
+      calc_r_multiplier();
+
       // calc new infections
       calc_new_infections(t);
       // TODO: enable this function again
