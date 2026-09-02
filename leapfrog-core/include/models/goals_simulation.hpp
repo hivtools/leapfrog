@@ -1938,12 +1938,11 @@ public:
     auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
 
-    real_type plhiv[nNS] = {};
+  
     real_type plhiv_on_art[nNS] = {};
-    real_type hiv_neg_pop[nNS] = {};
-    
     real_type art_prop[RG_MSM+1][nNS] = {};
     real_type plhiv_on_art_rs[RG_MSM+1][nNS] = {};
+    real_type all_pop_rs[RG_MSM+1][nNS] = {};
    
     //plhiv, and plhiv on art by s
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
@@ -1953,13 +1952,13 @@ public:
           continue;
         }
 
-        hiv_neg_pop[s] = n_hv.adults(VAC_ALL, rg, CD4_NEG, s);
+        all_pop_rs[rg][s] = n_hv.adults(VAC_ALL, rg, CD4_ALL, s);
         const int hOnArt = 7;
         for (int hd = CD4_GT500; hd <= CD4_LT50_ART; ++hd) {
-          //plhiv, not on art
-          plhiv[s] += n_hv.adults(VAC_ALL, rg, hd, s);
+
           //plhiv, on art
           plhiv_on_art[s] += n_hv.adults(VAC_ALL, rg, hd + hOnArt, s);
+
           //plhiv, on art, by rg
           plhiv_on_art_rs[rg][s] += n_hv.adults(VAC_ALL, rg, hd + hOnArt, s);
         }
@@ -1976,7 +1975,7 @@ public:
         }
 
         //use same average for all RGs, by sex, but may expand to be risk group specific 
-        art_prop[rg][s] = (hiv_neg_pop[s] + plhiv[s] + plhiv_on_art[s] > 0.0) ? (plhiv_on_art[s] / (hiv_neg_pop[s] + plhiv[s] + plhiv_on_art[s])) : 0.0;
+        art_prop[rg][s] = (all_pop_rs[rg][s] > 0.0) ? (plhiv_on_art_rs[rg][s] / all_pop_rs[rg][s]) : 0.0;
       }
     }
 
