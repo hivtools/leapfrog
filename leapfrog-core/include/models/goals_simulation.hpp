@@ -388,6 +388,13 @@ public:
     if (t > p_hv.goals_base_year_idx) {
       //new products, coverage with duration/waning and efficacy, for impact
       calc_proportion_with_efficacy(t, true);
+
+      //set the impact of therapeutic vaccine on art transmission multiplier 
+      set_therapeutically_vaccinated_transmission();
+
+      //set the proportion cured - they have no risk of transmission
+      set_cured_prop_transmission();
+
       //new products, coverage with duration/waning and without efficacy, for costing
       calc_proportion_with_efficacy(t, false);
     }
@@ -457,7 +464,8 @@ public:
       calc_r_multiplier();
       //effect of functional cure on transmission
       if( (hiv_step == 0) && (t >= opts.ts_art_start) && (t > p_hv.goals_base_year_idx) ){
-        calc_HIV_func_cure_effect(t);
+        calc_HIV_func_cure_effect(t);//impact vars for functional cure
+        calc_HIV_cure(t);//state transitions in goals due to cure
       }
       // calc new infections
       calc_new_infections(t);
@@ -509,7 +517,6 @@ public:
    if( (t > p_hv.goals_base_year_idx) && (hiv_step == opts.hts_per_year - 1) ){
       calc_HIV_cure_avg_cov_impact(t);//for use in dp/aim
       calc_HIV_cure_avg_cov(t);//for use in dp/aim
-      calc_HIV_cure(t);//state transitions due to cure
    }
   }
 
@@ -650,7 +657,7 @@ public:
     std::cout << "prev goals1 (%) t " << t << " " << 100.00 * prev << " "
               << std::endl;
 
-    prev = n_hv.prevalence(RG_ALL, S_ALL);  // n_hv.total_prevalence;
+    prev = n_hv.prevalence(RG_ALL, S_ALL);
 
     std::cout << "prev goals2 (%) t " << t << " " << 100.00 * prev << " "
               << std::endl;
@@ -739,8 +746,7 @@ public:
       if (t > p_hv.goals_base_year_idx) {
         n_hv.mult_art(hd) = p_hv.epi_inf_mult_art(t) *
                             p_hv.epi_infectiousness(INF_ASYMPT) *
-                            (1.0 - p_hv.rn_poc_cov(POC_VL, t) * p_hv.rn_poc_effect(POC_VL)) *
-                            (1.0 - n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_INF));
+                            (1.0 - p_hv.rn_poc_cov(POC_VL, t) * p_hv.rn_poc_effect(POC_VL));
       }
     }
 
@@ -805,12 +811,7 @@ public:
     nda::fill(n_hv.prevalence, 0.0);  // prevalence for each rg,  t
 
     nda::fill(n_hv.new_inf_vrs, 0.0);  // new infections for each t, by v,r,s, for goals
-    n_hv.total_new_vaccinations = 0.0;
-
-    nda::fill(n_hv.cured_prop, 0.0);
-
-    n_hv.total_prevalence = 0.0;  // total prevalence for each t
-
+    
     nda::fill(i_hv.new_vaccinations, 0.0); //for each t, by v,r,s, for goals
     nda::fill(i_hv.vac_effect, 0.0);
 
@@ -1643,11 +1644,11 @@ public:
         for (int d = 0; d  <= dur_max-1; ++d){
           n_hv.prop_func_cured_HR(cov_type, IMP_INF) *= 1.0 -  p_hv.func_cure_HR_cov(t - d) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.func_cure_reduce_inf : 1.0);
           n_hv.prop_func_cured_LR(cov_type,IMP_INF) *= 1.0 - p_hv.func_cure_LR_cov(t - d) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.func_cure_reduce_inf : 1.0);
-          n_hv.prop_func_cured_children(cov_type, IMP_INF) *= 1.0 - p_hv.func_cure_LR_cov(t - d) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.func_cure_reduce_inf : 1.0);
+          n_hv.prop_func_cured_children(cov_type, IMP_INF) *= 1.0 - p_hv.func_cure_children_cov(t - d) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.func_cure_reduce_inf : 1.0);
 
           n_hv.prop_func_cured_HR(cov_type, IMP_MORT) *= 1.0 -  p_hv.func_cure_HR_cov(t - d) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.func_cure_reduce_mort : 1.0);
           n_hv.prop_func_cured_LR(cov_type, IMP_MORT) *= 1.0 - p_hv.func_cure_LR_cov(t - d) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.func_cure_reduce_mort : 1.0);
-          n_hv.prop_func_cured_children(cov_type, IMP_MORT) *= 1.0 - p_hv.func_cure_LR_cov(t - d) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.func_cure_reduce_mort : 1.0);
+          n_hv.prop_func_cured_children(cov_type, IMP_MORT) *= 1.0 - p_hv.func_cure_children_cov(t - d) * ((cov_type == PROP_FOR_IMPACT) ? p_hv.func_cure_reduce_mort : 1.0);
         }
 
         n_hv.prop_func_cured_HR(cov_type, IMP_INF) = 1.0 - n_hv.prop_func_cured_HR(cov_type, IMP_INF);
@@ -1677,15 +1678,23 @@ public:
         }
 
         n_hv.prop_therapeutically_vaccinated(cov_type, IMP_INF) = 1.0 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_INF);
-        n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
+        n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1.0 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
       
       }
 
       //mortality impact: use [1 - proportion protected] for art mortality adjustment
-      n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
+      n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1.0 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
       
     }
 
+  }
+
+  void set_therapeutically_vaccinated_transmission(){
+  auto& n_hv = state_next.hv;  
+  //impact on ART multiplier
+  for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
+    n_hv.mult_art(hd) *= (1.0 - n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_INF));
+  }
   }
 
   void calc_HIV_cure_avg_cov_impact(int t){
@@ -1792,6 +1801,32 @@ public:
 
   }
 
+
+  void set_cured_prop_transmission() {
+    auto& n_hv = state_next.hv;
+    const auto& p_hv = pars.hv;
+
+    nda::fill(n_hv.cured_prop, 0.0);
+
+    for (int s = S_MALE; s <= S_FEMALE; ++s) {
+      for (int rg = RG_NONE; rg <= RG_MSM; ++rg) {
+        if (s == S_FEMALE && rg >= RG_MSM) {
+          continue;  // no female MSM
+        }
+
+        const int nr = (s == S_FEMALE) ? rg + RG_NONE_F3 : rg;
+
+        real_type cured = n_hv.prop_cured_all(PROP_FOR_IMPACT);
+        if (p_hv.rn_cure_coverage_type != CURE_COV_ALLRISK) {
+          cured = n_hv.prop_cured_rg(nr, PROP_FOR_IMPACT);
+        }
+
+        n_hv.cured_prop(rg, s) = std::clamp(cured, 0.0, 1.0);
+      }
+    }
+  }
+
+
   void calc_HIV_cure(int t) {
     auto& n_hv = state_next.hv;
     auto& c_hv = state_curr.hv;
@@ -1855,9 +1890,6 @@ public:
         cured_prop_next[rg][s][PROP_FOR_COSTING]  = std::clamp(cured_prop_next[rg][s][PROP_FOR_COSTING], 0.0, 1.0);
         cured_prop_curr[rg][s][PROP_FOR_COSTING]  = std::clamp(cured_prop_curr[rg][s][PROP_FOR_COSTING], 0.0, 1.0);
 
-       //cured proportion for impact in transmission equation
-        n_hv.cured_prop(rg, s) = cured_prop_next[rg][s][PROP_FOR_IMPACT];
-
         if (cured_prop_next[rg][s][PROP_FOR_IMPACT]  > 0.0) {
 
 
@@ -1909,10 +1941,9 @@ public:
     real_type plhiv[nNS] = {};
     real_type plhiv_on_art[nNS] = {};
     real_type art_prop[RG_MSM+1][nNS] = {};
-    real_type plhiv_rs[RG_MSM+1][nNS] = {};
     real_type plhiv_on_art_rs[RG_MSM+1][nNS] = {};
-
-    //plhiv, and plhiv on art by rg and s
+   
+    //plhiv, and plhiv on art by s
     for (int s = S_MALE; s <= S_FEMALE; ++s) {
       for (int rg = RG_LRH; rg <= RG_MSM; ++rg) {
 
@@ -1920,21 +1951,29 @@ public:
           continue;
         }
 
-        //plhiv
+        const int hOnArt = 7;
         for (int hd = CD4_GT500; hd <= CD4_LT50_ART; ++hd) {
-          plhiv_rs[rg][s] = n_hv.adults(VAC_ALL, rg, hd, s);
+          //plhiv, not on art
           plhiv[s] += n_hv.adults(VAC_ALL, rg, hd, s);
+          //plhiv, on art
+          plhiv_on_art[s] += n_hv.adults(VAC_ALL, rg, hd + hOnArt, s);
+          //plhiv, on art, by rg
+          plhiv_on_art_rs[rg][s] += n_hv.adults(VAC_ALL, rg, hd + hOnArt, s);
         }
 
-        //plhiv, not on art
-        for (int hd = CD4_GT500_ART; hd <= CD4_LT50_ART; ++hd) {
-          plhiv_on_art_rs[rg][s] = n_hv.adults(VAC_ALL, rg, hd, s);
-          plhiv_on_art[s] += n_hv.adults(VAC_ALL, rg, hd, s);
+      }
+    }
+
+    // risk-group share of on-ART PLHIV, once the per-sex totals are complete
+    for (int s = S_MALE; s <= S_FEMALE; ++s) {
+      for (int rg = RG_LRH; rg <= RG_MSM; ++rg) {
+
+        if (s == S_FEMALE && rg >= RG_MSM) {
+          continue;
         }
 
-        art_prop[rg][s] = (plhiv_on_art[s] > 0.0) ? (plhiv_on_art_rs[rg][s]/plhiv_on_art[s]) : 0.0;
-
-
+        //use same average for all RGs, by sex, but may expand to be risk group specific 
+        art_prop[rg][s] = (plhiv[s] + plhiv_on_art[s] > 0.0) ? (plhiv_on_art[s] / (plhiv[s] + plhiv_on_art[s])) : 0.0;
       }
     }
 
@@ -2011,7 +2050,7 @@ public:
       i_hv.func_cure_impact_inf(RG_IDU,S_MALE) = art_prop[RG_IDU][S_MALE] * n_hv.prop_func_cured_HR(PROP_FOR_IMPACT, IMP_INF);
       i_hv.func_cure_impact_inf(RG_IDU,S_FEMALE) = art_prop[RG_IDU][S_FEMALE] * n_hv.prop_func_cured_HR(PROP_FOR_IMPACT, IMP_INF);
       //msm
-      i_hv.func_cure_impact_inf(RG_MSM,S_MALE) = art_prop[RG_HRH][S_MALE] * n_hv.prop_func_cured_HR(PROP_FOR_IMPACT, IMP_INF);
+      i_hv.func_cure_impact_inf(RG_MSM,S_MALE) = art_prop[RG_MSM][S_MALE] * n_hv.prop_func_cured_HR(PROP_FOR_IMPACT, IMP_INF);
     }
 
     if(p_hv.func_cure_LR_cov(t) > 0.0){
@@ -2918,7 +2957,7 @@ public:
                                    * (1.0 + (p_hv.epi_transm_sti_mult - 1) * p_hv.epi_sti_prev(rg, t))
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
                                    * (1.0 - p_hv.prep_cov(S_MALE, rg, t) * i_hv.prep_effect(rg, s))
-                                   * (1.0 - n_hv.cured_prop(S_MALE, S_MALE))
+                                   * (1.0 - n_hv.cured_prop(rg, S_MALE))
                                    * (1.0 - i_hv.func_cure_impact_inf(rg, S_MALE))),
                               p_hv.b_sex_acts(rg, t)
                           )
@@ -3454,26 +3493,10 @@ public:
         }
 
         for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) {
-          if (pars.ha.art_entry_option == SS::ART_ENTRY_INITIATION_RATE) {
-            // Initiations are a rate applied to the treatment gap: PLHIV, plus
-            // this year's new infections, minus those already on ART.
-            const real_type new_infections = c_hv.new_inf_vrs(v, rg, s);
-            real_type plhiv = 0.0;
-            for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
-              plhiv += c_hv.adults(v, rg, hd, s);
-            }
-
-            const real_type treatment_gap = new_infections + plhiv;
-            start_art[v][rg][s] = std::max(
-                opts.dt * pars.ha.art_initiation_rate(s, t) * treatment_gap, 0.0);
-          } else {
-            // Coverage target: initiate however many are needed to reach the
-            // input number/percent on ART.
-            start_art[v][rg][s] =
+          start_art[v][rg][s] =
                 (not_receiving_art_vrs[v][rg][s] + receiving_art_vrs[v][rg][s])
                     * art_cov[rg][s] - receiving_art_vrs[v][rg][s];
-          }
-
+        
           // allocate new ART according to eligibility (Prop1) and mortality
           // (Prop2)
           for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {

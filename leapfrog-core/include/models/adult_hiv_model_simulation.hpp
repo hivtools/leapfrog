@@ -992,14 +992,17 @@ struct AdultHivModelSimulation<Config> {
         // adults, PLHIV not on ART
         for (int hm = 0; hm < hDS; ++hm) {
 
-          // for costing, use proportion for costing, without efficacy applied
-          cured = cure_cov * n_ha.h_hivpop(hm, ha, s);
+          if(a >= SS::pIDX_15to49 + SS::pAG_15to49){
+            // 15-49 new_cures tracked in goals
+            // for costing, use proportion for costing, without efficacy applied
+            cured = cure_cov * n_ha.h_hivpop(hm, ha, s);
 
-          // do not remove more than 99 % of the current compartment
-          cured = std::min(cured, 0.99 * n_ha.h_hivpop(hm, ha, s));
+            // do not remove more than 99 % of the current compartment
+            cured = std::min(cured, 0.99 * n_ha.h_hivpop(hm, ha, s));
 
-          // add to total for costing
-          state_next.hv.total_new_cures += cured;
+            // add to total for costing
+            state_next.hv.total_new_cures += cured;
+           }
 
           //for impact, use proportion for costing, with efficacy applied
           cured = cure_cov_impact * n_ha.h_hivpop(hm, ha, s);
@@ -1016,14 +1019,17 @@ struct AdultHivModelSimulation<Config> {
         for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
           for (int hu = 0; hu < hTS; ++hu) {
 
-          // for costing, use proportion for costing, without efficacy applied
-          cured = cure_cov * n_ha.h_artpop(hu, hm, ha, s);
+          if(a >= SS::pIDX_15to49 + SS::pAG_15to49){
+            // 15-49 new_cures tracked in goals
+            // for costing, use proportion for costing, without efficacy applied
+            cured = cure_cov * n_ha.h_artpop(hu, hm, ha, s);
 
-          // do not remove more than 99 % of the current compartment
-          cured = std::min(cured, 0.99 * n_ha.h_artpop(hu, hm, ha, s));
+            // do not remove more than 99 % of the current compartment
+            cured = std::min(cured, 0.99 * n_ha.h_artpop(hu, hm, ha, s));
 
-          // add to total for costing
-          state_next.hv.total_new_cures += cured;
+            // add to total for costing
+            state_next.hv.total_new_cures += cured;
+          }
 
           // for impact, use proportion for costing, with efficacy applied
           cured = cure_cov_impact * n_ha.h_artpop(hu, hm, ha, s);
