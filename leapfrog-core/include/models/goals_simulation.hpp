@@ -1940,6 +1940,8 @@ public:
 
     real_type plhiv[nNS] = {};
     real_type plhiv_on_art[nNS] = {};
+    real_type hiv_neg_pop[nNS] = {};
+    
     real_type art_prop[RG_MSM+1][nNS] = {};
     real_type plhiv_on_art_rs[RG_MSM+1][nNS] = {};
    
@@ -1951,6 +1953,7 @@ public:
           continue;
         }
 
+        hiv_neg_pop[s] = n_hv.adults(VAC_ALL, rg, CD4_NEG, s);
         const int hOnArt = 7;
         for (int hd = CD4_GT500; hd <= CD4_LT50_ART; ++hd) {
           //plhiv, not on art
@@ -1973,7 +1976,7 @@ public:
         }
 
         //use same average for all RGs, by sex, but may expand to be risk group specific 
-        art_prop[rg][s] = (plhiv[s] + plhiv_on_art[s] > 0.0) ? (plhiv_on_art[s] / (plhiv[s] + plhiv_on_art[s])) : 0.0;
+        art_prop[rg][s] = (hiv_neg_pop[s] + plhiv[s] + plhiv_on_art[s] > 0.0) ? (plhiv_on_art[s] / (hiv_neg_pop[s] + plhiv[s] + plhiv_on_art[s])) : 0.0;
       }
     }
 
@@ -2855,7 +2858,7 @@ public:
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
                                    * (1.0 - p_hv.prep_cov(S_MALE, rg, t) * i_hv.prep_effect(rg, s))
                                    * (1.0 - n_hv.cured_prop(rg, S_MALE))
-                                   * (1.0 - i_hv.func_cure_impact_inf(rg, S_MALE))),
+                                   * (1.0 - i_hv.func_cure_impact_inf(rg, S_FEMALE))),
                               p_hv.b_sex_acts(rg, t) * SexActsRatioM
                           )
                       + (1.0 - PrevF),
@@ -2906,7 +2909,7 @@ public:
                                  (1.0 - p_hv.prep_cov(S_FEMALE, rg, t) * i_hv.prep_effect(rg, s))
                                  * (1.0 - vmm_coverage * p_hv.rn_vmm_effect)
                                  * (1.0 - n_hv.cured_prop(rg, S_FEMALE))
-                                 * (1.0 - i_hv.func_cure_impact_inf(rg, S_FEMALE))),
+                                 * (1.0 - i_hv.func_cure_impact_inf(rg, S_MALE))),
                             p_hv.b_sex_acts(rg, t) * SexActsRatioF
                         )
                     + (1.0 - PrevM),
@@ -3051,7 +3054,7 @@ public:
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
                                    * (1.0 - p_hv.prep_cov(S_MALE, rg, t) * i_hv.prep_effect(rg, S_MALE))
                                    * (1.0 - n_hv.cured_prop(rg, S_MALE))
-                                   * (1.0 - i_hv.func_cure_impact_inf(rg, S_MALE))),
+                                   * (1.0 - i_hv.func_cure_impact_inf(rg, S_FEMALE))),
                               p_hv.b_sex_acts(rg, t) * SexActsRatioM
                           )
                       + (1.0 - PrevF),
@@ -3068,7 +3071,7 @@ public:
                                    * (1.0 - i_hv.i_condom_prop(rg) * p_hv.epi_condom_effect)
                                    * (1.0 - p_hv.prep_cov(S_FEMALE, rg, t) * i_hv.prep_effect(rg, S_FEMALE))
                                    * (1.0 - n_hv.cured_prop(rg, S_FEMALE))
-                                   * (1.0 - i_hv.func_cure_impact_inf(rg, S_FEMALE))),
+                                   * (1.0 - i_hv.func_cure_impact_inf(rg, S_MALE))),
                               p_hv.b_sex_acts(rg, t) * SexActsRatioF
                           )
                       + (1.0 - PrevM),
