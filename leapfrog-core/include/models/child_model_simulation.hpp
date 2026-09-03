@@ -454,8 +454,9 @@ struct ChildModelSimulation<Config> {
           p_hc.prep_parameters(PREP_PERSON_YEARS_INJECTABLE) *
           p_hc.prep_parameters(PREP_ADHERENCE_INJECTABLE);
 
-    const real_type prep_effect = prep_person_years / births_minus_pmtct_need *
-                                  p_hc.prep_parameters(PREP_SELECTION_INCIDENCE_RATIO);
+    const real_type prep_effect =
+        (prep_person_years / births_minus_pmtct_need) *
+        p_hc.prep_parameters(PREP_SELECTION_INCIDENCE_RATIO);
 
     return std::min(prep_effect, 1.0);
   };
