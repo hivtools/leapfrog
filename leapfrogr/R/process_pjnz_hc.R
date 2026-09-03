@@ -69,6 +69,37 @@ prepare_abortion_input <- function(dat, pars, dim_vars, proj_years) {
   abortion
 }
 
+prepare_prep_for_pregnant_women <- function(pars, proj_years) {
+  n_years <- length(proj_years)
+  prep_param_names <- c("adherence_oral", "adherence_injectable",
+                        "selection_incidence_ratio", "person_years_prep_oral",
+                        "person_years_prep_injectable")
+
+  ## Both inputs are absent in PJNZ files written before PrEP for pregnant and
+  ## breastfeeding women was added; in that case they pass through as all zero,
+  ## which leaves maternal HIV incidence unchanged in the child model.
+  if (is.null(pars$prep_parameters)) {
+    prep_parameters <- array(0, dim = length(prep_param_names),
+                             dimnames = list(prep_param_names))
+  } else {
+    prep_parameters <- pars$prep_parameters[prep_param_names]
+    prep_parameters[is.na(prep_parameters)] <- 0
+  }
+
+  prep_for_pregnant_women <- array(
+    0, dim = c(2, n_years),
+    dimnames = list(method = c("oral", "injectable"), year = proj_years)
+  )
+  if (!is.null(pars$prep_for_pregnant_women)) {
+    n_copy <- min(n_years, ncol(pars$prep_for_pregnant_women))
+    prep_for_pregnant_women[c("oral", "injectable"), seq_len(n_copy)] <-
+      pars$prep_for_pregnant_women[c("oral", "injectable"), seq_len(n_copy)]
+  }
+
+  list(prep_parameters = prep_parameters,
+       prep_for_pregnant_women = prep_for_pregnant_women)
+}
+
 prepare_pmtct <- function(dat, pars, dim_vars, proj_years) {
   pmtct <- pars$arv_regimen
   pmtct[is.na(pmtct)] <- 0
@@ -390,6 +421,9 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
   PMTCT_input_is_percent <- as.integer(pmtct$pmtct_input_isperc)
   PMTCT_dropout <- prepare_pmtct_dropout(dat, pars, dim_vars, proj_years)
 
+  ## PrEP for pregnant and breastfeeding women
+  prep <- prepare_prep_for_pregnant_women(pars, proj_years)
+
   ##rates of MTCT
   mtct <- prepare_vertical_transmission(dat, pars, dim_vars)
   PMTCT_transmission_rate <- mtct$pmtct_mtct
@@ -484,6 +518,8 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
     PMTCT_transmission_rate = PMTCT_transmission_rate,
     PMTCT_dropout = PMTCT_dropout,
     PMTCT_input_is_percent = PMTCT_input_is_percent,
+    prep_for_pregnant_women = prep$prep_for_pregnant_women,
+    prep_parameters = prep$prep_parameters,
     breastfeeding_duration_art = breastfeeding_duration_art,
     breastfeeding_duration_no_art = breastfeeding_duration_no_art,
     infant_pop = infant_pop,
