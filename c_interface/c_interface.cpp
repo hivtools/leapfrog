@@ -163,4 +163,46 @@ DllExport HRESULT WINAPI run_model_from_state(leapfrog::internal::CParams<double
 }
 
 
+template <typename ModelVariant>
+HRESULT fit_initial_state(leapfrog::internal::CParams<double> &data,
+                          leapfrog::internal::COptions &options,
+                          leapfrog::internal::CState<double> &out,
+                             CallbackFunction error_handler) {
+
+  using LF = leapfrog::Leapfrog<leapfrog::C, double, ModelVariant>;
+
+  try {
+    const leapfrog::Options<double> opts =  {
+      10,
+      0,
+      0,
+      2020,
+      2020
+    };
+    const auto pars = LF::Cfg::get_pars(data, opts);
+    auto state = LF::Cfg::get_initial_state(out);
+
+    leapfrog::run_initial_year_calculations<leapfrog::C, double, ModelVariant>(pars, state);
+    LF::Cfg::build_output_single_year(0, state, out);
+  } catch (const std::invalid_argument& e) {
+    error_handler(e.what());
+    return E_INVALIDARG;
+  } catch (...) {
+    error_handler("Caught unhandled exception");
+    return E_FAIL;
+  }
+
+  return S_OK;
+}
+
+
+DllExport HRESULT WINAPI run_initial_year_calculations(leapfrog::internal::CParams<double> &data,
+                                                      leapfrog::internal::COptions &options,
+                                                      leapfrog::internal::CState<double> &out,
+                                                      CallbackFunction error_handler) {
+  #pragma EXPORT
+  return fit_initial_state<leapfrog::Spectrum>(data, options, out, error_handler);
+}
+  
+
 
