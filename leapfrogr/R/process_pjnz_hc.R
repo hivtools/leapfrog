@@ -69,6 +69,38 @@ prepare_abortion_input <- function(dat, pars, dim_vars, proj_years) {
   abortion
 }
 
+prepare_pbfw_prep <- function(pars, proj_years) {
+  n_years <- length(proj_years)
+  regimen_names <- c("oral", "long_acting")
+
+  ## PrEP for pregnant and breastfeeding women is absent in PJNZ files written
+  ## before it was added; in that case every value passes through as zero, which
+  ## leaves maternal HIV incidence unchanged in the child model.
+  pbfw_prep_receiving <- array(
+    0, dim = c(length(regimen_names), n_years),
+    dimnames = list(regimen = regimen_names, year = proj_years)
+  )
+  if (!is.null(pars$prep_for_pregnant_women)) {
+    n_copy <- min(n_years, ncol(pars$prep_for_pregnant_women))
+    pbfw_prep_receiving[regimen_names, seq_len(n_copy)] <-
+      pars$prep_for_pregnant_women[regimen_names, seq_len(n_copy)]
+  }
+
+  prep_params <- pars$prep_parameters
+  param <- function(name) {
+    if (is.null(prep_params) || is.na(prep_params[name])) 0 else unname(prep_params[name])
+  }
+
+  list(
+    pbfw_prep_receiving = pbfw_prep_receiving,
+    pbfw_prep_adherence_oral = param("adherence_oral"),
+    pbfw_prep_adherence_long_acting = param("adherence_long_acting"),
+    pbfw_prep_client_incidence_ratio = param("incidence_ratio_among_prep_clients_v_non_clients"),
+    pbfw_prep_person_years_oral = param("person_years_prep_oral"),
+    pbfw_prep_person_years_long_acting = param("person_years_prep_long_acting")
+  )
+}
+
 prepare_pmtct <- function(dat, pars, dim_vars, proj_years) {
   pmtct <- pars$arv_regimen
   pmtct[is.na(pmtct)] <- 0
@@ -390,6 +422,9 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
   PMTCT_input_is_percent <- as.integer(pmtct$pmtct_input_isperc)
   PMTCT_dropout <- prepare_pmtct_dropout(dat, pars, dim_vars, proj_years)
 
+  ## PrEP for pregnant and breastfeeding women
+  pbfw_prep <- prepare_pbfw_prep(pars, proj_years)
+
   ##rates of MTCT
   mtct <- prepare_vertical_transmission(dat, pars, dim_vars)
   PMTCT_transmission_rate <- mtct$pmtct_mtct
@@ -462,7 +497,7 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
   hc2_art_mort <- art_mort$hc2_art_mort
   hc_art_mort_rr <- prepare_hc_art_mort_rr(dat, pars, dim_vars, proj_years, year_idx)
 
-  list(
+  c(pbfw_prep, list(
     hc_nosocomial_infections_by_age = hc_nosocomial_infections_by_age,
     hc1_cd4_dist = hc1_cd4_dist,
     hc1_cd4_mort = hc1_cd4_mort,
@@ -502,5 +537,5 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
     cotrim_effect = cotrim_effect,
     hc_art_start = hc_art_start,
     hc_age_specific_fertility_rate = hc_age_specific_fertility_rate
-  )
+  ))
 }

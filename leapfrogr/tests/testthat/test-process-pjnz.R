@@ -71,12 +71,61 @@ test_that("process_pjnz extract_child_params adds child-specific parameters", {
 
   child_pars <- c("hc_nosocomial_infections_by_age", "hc1_cd4_dist", "hc1_cd4_mort",
                   "hc2_cd4_mort", "hc1_cd4_prog", "hc2_cd4_prog",
-                  "cotrim_val", "PMTCT", "vertical_transmission_rate")
+                  "cotrim_val", "PMTCT", "vertical_transmission_rate",
+                  "pbfw_prep_receiving", "pbfw_prep_adherence_oral",
+                  "pbfw_prep_adherence_long_acting", "pbfw_prep_client_incidence_ratio",
+                  "pbfw_prep_person_years_oral", "pbfw_prep_person_years_long_acting")
   expect_true(all(child_pars %in% names(pars_child)))
   expect_false(any(child_pars %in% names(pars_adult)))
 
   # Adult parameters still present
   expect_true(all(c("basepop", "Sx", "cd4_mort") %in% names(pars_child)))
+})
+
+test_that("PrEP for pregnant and breastfeeding women passes through as zero for older PJNZ", {
+  pars_child <- process_pjnz(bwa_pmtct_pjnz, extract_child_params = TRUE)
+
+  expect_equal(nrow(pars_child$pbfw_prep_receiving), 2L)
+  expect_equal(ncol(pars_child$pbfw_prep_receiving), ncol(pars_child$PMTCT),
+               ignore_attr = TRUE)
+  expect_equal(rownames(pars_child$pbfw_prep_receiving), c("oral", "long_acting"))
+  expect_true(all(pars_child$pbfw_prep_receiving == 0))
+
+  expect_equal(pars_child$pbfw_prep_adherence_oral, 0)
+  expect_equal(pars_child$pbfw_prep_adherence_long_acting, 0)
+  expect_equal(pars_child$pbfw_prep_client_incidence_ratio, 0)
+  expect_equal(pars_child$pbfw_prep_person_years_oral, 0)
+  expect_equal(pars_child$pbfw_prep_person_years_long_acting, 0)
+})
+
+test_that("PrEP for pregnant and breastfeeding women is read from PJNZ when present", {
+  raw_dp <- pjnz::read_dp(bwa_pmtct_pjnz, include_raw = TRUE)
+  n_years <- length(raw_dp$dim_vars$years)
+  preg_prep <- matrix(0, nrow = 2, ncol = n_years,
+                      dimnames = list(c("oral", "long_acting"), raw_dp$dim_vars$years))
+  preg_prep["oral", ] <- 10
+  preg_prep["long_acting", ] <- 3
+  raw_dp$data$prep_for_pregnant_women <- list(data = preg_prep, tag = "AM_PMTCTReceivingOralPrEP MV")
+  raw_dp$data$prep_parameters <- list(
+    data = array(c(0.75, 0.9, 1, 0.59, 0.85), dim = 5L,
+                 dimnames = list(c("adherence_oral", "adherence_long_acting",
+                                   "incidence_ratio_among_prep_clients_v_non_clients",
+                                   "person_years_prep_oral", "person_years_prep_long_acting"))),
+    tag = "AM_PMTCTPrEPParameters MV")
+
+  with_mocked_bindings(
+    pars_child <- process_pjnz(bwa_pmtct_pjnz, extract_child_params = TRUE),
+    read_dp = function(...) raw_dp,
+    .package = "pjnz"
+  )
+
+  expect_true(all(pars_child$pbfw_prep_receiving["oral", ] == 10))
+  expect_true(all(pars_child$pbfw_prep_receiving["long_acting", ] == 3))
+  expect_equal(pars_child$pbfw_prep_adherence_oral, 0.75)
+  expect_equal(pars_child$pbfw_prep_adherence_long_acting, 0.9)
+  expect_equal(pars_child$pbfw_prep_client_incidence_ratio, 1)
+  expect_equal(pars_child$pbfw_prep_person_years_oral, 0.59)
+  expect_equal(pars_child$pbfw_prep_person_years_long_acting, 0.85)
 })
 
 test_that("process_pjnz converts non-age stratified nosocomial infections to age stratified", {

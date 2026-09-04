@@ -95,7 +95,14 @@ struct ChildModelSimulation<Config> {
     VT_MOS_30_31 = 15,
     VT_MOS_32_33 = 16,
     VT_MOS_34_35 = 17, // [34,36) months
+
+    // PrEP for pregnant and breastfeeding women: regimen index into pbfw_prep_receiving
+    PBFW_PREP_ORAL = 0,        // Number receiving daily oral PrEP
+    PBFW_PREP_LONG_ACTING = 1, // Number receiving long-acting PrEP
   };
+
+  static_assert(PBFW_PREP_LONG_ACTING + 1 == SS::pbfw_prep_regimen,
+                "pbfw_prep_receiving regimen enum is out of sync with state space");
 
   // function args
   int t;
@@ -419,6 +426,32 @@ struct ChildModelSimulation<Config> {
     }
   };
 
+  // Relative reduction in HIV incidence among pregnant / breastfeeding women due
+  // to PrEP use, matching Spectrum's DP PMTCT calculation. Returns a value in
+  // [0, 1]; 0 when there are no PrEP clients (e.g. older PJNZ files that do not
+  // carry the PrEP-for-pregnant-women inputs, which pass through as all zero).
+  real_type maternal_prep_incidence_reduction(real_type births_minus_pmtct_need) {
+    const auto& p_hc = pars.hc;
+
+    if (births_minus_pmtct_need <= 0.0) {
+      return 0.0;
+    }
+
+    const real_type prep_person_years =
+        p_hc.pbfw_prep_receiving(PBFW_PREP_ORAL, t) *
+          p_hc.pbfw_prep_person_years_oral *
+          p_hc.pbfw_prep_adherence_oral +
+        p_hc.pbfw_prep_receiving(PBFW_PREP_LONG_ACTING, t) *
+          p_hc.pbfw_prep_person_years_long_acting *
+          p_hc.pbfw_prep_adherence_long_acting;
+
+    const real_type prep_effect =
+        (prep_person_years / births_minus_pmtct_need) *
+        p_hc.pbfw_prep_client_incidence_ratio;
+
+    return std::min(prep_effect, 1.0);
+  };
+
   void maternal_incidence_in_pregnancy_tr() {
     const auto& p_dp = pars.dp;
     const auto& p_hc = pars.hc;
@@ -444,6 +477,8 @@ struct ChildModelSimulation<Config> {
 
       if (age_weighted_hivneg > 0.0) {
         i_hc.incidence_rate_wlhiv = age_weighted_infections / age_weighted_hivneg;
+        // PrEP among pregnant / breastfeeding women lowers maternal HIV incidence
+        i_hc.incidence_rate_wlhiv *= 1.0 - maternal_prep_incidence_reduction(p_hc.total_births(t) - n_hc.pmtct_need);
         // 0.75 is 9/12, gestational period, index 7 in the vertical transmission object is the index for maternal seroconversion
         i_hc.perinatal_transmission_from_incidence = i_hc.incidence_rate_wlhiv * 0.75 *
                                                      (p_hc.total_births(t) - n_hc.pmtct_need) *
@@ -462,6 +497,8 @@ struct ChildModelSimulation<Config> {
 
       if (age_weighted_hivneg > 0.0) {
         i_hc.incidence_rate_wlhiv = age_weighted_infections / age_weighted_hivneg;
+        // PrEP among pregnant / breastfeeding women lowers maternal HIV incidence
+        i_hc.incidence_rate_wlhiv *= 1.0 - maternal_prep_incidence_reduction(n_dp.births - n_hc.pmtct_need);
         //0.75 is 9/12, gestational period, index 7 in the vertical trasnmission object is the index for maternal seroconversion
         i_hc.perinatal_transmission_from_incidence = i_hc.incidence_rate_wlhiv * 0.75 *
                                                      (n_dp.births - n_hc.pmtct_need) *

@@ -25,6 +25,7 @@
       "hAB_ind": 2,
       "hAG_fert": 7,
       "mtct_source": 11,
+      "pbfw_prep_regimen": 2,
       "hc_age_coarse": [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
       "hc_age_coarse_cd4": [0, 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
       "hc1_to_hc2_cd4_transition": [
@@ -202,6 +203,25 @@
       "total_births": {
         "num_type": "real_type",
         "dims": ["opts.proj_steps"]
+      },
+      "pbfw_prep_receiving": {
+        "num_type": "real_type",
+        "dims": ["SS::pbfw_prep_regimen", "opts.proj_steps"]
+      },
+      "pbfw_prep_adherence_oral": {
+        "num_type": "real_type"
+      },
+      "pbfw_prep_adherence_long_acting": {
+        "num_type": "real_type"
+      },
+      "pbfw_prep_client_incidence_ratio": {
+        "num_type": "real_type"
+      },
+      "pbfw_prep_person_years_oral": {
+        "num_type": "real_type"
+      },
+      "pbfw_prep_person_years_long_acting": {
+        "num_type": "real_type"
       },
       "cotrim_effect": {
         "num_type": "real_type",
