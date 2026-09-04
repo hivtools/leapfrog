@@ -456,8 +456,8 @@ struct ChildModelSimulation<Config> {
     } else {
       for (int a = 0; a < hAG_fertility; ++a) {
         auto asfr_weight = p_dp.age_specific_fertility_rate(a, t) / asfr_sum;
-        age_weighted_hivneg += asfr_weight * i_hc.p_hiv_neg_pop(a + 15, FEMALE); // HIV negative 15-49 women weighted for ASFR
-        age_weighted_infections += asfr_weight * n_ha.p_infections(a + 15, FEMALE); // newly infected 15-49 women, weighted for ASFR
+        age_weighted_hivneg += asfr_weight * i_hc.p_hiv_neg_pop(a + SS::p_idx_fertility_first, FEMALE); // HIV negative 15-49 women weighted for ASFR
+        age_weighted_infections += asfr_weight * n_ha.p_infections(a + SS::p_idx_fertility_first, FEMALE); // newly infected 15-49 women, weighted for ASFR
       } // end a
 
       if (age_weighted_hivneg > 0.0) {
