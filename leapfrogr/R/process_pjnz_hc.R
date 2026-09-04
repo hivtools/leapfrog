@@ -69,36 +69,36 @@ prepare_abortion_input <- function(dat, pars, dim_vars, proj_years) {
   abortion
 }
 
-prepare_prep_for_pregnant_women <- function(pars, proj_years) {
+prepare_pbfw_prep <- function(pars, proj_years) {
   n_years <- length(proj_years)
-  prep_param_names <- c("adherence_oral", "adherence_long_acting",
-                        "incidence_ratio_among_prep_clients_v_non_clients",
-                        "person_years_prep_oral", "person_years_prep_long_acting")
-  prep_regimen_names <- c("oral", "long_acting")
+  regimen_names <- c("oral", "long_acting")
 
-  ## Both inputs are absent in PJNZ files written before PrEP for pregnant and
-  ## breastfeeding women was added; in that case they pass through as all zero,
-  ## which leaves maternal HIV incidence unchanged in the child model.
-  if (is.null(pars$prep_parameters)) {
-    prep_parameters <- array(0, dim = length(prep_param_names),
-                             dimnames = list(prep_param_names))
-  } else {
-    prep_parameters <- pars$prep_parameters[prep_param_names]
-    prep_parameters[is.na(prep_parameters)] <- 0
-  }
-
-  prep_for_pregnant_women <- array(
-    0, dim = c(length(prep_regimen_names), n_years),
-    dimnames = list(regimen = prep_regimen_names, year = proj_years)
+  ## PrEP for pregnant and breastfeeding women is absent in PJNZ files written
+  ## before it was added; in that case every value passes through as zero, which
+  ## leaves maternal HIV incidence unchanged in the child model.
+  pbfw_prep_receiving <- array(
+    0, dim = c(length(regimen_names), n_years),
+    dimnames = list(regimen = regimen_names, year = proj_years)
   )
   if (!is.null(pars$prep_for_pregnant_women)) {
     n_copy <- min(n_years, ncol(pars$prep_for_pregnant_women))
-    prep_for_pregnant_women[prep_regimen_names, seq_len(n_copy)] <-
-      pars$prep_for_pregnant_women[prep_regimen_names, seq_len(n_copy)]
+    pbfw_prep_receiving[regimen_names, seq_len(n_copy)] <-
+      pars$prep_for_pregnant_women[regimen_names, seq_len(n_copy)]
   }
 
-  list(prep_parameters = prep_parameters,
-       prep_for_pregnant_women = prep_for_pregnant_women)
+  prep_params <- pars$prep_parameters
+  param <- function(name) {
+    if (is.null(prep_params) || is.na(prep_params[name])) 0 else unname(prep_params[name])
+  }
+
+  list(
+    pbfw_prep_receiving = pbfw_prep_receiving,
+    pbfw_prep_adherence_oral = param("adherence_oral"),
+    pbfw_prep_adherence_long_acting = param("adherence_long_acting"),
+    pbfw_prep_client_incidence_ratio = param("incidence_ratio_among_prep_clients_v_non_clients"),
+    pbfw_prep_person_years_oral = param("person_years_prep_oral"),
+    pbfw_prep_person_years_long_acting = param("person_years_prep_long_acting")
+  )
 }
 
 prepare_pmtct <- function(dat, pars, dim_vars, proj_years) {
@@ -423,7 +423,7 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
   PMTCT_dropout <- prepare_pmtct_dropout(dat, pars, dim_vars, proj_years)
 
   ## PrEP for pregnant and breastfeeding women
-  prep <- prepare_prep_for_pregnant_women(pars, proj_years)
+  pbfw_prep <- prepare_pbfw_prep(pars, proj_years)
 
   ##rates of MTCT
   mtct <- prepare_vertical_transmission(dat, pars, dim_vars)
@@ -497,7 +497,7 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
   hc2_art_mort <- art_mort$hc2_art_mort
   hc_art_mort_rr <- prepare_hc_art_mort_rr(dat, pars, dim_vars, proj_years, year_idx)
 
-  list(
+  c(pbfw_prep, list(
     hc_nosocomial_infections_by_age = hc_nosocomial_infections_by_age,
     hc1_cd4_dist = hc1_cd4_dist,
     hc1_cd4_mort = hc1_cd4_mort,
@@ -519,8 +519,6 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
     PMTCT_transmission_rate = PMTCT_transmission_rate,
     PMTCT_dropout = PMTCT_dropout,
     PMTCT_input_is_percent = PMTCT_input_is_percent,
-    prep_for_pregnant_women = prep$prep_for_pregnant_women,
-    prep_parameters = prep$prep_parameters,
     breastfeeding_duration_art = breastfeeding_duration_art,
     breastfeeding_duration_no_art = breastfeeding_duration_no_art,
     infant_pop = infant_pop,
@@ -539,5 +537,5 @@ process_pjnz_hc <- function(dat, pars, dim_vars, dp_params, use_coarse_age_group
     cotrim_effect = cotrim_effect,
     hc_art_start = hc_art_start,
     hc_age_specific_fertility_rate = hc_age_specific_fertility_rate
-  )
+  ))
 }
