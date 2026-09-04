@@ -86,13 +86,14 @@ test_that("PrEP for pregnant and breastfeeding women passes through as zero for 
   expect_equal(nrow(pars_child$prep_for_pregnant_women), 2L)
   expect_equal(ncol(pars_child$prep_for_pregnant_women), ncol(pars_child$PMTCT),
                ignore_attr = TRUE)
-  expect_equal(rownames(pars_child$prep_for_pregnant_women), c("oral", "injectable"))
+  expect_equal(rownames(pars_child$prep_for_pregnant_women), c("oral", "long_acting"))
   expect_true(all(pars_child$prep_for_pregnant_women == 0))
 
   expect_equal(
     names(pars_child$prep_parameters),
-    c("adherence_oral", "adherence_injectable", "selection_incidence_ratio",
-      "person_years_prep_oral", "person_years_prep_injectable")
+    c("adherence_oral", "adherence_long_acting",
+      "incidence_ratio_among_prep_clients_v_non_clients",
+      "person_years_prep_oral", "person_years_prep_long_acting")
   )
   expect_true(all(pars_child$prep_parameters == 0))
 })
@@ -101,15 +102,15 @@ test_that("PrEP for pregnant and breastfeeding women is read from PJNZ when pres
   raw_dp <- pjnz::read_dp(bwa_pmtct_pjnz, include_raw = TRUE)
   n_years <- length(raw_dp$dim_vars$years)
   preg_prep <- matrix(0, nrow = 2, ncol = n_years,
-                      dimnames = list(c("oral", "injectable"), raw_dp$dim_vars$years))
+                      dimnames = list(c("oral", "long_acting"), raw_dp$dim_vars$years))
   preg_prep["oral", ] <- 10
-  preg_prep["injectable", ] <- 3
+  preg_prep["long_acting", ] <- 3
   raw_dp$data$prep_for_pregnant_women <- list(data = preg_prep, tag = "AM_PMTCTReceivingOralPrEP MV")
   raw_dp$data$prep_parameters <- list(
     data = array(c(0.75, 0.9, 1, 0.59, 0.85), dim = 5L,
-                 dimnames = list(c("adherence_oral", "adherence_injectable",
-                                   "selection_incidence_ratio", "person_years_prep_oral",
-                                   "person_years_prep_injectable"))),
+                 dimnames = list(c("adherence_oral", "adherence_long_acting",
+                                   "incidence_ratio_among_prep_clients_v_non_clients",
+                                   "person_years_prep_oral", "person_years_prep_long_acting"))),
     tag = "AM_PMTCTPrEPParameters MV")
 
   with_mocked_bindings(
@@ -119,7 +120,7 @@ test_that("PrEP for pregnant and breastfeeding women is read from PJNZ when pres
   )
 
   expect_true(all(pars_child$prep_for_pregnant_women["oral", ] == 10))
-  expect_true(all(pars_child$prep_for_pregnant_women["injectable", ] == 3))
+  expect_true(all(pars_child$prep_for_pregnant_women["long_acting", ] == 3))
   expect_equal(as.numeric(pars_child$prep_parameters), c(0.75, 0.9, 1, 0.59, 0.85))
 })
 

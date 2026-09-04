@@ -25,7 +25,7 @@
       "hAB_ind": 2,
       "hAG_fert": 7,
       "mtct_source": 11,
-      "prep_preg_method": 2,
+      "prep_preg_regimen": 2,
       "prep_preg_param": 5,
       "hc_age_coarse": [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
       "hc_age_coarse_cd4": [0, 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
@@ -207,7 +207,7 @@
       },
       "prep_for_pregnant_women": {
         "num_type": "real_type",
-        "dims": ["SS::prep_preg_method", "opts.proj_steps"]
+        "dims": ["SS::prep_preg_regimen", "opts.proj_steps"]
       },
       "prep_parameters": {
         "num_type": "real_type",

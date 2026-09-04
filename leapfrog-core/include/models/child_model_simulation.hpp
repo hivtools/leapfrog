@@ -96,21 +96,21 @@ struct ChildModelSimulation<Config> {
     VT_MOS_32_33 = 16,
     VT_MOS_34_35 = 17, // [34,36) months
 
-    // PrEP for pregnant and breastfeeding women: method index into prep_for_pregnant_women
-    PREP_ORAL = 0,       // Number receiving daily oral PrEP
-    PREP_INJECTABLE = 1, // Number receiving long-acting PrEP
+    // PrEP for pregnant and breastfeeding women: regimen index into prep_for_pregnant_women
+    PREP_ORAL = 0,        // Number receiving daily oral PrEP
+    PREP_LONG_ACTING = 1, // Number receiving long-acting PrEP
 
     // Indices into prep_parameters
     PREP_ADHERENCE_ORAL = 0,
-    PREP_ADHERENCE_INJECTABLE = 1,
-    PREP_SELECTION_INCIDENCE_RATIO = 2,
+    PREP_ADHERENCE_LONG_ACTING = 1,
+    PREP_INCIDENCE_RATIO_AMONG_CLIENTS_V_NON_CLIENTS = 2,
     PREP_PERSON_YEARS_ORAL = 3,
-    PREP_PERSON_YEARS_INJECTABLE = 4,
+    PREP_PERSON_YEARS_LONG_ACTING = 4,
   };
 
-  static_assert(PREP_INJECTABLE + 1 == SS::prep_preg_method,
-                "prep_for_pregnant_women method enum is out of sync with state space");
-  static_assert(PREP_PERSON_YEARS_INJECTABLE + 1 == SS::prep_preg_param,
+  static_assert(PREP_LONG_ACTING + 1 == SS::prep_preg_regimen,
+                "prep_for_pregnant_women regimen enum is out of sync with state space");
+  static_assert(PREP_PERSON_YEARS_LONG_ACTING + 1 == SS::prep_preg_param,
                 "prep_parameters index enum is out of sync with state space");
 
   // function args
@@ -450,13 +450,13 @@ struct ChildModelSimulation<Config> {
         p_hc.prep_for_pregnant_women(PREP_ORAL, t) *
           p_hc.prep_parameters(PREP_PERSON_YEARS_ORAL) *
           p_hc.prep_parameters(PREP_ADHERENCE_ORAL) +
-        p_hc.prep_for_pregnant_women(PREP_INJECTABLE, t) *
-          p_hc.prep_parameters(PREP_PERSON_YEARS_INJECTABLE) *
-          p_hc.prep_parameters(PREP_ADHERENCE_INJECTABLE);
+        p_hc.prep_for_pregnant_women(PREP_LONG_ACTING, t) *
+          p_hc.prep_parameters(PREP_PERSON_YEARS_LONG_ACTING) *
+          p_hc.prep_parameters(PREP_ADHERENCE_LONG_ACTING);
 
     const real_type prep_effect =
         (prep_person_years / births_minus_pmtct_need) *
-        p_hc.prep_parameters(PREP_SELECTION_INCIDENCE_RATIO);
+        p_hc.prep_parameters(PREP_INCIDENCE_RATIO_AMONG_CLIENTS_V_NON_CLIENTS);
 
     return std::min(prep_effect, 1.0);
   };

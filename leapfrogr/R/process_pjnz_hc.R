@@ -71,9 +71,10 @@ prepare_abortion_input <- function(dat, pars, dim_vars, proj_years) {
 
 prepare_prep_for_pregnant_women <- function(pars, proj_years) {
   n_years <- length(proj_years)
-  prep_param_names <- c("adherence_oral", "adherence_injectable",
-                        "selection_incidence_ratio", "person_years_prep_oral",
-                        "person_years_prep_injectable")
+  prep_param_names <- c("adherence_oral", "adherence_long_acting",
+                        "incidence_ratio_among_prep_clients_v_non_clients",
+                        "person_years_prep_oral", "person_years_prep_long_acting")
+  prep_regimen_names <- c("oral", "long_acting")
 
   ## Both inputs are absent in PJNZ files written before PrEP for pregnant and
   ## breastfeeding women was added; in that case they pass through as all zero,
@@ -87,13 +88,13 @@ prepare_prep_for_pregnant_women <- function(pars, proj_years) {
   }
 
   prep_for_pregnant_women <- array(
-    0, dim = c(2, n_years),
-    dimnames = list(method = c("oral", "injectable"), year = proj_years)
+    0, dim = c(length(prep_regimen_names), n_years),
+    dimnames = list(regimen = prep_regimen_names, year = proj_years)
   )
   if (!is.null(pars$prep_for_pregnant_women)) {
     n_copy <- min(n_years, ncol(pars$prep_for_pregnant_women))
-    prep_for_pregnant_women[c("oral", "injectable"), seq_len(n_copy)] <-
-      pars$prep_for_pregnant_women[c("oral", "injectable"), seq_len(n_copy)]
+    prep_for_pregnant_women[prep_regimen_names, seq_len(n_copy)] <-
+      pars$prep_for_pregnant_women[prep_regimen_names, seq_len(n_copy)]
   }
 
   list(prep_parameters = prep_parameters,
