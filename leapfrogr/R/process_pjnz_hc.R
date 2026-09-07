@@ -71,18 +71,18 @@ prepare_abortion_input <- function(dat, pars, dim_vars, proj_years) {
 
 prepare_pbfw_prep <- function(pars, proj_years) {
   n_years <- length(proj_years)
-  regimen_names <- c("oral", "long_acting")
+  regimen_names <- c("daily_oral", "injectable")
 
   ## PrEP for pregnant and breastfeeding women is absent in PJNZ files written
   ## before it was added; in that case every value passes through as zero, which
   ## leaves maternal HIV incidence unchanged in the child model.
-  pbfw_prep_receiving <- array(
+  pbfw_prep_clients <- array(
     0, dim = c(length(regimen_names), n_years),
     dimnames = list(regimen = regimen_names, year = proj_years)
   )
   if (!is.null(pars$prep_for_pregnant_women)) {
     n_copy <- min(n_years, ncol(pars$prep_for_pregnant_women))
-    pbfw_prep_receiving[regimen_names, seq_len(n_copy)] <-
+    pbfw_prep_clients[regimen_names, seq_len(n_copy)] <-
       pars$prep_for_pregnant_women[regimen_names, seq_len(n_copy)]
   }
 
@@ -92,12 +92,12 @@ prepare_pbfw_prep <- function(pars, proj_years) {
   }
 
   list(
-    pbfw_prep_receiving = pbfw_prep_receiving,
-    pbfw_prep_adherence_oral = param("adherence_oral"),
-    pbfw_prep_adherence_long_acting = param("adherence_long_acting"),
-    pbfw_prep_client_incidence_ratio = param("incidence_ratio_among_prep_clients_v_non_clients"),
-    pbfw_prep_person_years_oral = param("person_years_prep_oral"),
-    pbfw_prep_person_years_long_acting = param("person_years_prep_long_acting")
+    pbfw_prep_clients = pbfw_prep_clients,
+    pbfw_prep_adherence_daily_oral = param("adherence_daily_oral"),
+    pbfw_prep_adherence_injectable = param("adherence_injectable"),
+    pbfw_prep_client_incidence_ratio = param("client_incidence_ratio"),
+    pbfw_prep_person_years_daily_oral = param("person_years_daily_oral"),
+    pbfw_prep_person_years_injectable = param("person_years_injectable")
   )
 }
 

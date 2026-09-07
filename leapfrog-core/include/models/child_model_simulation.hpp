@@ -96,13 +96,13 @@ struct ChildModelSimulation<Config> {
     VT_MOS_32_33 = 16,
     VT_MOS_34_35 = 17, // [34,36) months
 
-    // PrEP for pregnant and breastfeeding women: regimen index into pbfw_prep_receiving
-    PBFW_PREP_ORAL = 0,        // Number receiving daily oral PrEP
-    PBFW_PREP_LONG_ACTING = 1, // Number receiving long-acting PrEP
+    // PrEP for pregnant and breastfeeding women: regimen index into pbfw_prep_clients
+    PBFW_PREP_DAILY_ORAL = 0, // Number receiving daily oral PrEP
+    PBFW_PREP_INJECTABLE = 1, // Number receiving injectable PrEP
   };
 
-  static_assert(PBFW_PREP_LONG_ACTING + 1 == SS::pbfw_prep_regimen,
-                "pbfw_prep_receiving regimen enum is out of sync with state space");
+  static_assert(PBFW_PREP_INJECTABLE + 1 == SS::pbfw_prep_regimen,
+                "pbfw_prep_clients regimen enum is out of sync with state space");
 
   // function args
   int t;
@@ -438,12 +438,12 @@ struct ChildModelSimulation<Config> {
     }
 
     const real_type prep_person_years =
-        p_hc.pbfw_prep_receiving(PBFW_PREP_ORAL, t) *
-          p_hc.pbfw_prep_person_years_oral *
-          p_hc.pbfw_prep_adherence_oral +
-        p_hc.pbfw_prep_receiving(PBFW_PREP_LONG_ACTING, t) *
-          p_hc.pbfw_prep_person_years_long_acting *
-          p_hc.pbfw_prep_adherence_long_acting;
+        p_hc.pbfw_prep_clients(PBFW_PREP_DAILY_ORAL, t) *
+          p_hc.pbfw_prep_person_years_daily_oral *
+          p_hc.pbfw_prep_adherence_daily_oral +
+        p_hc.pbfw_prep_clients(PBFW_PREP_INJECTABLE, t) *
+          p_hc.pbfw_prep_person_years_injectable *
+          p_hc.pbfw_prep_adherence_injectable;
 
     const real_type prep_effect =
         (prep_person_years / births_minus_pmtct_need) *
