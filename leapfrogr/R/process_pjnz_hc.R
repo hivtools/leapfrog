@@ -86,6 +86,12 @@ prepare_pbfw_prep <- function(pars, proj_years) {
       pars$prep_for_pregnant_women[regimen_names, seq_len(n_copy)]
   }
 
+  ## When 1, pbfw_prep_clients holds coverage (share of HIV-negative
+  ## pregnant women on PrEP) rather than a client count. The PJNZ always carries a
+  ## count, so this defaults to 0. Set directly from goals-scenario which
+  ## wants to pass data in as a coverage.
+  pbfw_prep_is_percent <- rep(0L, n_years)
+
   prep_params <- pars$prep_parameters
   param <- function(name) {
     if (is.null(prep_params) || is.na(prep_params[name])) 0 else unname(prep_params[name])
@@ -93,6 +99,7 @@ prepare_pbfw_prep <- function(pars, proj_years) {
 
   list(
     pbfw_prep_clients = pbfw_prep_clients,
+    pbfw_prep_is_percent = pbfw_prep_is_percent,
     pbfw_prep_adherence_daily_oral = param("adherence_daily_oral"),
     pbfw_prep_adherence_injectable = param("adherence_injectable"),
     pbfw_prep_client_incidence_ratio = param("client_incidence_ratio"),

@@ -72,9 +72,10 @@ test_that("process_pjnz extract_child_params adds child-specific parameters", {
   child_pars <- c("hc_nosocomial_infections_by_age", "hc1_cd4_dist", "hc1_cd4_mort",
                   "hc2_cd4_mort", "hc1_cd4_prog", "hc2_cd4_prog",
                   "cotrim_val", "PMTCT", "vertical_transmission_rate",
-                  "pbfw_prep_clients", "pbfw_prep_adherence_daily_oral",
-                  "pbfw_prep_adherence_injectable", "pbfw_prep_client_incidence_ratio",
-                  "pbfw_prep_person_years_daily_oral", "pbfw_prep_person_years_injectable")
+                  "pbfw_prep_clients", "pbfw_prep_is_percent",
+                  "pbfw_prep_adherence_daily_oral", "pbfw_prep_adherence_injectable",
+                  "pbfw_prep_client_incidence_ratio", "pbfw_prep_person_years_daily_oral",
+                  "pbfw_prep_person_years_injectable")
   expect_true(all(child_pars %in% names(pars_child)))
   expect_false(any(child_pars %in% names(pars_adult)))
 
@@ -90,6 +91,9 @@ test_that("PrEP for pregnant and breastfeeding women passes through as zero for 
                ignore_attr = TRUE)
   expect_equal(rownames(pars_child$pbfw_prep_clients), c("daily_oral", "injectable"))
   expect_true(all(pars_child$pbfw_prep_clients == 0))
+
+  expect_equal(pars_child$pbfw_prep_is_percent,
+               rep(0L, ncol(pars_child$PMTCT)), ignore_attr = TRUE)
 
   expect_equal(pars_child$pbfw_prep_adherence_daily_oral, 0)
   expect_equal(pars_child$pbfw_prep_adherence_injectable, 0)
@@ -121,6 +125,8 @@ test_that("PrEP for pregnant and breastfeeding women is read from PJNZ when pres
 
   expect_true(all(pars_child$pbfw_prep_clients["daily_oral", ] == 10))
   expect_true(all(pars_child$pbfw_prep_clients["injectable", ] == 3))
+  # PJNZ always carries a count, never coverage
+  expect_equal(pars_child$pbfw_prep_is_percent, rep(0L, n_years))
   expect_equal(pars_child$pbfw_prep_adherence_daily_oral, 0.75)
   expect_equal(pars_child$pbfw_prep_adherence_injectable, 0.9)
   expect_equal(pars_child$pbfw_prep_client_incidence_ratio, 1)
