@@ -43,7 +43,7 @@ wheels = [
 
 [[package]]
 name = "avenir-spectrum-common"
-version = "0.1.24"
+version = "0.1.25"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "avenir-common" },
@@ -56,9 +56,9 @@ dependencies = [
     { name = "requests" },
     { name = "ujson" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2a/41/28534adb7de37f093c2d2e85e841e1ab1479d97ac979d446c5cd437da685/avenir_spectrum_common-0.1.24.tar.gz", hash = "sha256:b0ff3424656e40fb6e10bbf463069fe0d11630ee31bb2d406ca99bbdcb380356", size = 657624, upload-time = "2026-08-20T15:35:13.408Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/e1/e12587c0ed05d73f87477ba859f690bba4f624adc23c6cdcf24b64096195/avenir_spectrum_common-0.1.25.tar.gz", hash = "sha256:30c832bde98a10a498fd920272b51402265326c9746128cf1a6fe11451c50be2", size = 658097, upload-time = "2026-09-07T10:56:16.875Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4c/5a/74340ef0cb7a0ced9b661ca0f631d4dd65b8e74b742fd4e5675debbbac2c/avenir_spectrum_common-0.1.24-py3-none-any.whl", hash = "sha256:4b3e5d55bcea2493f2566e6b4c6a3afbf901ac11050da63d9a5529306eb170fc", size = 735161, upload-time = "2026-08-20T15:35:15.379Z" },
+    { url = "https://files.pythonhosted.org/packages/94/33/52953d039c8871d316180512c4179c3b9f201608bb603847c0d2d5db7230/avenir_spectrum_common-0.1.25-py3-none-any.whl", hash = "sha256:30f49be4c0e39e8ba8b121a436e3fe95d7e189fe7dc25069c4884fc8fcdbffd1", size = 735429, upload-time = "2026-09-07T10:56:18.373Z" },
 ]
 
 [[package]]
@@ -635,7 +635,7 @@ wheels = [
 
 [[package]]
 name = "leapfrog-goals"
-version = "1.0.4"
+version = "1.0.5"
 source = { editable = "." }
 dependencies = [
     { name = "h5py" },
@@ -660,7 +660,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "avenir-spectrum-common", specifier = ">=0.1.24" },
+    { name = "avenir-spectrum-common", specifier = ">=0.1.25" },
     { name = "avenir-spectrum-import-pjnz", specifier = ">=0.1.16" },
     { name = "deepdiff", specifier = ">=8.4.2" },
     { name = "docopt", specifier = ">=0.6.2" },

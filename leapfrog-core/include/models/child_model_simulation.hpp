@@ -428,25 +428,36 @@ struct ChildModelSimulation<Config> {
 
   // Relative reduction in HIV incidence among pregnant / breastfeeding women due
   // to PrEP use, matching Spectrum's DP PMTCT calculation. Returns a value in
-  // [0, 1]; 0 when there are no PrEP clients (e.g. older PJNZ files that do not
-  // carry the PrEP-for-pregnant-women inputs, which pass through as all zero).
+  // [0, 1]; 0 when there is no PrEP use (e.g. older PJNZ files that do not carry
+  // the PrEP-for-pregnant-women inputs, which pass through as all zero).
+  //
+  // Per regimen the reduction is
+  //   coverage * person-years of PrEP per client * adherence * incidence rate ratio
+  // where coverage is the share of HIV-negative pregnant women on PrEP.
+  // pbfw_prep_clients holds that coverage directly when pbfw_prep_is_percent is
+  // set, otherwise a client count that is turned into coverage by dividing by the
+  // HIV-negative pregnant population (births - PMTCT need).
   real_type maternal_prep_incidence_reduction(real_type births_minus_pmtct_need) {
     const auto& p_hc = pars.hc;
 
-    if (births_minus_pmtct_need <= 0.0) {
-      return 0.0;
+    real_type daily_oral_coverage = p_hc.pbfw_prep_clients(PBFW_PREP_DAILY_ORAL, t);
+    real_type injectable_coverage = p_hc.pbfw_prep_clients(PBFW_PREP_INJECTABLE, t);
+
+    if (!p_hc.pbfw_prep_is_percent(t)) {
+      if (births_minus_pmtct_need <= 0.0) {
+        return 0.0;
+      }
+      daily_oral_coverage /= births_minus_pmtct_need;
+      injectable_coverage /= births_minus_pmtct_need;
     }
 
-    const real_type prep_person_years =
-        p_hc.pbfw_prep_clients(PBFW_PREP_DAILY_ORAL, t) *
-          p_hc.pbfw_prep_person_years_daily_oral *
-          p_hc.pbfw_prep_adherence_daily_oral +
-        p_hc.pbfw_prep_clients(PBFW_PREP_INJECTABLE, t) *
-          p_hc.pbfw_prep_person_years_injectable *
-          p_hc.pbfw_prep_adherence_injectable;
-
     const real_type prep_effect =
-        (prep_person_years / births_minus_pmtct_need) *
+        (daily_oral_coverage *
+           p_hc.pbfw_prep_person_years_daily_oral *
+           p_hc.pbfw_prep_adherence_daily_oral +
+         injectable_coverage *
+           p_hc.pbfw_prep_person_years_injectable *
+           p_hc.pbfw_prep_adherence_injectable) *
         p_hc.pbfw_prep_client_incidence_ratio;
 
     return std::min(prep_effect, 1.0);
