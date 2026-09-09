@@ -174,10 +174,10 @@ HRESULT fit_initial_state(leapfrog::internal::CParams<double> &data,
   try {
     const leapfrog::Options<double> opts =  {
       10,
-      0,
-      0,
-      2020,
-      2020
+      options.ts_art_start,
+      options.proj_period,
+      options.proj_start_year,
+      options.proj_end_year
     };
     const auto pars = LF::Cfg::get_pars(data, opts);
     auto state = LF::Cfg::get_initial_state(out);
