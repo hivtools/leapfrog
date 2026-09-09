@@ -95,7 +95,14 @@ struct ChildModelSimulation<Config> {
     VT_MOS_30_31 = 15,
     VT_MOS_32_33 = 16,
     VT_MOS_34_35 = 17, // [34,36) months
+
+    // PrEP for pregnant and breastfeeding women: regimen index into pbfw_prep_clients
+    PBFW_PREP_DAILY_ORAL = 0, // Number receiving daily oral PrEP
+    PBFW_PREP_INJECTABLE = 1, // Number receiving injectable PrEP
   };
+
+  static_assert(PBFW_PREP_INJECTABLE + 1 == SS::pbfw_prep_regimen,
+                "pbfw_prep_clients regimen enum is out of sync with state space");
 
   // function args
   int t;
@@ -419,6 +426,43 @@ struct ChildModelSimulation<Config> {
     }
   };
 
+  // Relative reduction in HIV incidence among pregnant / breastfeeding women due
+  // to PrEP use, matching Spectrum's DP PMTCT calculation. Returns a value in
+  // [0, 1]; 0 when there is no PrEP use (e.g. older PJNZ files that do not carry
+  // the PrEP-for-pregnant-women inputs, which pass through as all zero).
+  //
+  // Per regimen the reduction is
+  //   coverage * person-years of PrEP per client * adherence * incidence rate ratio
+  // where coverage is the share of HIV-negative pregnant women on PrEP.
+  // pbfw_prep_clients holds that coverage directly when pbfw_prep_is_percent is
+  // set, otherwise a client count that is turned into coverage by dividing by the
+  // HIV-negative pregnant population (births - PMTCT need).
+  real_type maternal_prep_incidence_reduction(real_type births_minus_pmtct_need) {
+    const auto& p_hc = pars.hc;
+
+    real_type daily_oral_coverage = p_hc.pbfw_prep_clients(PBFW_PREP_DAILY_ORAL, t);
+    real_type injectable_coverage = p_hc.pbfw_prep_clients(PBFW_PREP_INJECTABLE, t);
+
+    if (!p_hc.pbfw_prep_is_percent(t)) {
+      if (births_minus_pmtct_need <= 0.0) {
+        return 0.0;
+      }
+      daily_oral_coverage /= births_minus_pmtct_need;
+      injectable_coverage /= births_minus_pmtct_need;
+    }
+
+    const real_type prep_effect =
+        (daily_oral_coverage *
+           p_hc.pbfw_prep_person_years_daily_oral *
+           p_hc.pbfw_prep_adherence_daily_oral +
+         injectable_coverage *
+           p_hc.pbfw_prep_person_years_injectable *
+           p_hc.pbfw_prep_adherence_injectable) *
+        p_hc.pbfw_prep_client_incidence_ratio;
+
+    return std::min(prep_effect, 1.0);
+  };
+
   void maternal_incidence_in_pregnancy_tr() {
     const auto& p_dp = pars.dp;
     const auto& p_hc = pars.hc;
@@ -444,6 +488,8 @@ struct ChildModelSimulation<Config> {
 
       if (age_weighted_hivneg > 0.0) {
         i_hc.incidence_rate_wlhiv = age_weighted_infections / age_weighted_hivneg;
+        // PrEP among pregnant / breastfeeding women lowers maternal HIV incidence
+        i_hc.incidence_rate_wlhiv *= 1.0 - maternal_prep_incidence_reduction(p_hc.total_births(t) - n_hc.pmtct_need);
         // 0.75 is 9/12, gestational period, index 7 in the vertical transmission object is the index for maternal seroconversion
         i_hc.perinatal_transmission_from_incidence = i_hc.incidence_rate_wlhiv * 0.75 *
                                                      (p_hc.total_births(t) - n_hc.pmtct_need) *
@@ -456,12 +502,14 @@ struct ChildModelSimulation<Config> {
     } else {
       for (int a = 0; a < hAG_fertility; ++a) {
         auto asfr_weight = p_dp.age_specific_fertility_rate(a, t) / asfr_sum;
-        age_weighted_hivneg += asfr_weight * i_hc.p_hiv_neg_pop(a + 15, FEMALE); // HIV negative 15-49 women weighted for ASFR
-        age_weighted_infections += asfr_weight * n_ha.p_infections(a + 15, FEMALE); // newly infected 15-49 women, weighted for ASFR
+        age_weighted_hivneg += asfr_weight * i_hc.p_hiv_neg_pop(a + SS::p_idx_fertility_first, FEMALE); // HIV negative 15-49 women weighted for ASFR
+        age_weighted_infections += asfr_weight * n_ha.p_infections(a + SS::p_idx_fertility_first, FEMALE); // newly infected 15-49 women, weighted for ASFR
       } // end a
 
       if (age_weighted_hivneg > 0.0) {
         i_hc.incidence_rate_wlhiv = age_weighted_infections / age_weighted_hivneg;
+        // PrEP among pregnant / breastfeeding women lowers maternal HIV incidence
+        i_hc.incidence_rate_wlhiv *= 1.0 - maternal_prep_incidence_reduction(n_dp.births - n_hc.pmtct_need);
         //0.75 is 9/12, gestational period, index 7 in the vertical trasnmission object is the index for maternal seroconversion
         i_hc.perinatal_transmission_from_incidence = i_hc.incidence_rate_wlhiv * 0.75 *
                                                      (n_dp.births - n_hc.pmtct_need) *
