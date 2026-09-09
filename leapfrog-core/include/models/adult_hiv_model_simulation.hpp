@@ -138,7 +138,7 @@ struct AdultHivModelSimulation<Config> {
     run_wlhiv_births();
 
     if constexpr (ModelVariant::run_goals) {
-      if ((t > pars.hv.goals_base_year_idx) && (hiv_step == opts.hts_per_year - 1)) {
+      if ((t > pars.hv.goals_base_year_idx) && (hiv_step == 0)) {
         apply_goals_cure_adults();
       }
     }
@@ -983,7 +983,6 @@ struct AdultHivModelSimulation<Config> {
       // cure cov includes adjustment for the proportion already received cured over period of duration
       const real_type cure_cov = intermediate.hv.cure_avg_cov_adults(s);
       const real_type cure_cov_impact = intermediate.hv.cure_avg_cov_adults_impact(s);
-      const real_type cure_eff = pars.hv.rn_cure_effect(0);
       real_type cured = 0.0;
 
       for (int ha = 0; ha < hAG; ++ha) {

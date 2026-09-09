@@ -1687,8 +1687,8 @@ struct ChildModelSimulation<Config> {
 
                     // for impact, use proportion for costing, with efficacy applied
                     cured = pars.hv.rn_cure_coverage_children(t) *
-                            n_hc.hc1_hivpop(hd, cat, a, s) *
-                            state_next.hv.prop_cured_children(0);
+                            pars.hv.rn_cure_effect(0) *
+                            n_hc.hc1_hivpop(hd, cat, a, s);
 
                     // do not remove more than 99 % of the current compartment
                     cured = std::min(cured, 0.99 * n_hc.hc1_hivpop(hd, cat, a, s));
@@ -1714,8 +1714,8 @@ struct ChildModelSimulation<Config> {
 
                     // for impact, use proportion for costing, with efficacy applied
                     cured = pars.hv.rn_cure_coverage_children(t) *
-                            n_hc.hc1_artpop(dur, hd, a, s) *
-                            state_next.hv.prop_cured_children(0);
+                            pars.hv.rn_cure_effect(0) *
+                            n_hc.hc1_artpop(dur, hd, a, s);
 
                     // do not remove more than 99 % of the current compartment
                     cured = std::min(cured, 0.99 * n_hc.hc1_artpop(dur, hd, a, s));
@@ -1733,8 +1733,7 @@ struct ChildModelSimulation<Config> {
 
                     //for costing, use proportion for costing, without efficacy applied
                     cured = pars.hv.rn_cure_coverage_children(t) *
-                            n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) *
-                            (1 - state_next.hv.prop_cured_children(1));
+                            n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
 
                     // do not remove more than 99 % of the current compartment
                     cured = std::min(cured, 0.99 * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s));
@@ -1744,8 +1743,8 @@ struct ChildModelSimulation<Config> {
 
                     //for impact, use proportion for costing, with efficacy applied
                     cured = pars.hv.rn_cure_coverage_children(t) *
-                            n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s) *
-                            state_next.hv.prop_cured_children(0);
+                            pars.hv.rn_cure_effect(0) *
+                            n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s);
 
                     // do not remove more than 99 % of the current compartment
                     cured = std::min(cured, 0.99 * n_hc.hc2_hivpop(hd, cat, a - hc2_agestart, s));
@@ -1771,8 +1770,8 @@ struct ChildModelSimulation<Config> {
 
                   //for impact, use proportion for costing, with efficacy applied
                   cured = pars.hv.rn_cure_coverage_children(t) *
-                          n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s) *
-                          state_next.hv.prop_cured_children(0);
+                          pars.hv.rn_cure_effect(0) *  
+                          n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s);
 
                    // do not remove more than 99 % of the current compartment
                   cured = std::min(cured, 0.99 * n_hc.hc2_artpop(dur, hd, a - hc2_agestart, s));

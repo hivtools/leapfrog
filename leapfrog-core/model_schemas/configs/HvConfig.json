@@ -819,27 +819,6 @@
        "dims": ["SS::nNS+1"]
     },
 
-     "prop_cured_all": {
-      "num_type": "real_type",
-      "dims": ["SS::nCOV" ]
-    },
-
-    "prop_cured_rg": {
-      "num_type": "real_type",
-      "dims": ["SS::nRG", "SS::nCOV"]
-    },
-
-    "prop_cured_children": {
-      "num_type": "real_type",
-      "dims": ["SS::nCOV"]
-    },
-
-    "prop_cured_neonates": {
-      "num_type": "real_type",
-      "dims": ["SS::nCOV" ]
-    },
-   
-   
     "prop_func_cured_HR": {
       "num_type": "real_type",
       "dims": ["SS::nCOV", "SS::nIMPACTS"]
@@ -860,7 +839,21 @@
        "dims": ["SS::nCOV", "SS::nIMPACTS" ]
     },
 
+    "cured_pop": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG+1","SS::nNS+1"]
+    },
+
     "cured_prop": {
+      "num_type": "real_type",
+      "dims": ["SS::nRG+1","SS::nNS+1"]
+    },
+
+    "cured_prop_all": {
+      "num_type": "real_type"
+    },
+
+     "pop_hiv_neg": {
       "num_type": "real_type",
       "dims": ["SS::nRG+1","SS::nNS+1"]
     },
