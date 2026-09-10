@@ -388,7 +388,7 @@ struct HivDemographicProjection<Config> {
           n_ha.h_hivpop(hm, ha, s) = (1.0 - i_ha.hiv_age_up_prob(ha, s)) * c_ha.h_hivpop(hm, ha, s);  // age-out
           n_ha.h_hivpop(hm, ha, s) += i_ha.hiv_age_up_prob(ha - 1, s) * c_ha.h_hivpop(hm, ha - 1, s); // age-in
 
-          if (t >= opts.ts_art_start) {
+          if (t > opts.ts_art_start) {
             for (int hu = 0; hu < hTS; ++hu) {
               n_ha.h_artpop(hu, hm, ha, s) = (1.0 - i_ha.hiv_age_up_prob(ha, s)) * c_ha.h_artpop(hu, hm, ha, s);  // age-out
               n_ha.h_artpop(hu, hm, ha, s) += i_ha.hiv_age_up_prob(ha - 1, s) * c_ha.h_artpop(hu, hm, ha - 1, s); // age-in
@@ -401,7 +401,7 @@ struct HivDemographicProjection<Config> {
       int ha = 0;
       for (int hm = 0; hm < hDS; ++hm) {
         n_ha.h_hivpop(hm, ha, s) = (1.0 - i_ha.hiv_age_up_prob(ha, s)) * c_ha.h_hivpop(hm, ha, s);  // age-out
-        if (t >= opts.ts_art_start) {
+        if (t > opts.ts_art_start) {
           for (int hu = 0; hu < hTS; ++hu) {
             n_ha.h_artpop(hu, hm, ha, s) = (1.0 - i_ha.hiv_age_up_prob(ha, s)) * c_ha.h_artpop(hu, hm, ha, s);  // age-out
           }
@@ -418,7 +418,7 @@ struct HivDemographicProjection<Config> {
 
           if (t > p_hc.hc_art_start) {
             for (int hu = 0; hu < hTS; ++hu) {
-              if (t >= opts.ts_art_start) {
+              if (t > opts.ts_art_start) {
                 n_ha.h_artpop(hu, hm, 0, s) += i_hc.age15_artpop(hu, hm, s);
               } else {
                 // If child ART has started, but not yet adult ART has started, put
