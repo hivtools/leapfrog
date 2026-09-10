@@ -167,7 +167,7 @@ template <typename ModelVariant>
 HRESULT fit_initial_state(leapfrog::internal::CParams<double> &data,
                           leapfrog::internal::COptions &options,
                           leapfrog::internal::CState<double> &out,
-                             CallbackFunction error_handler) {
+                          CallbackFunction error_handler) {
 
   using LF = leapfrog::Leapfrog<leapfrog::C, double, ModelVariant>;
 
