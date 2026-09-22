@@ -4,6 +4,7 @@ Composable primitives, independently invokable: build-params, run, diff.
 See `.scratch/leapfrog-validation/issues/15-walking-skeleton-single-indicator-diff.md`.
 """
 
+import tempfile
 from pathlib import Path
 from typing import Annotated
 
@@ -18,11 +19,11 @@ app = typer.Typer(help="Compare leapfrog model output across git refs.")
 
 DEFAULT_CACHE_DIR = Path.home() / ".cache" / "leapfrog-validate"
 
+REF_HELP = f"Git ref/SHA to build leapfrogr at, or '{git_utils.WORKING_TREE}' for your own uncommitted checkout."
+
 
 def _prepare_ref(repo_root: Path, cache_dir: Path, ref: str) -> BuildWorkspace:
-    sha = git_utils.resolve_ref(repo_root, ref)
-    typer.echo(f"Resolved '{ref}' -> {sha}")
-    worktree = git_utils.ensure_worktree(repo_root, sha, cache_dir)
+    worktree = git_utils.prepare_source(repo_root, cache_dir, ref)
     typer.echo(f"Building leapfrogr at {worktree} ...")
     return build.build_leapfrogr(worktree)
 
@@ -45,7 +46,7 @@ def set_cache_dir(
 @app.command("build-params")
 def build_params_cmd(
     ctx: typer.Context,
-    ref: Annotated[str, typer.Argument(help="Git ref or SHA to build leapfrogr at.")],
+    ref: Annotated[str, typer.Argument(help=REF_HELP)],
     pjnz: Annotated[Path, typer.Argument(exists=True, help="PJNZ file to process.")],
     output: Annotated[Path, typer.Option("--output", "-o", help="Where to write the params artifact.")] = Path(
         "params.h5"
@@ -60,7 +61,7 @@ def build_params_cmd(
 @app.command("run")
 def run_cmd(
     ctx: typer.Context,
-    ref: Annotated[str, typer.Argument(help="Git ref or SHA to build leapfrogr at.")],
+    ref: Annotated[str, typer.Argument(help=REF_HELP)],
     params_path: Annotated[
         Path, typer.Argument(exists=True, metavar="PARAMS", help="params.h5 to run the model against.")
     ],
@@ -115,6 +116,74 @@ def diff_cmd(
         typer.echo(verdict.summary())
 
     raise typer.Exit(0 if all(v.passed for v in verdicts) else 1)
+
+
+def _compare_one_pjnz(
+    ref_workspace: BuildWorkspace,
+    candidate_workspace: BuildWorkspace,
+    pjnz: Path,
+    configuration: str,
+    tmp_dir: Path,
+) -> list[Verdict]:
+    """Run build-params/run/diff for one PJNZ file, against both workspaces."""
+    params_ref = tmp_dir / f"{pjnz.stem}-ref-params.h5"
+    params_candidate = tmp_dir / f"{pjnz.stem}-candidate-params.h5"
+    params.build_params(ref_workspace, pjnz, params_ref)
+    params.build_params(candidate_workspace, pjnz, params_candidate)
+
+    output_ref = tmp_dir / f"{pjnz.stem}-ref-output.h5"
+    output_candidate = tmp_dir / f"{pjnz.stem}-candidate-output.h5"
+    model_run.run_model(ref_workspace, params_ref, output_ref, configuration)
+    model_run.run_model(candidate_workspace, params_candidate, output_candidate, configuration)
+
+    names = sorted(indicators.INDICATORS)
+    return [_diff_one(name, output_ref, output_candidate, pjnz.stem) for name in names]
+
+
+@app.command("compare")
+def compare_cmd(
+    ctx: typer.Context,
+    ref: Annotated[str, typer.Argument(help=REF_HELP)],
+    candidate: Annotated[str, typer.Argument(help=REF_HELP)],
+    pjnz_dir: Annotated[
+        Path,
+        typer.Option(
+            "--pjnz-dir", exists=True, file_okay=False, help="Directory of PJNZ files to compare across."
+        ),
+    ],
+    configuration: Annotated[
+        str,
+        typer.Option(help="Model configuration to run, see leapfrogr::list_model_configurations()."),
+    ] = "Spectrum",
+) -> None:
+    """Run build-params/run/diff for every PJNZ in PJNZ_DIR, comparing REF against CANDIDATE.
+
+    Prints a per-indicator verdict per PJNZ file, then a per-file PASS/FAIL
+    summary line. Exits non-zero if any file fails any indicator.
+    """
+    pjnz_files = sorted(p for p in pjnz_dir.iterdir() if p.suffix.upper() == ".PJNZ")
+    if not pjnz_files:
+        typer.echo(f"No PJNZ files found in {pjnz_dir}", err=True)
+        raise typer.Exit(2)
+
+    ref_workspace = _prepare_ref(ctx.obj["repo_root"], ctx.obj["cache_dir"], ref)
+    candidate_workspace = _prepare_ref(ctx.obj["repo_root"], ctx.obj["cache_dir"], candidate)
+
+    file_results: dict[str, bool] = {}
+    with tempfile.TemporaryDirectory() as tmp:
+        for pjnz in pjnz_files:
+            typer.echo(f"\n== {pjnz.name} ==")
+            verdicts = _compare_one_pjnz(ref_workspace, candidate_workspace, pjnz, configuration, Path(tmp))
+            for verdict in verdicts:
+                typer.echo(f"  {verdict.summary()}")
+            file_results[pjnz.name] = all(v.passed for v in verdicts)
+            typer.echo(f"  {pjnz.name}: {'PASS' if file_results[pjnz.name] else 'FAIL'}")
+
+    typer.echo("\n== Summary ==")
+    for name, passed in file_results.items():
+        typer.echo(f"  {'PASS' if passed else 'FAIL'}  {name}")
+
+    raise typer.Exit(0 if all(file_results.values()) else 1)
 
 
 def main() -> None:
