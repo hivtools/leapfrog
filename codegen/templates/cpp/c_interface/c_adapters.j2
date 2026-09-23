@@ -28,7 +28,7 @@ auto read_data(T* data, int length, std::string_view name, nda::shape_of_rank<Ra
 }
 
 template <typename T, typename Shape>
-void fill_initial_state(T* data, int length, const std::string_view name, nda::array<T, Shape> array) {
+void fill_initial_state(T* data, int length, const std::string_view name, nda::array<T, Shape>& array) {
   nda::array_ref<T, Shape> array_ref(data);
 
   nda::for_each_index(Shape(), [&](auto i) {
