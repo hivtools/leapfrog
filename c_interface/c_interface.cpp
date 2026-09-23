@@ -126,6 +126,12 @@ HRESULT fit_model_from_state(leapfrog::internal::CParams<double> &data,
   using LF = leapfrog::Leapfrog<leapfrog::C, double, ModelVariant>;
 
   try {
+    // Unlike the higher-level interfaces, this C API expects callers to pass the
+    // projection bounds in the correct length/shape already. We intentionally do
+    // not replicate `simulation_start_year` into `options.proj_start_year`; As 
+    // an example the delphi desktop calcstate will pass an initial state for 2025 
+    // and all the params and states will also start from 2025. Maybe this can be 
+    // revised later on if there is a need to calculate from a later year.
     const leapfrog::Options<double> opts =  {
       10,
       options.ts_art_start,
@@ -180,10 +186,11 @@ HRESULT fit_initial_state(leapfrog::internal::CParams<double> &data,
       options.proj_end_year
     };
     const auto pars = LF::Cfg::get_pars(data, opts);
-    auto state = LF::Cfg::get_initial_state(out);
 
-    leapfrog::run_initial_year_calculations<leapfrog::C, double, ModelVariant>(pars, state);
-    LF::Cfg::build_output_single_year(0, state, out);
+    typename LF::State initial_state;
+    initial_state.reset();
+    leapfrog::run_initial_year_calculations<leapfrog::C, double, ModelVariant>(pars, initial_state);
+    LF::Cfg::build_output_single_year(0, initial_state, out);
   } catch (const std::invalid_argument& e) {
     error_handler(e.what());
     return E_INVALIDARG;
