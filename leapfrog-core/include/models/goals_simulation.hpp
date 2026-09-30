@@ -828,7 +828,7 @@ public:
 
     nda::fill(i_hv.cure_avg_cov_adults_impact, 0.0);
     nda::fill(i_hv.cure_avg_cov_adults, 0.0);
-    
+
   }
 
 
@@ -1502,22 +1502,23 @@ public:
       i_hv.AHD_Tx_Impact = std::clamp(i_hv.AHD_Tx_Impact, 0.0, 1.0);
     }
 
-    // Reduce mortality by ART by 50% as viral suppression increases to 95%
-    // Input is percent not virally suppressed, initial default is 0.25
-    // Fast-Track target is 0.05
-    i_hv.alpha_mult = 1 - std::min(0.5, 0.5 * (p_hv.epi_inf_mult_art(1)
-                          - p_hv.epi_inf_mult_art(t))
-                       / (p_hv.epi_inf_mult_art(1) - 0.05));
+    //Reduce mortality by ART by 50% as viral suppression increases to 95%
+    //Input is percent not virally suppressed, initial default is 0.25
+    //Fast-Track target is 0.05
+    i_hv.alpha_mult = 1.0 - std::min(0.5, 0.5 * (p_hv.epi_inf_mult_art(1)
+                           - p_hv.epi_inf_mult_art(t))
+                        / (p_hv.epi_inf_mult_art(1) - 0.05));
 
     if(t > p_hv.goals_base_year_idx){
-      i_hv.alpha_mult = 1 - std::min(0.5, 0.5 * (p_hv.epi_inf_mult_art(1)
-                          - p_hv.epi_inf_mult_art(t)
-                              * (1.0 - p_hv.rn_poc_cov(POC_VL, t) * p_hv.rn_poc_effect(POC_VL))
-                              * (1.0 - p_hv.long_act_treat_cov(t) * p_hv.long_act_treat_eff_vls))
-                       / (p_hv.epi_inf_mult_art(1) - 0.05));
+       i_hv.alpha_mult = 1.0 - std::min(0.5, 0.5 * (p_hv.epi_inf_mult_art(1)
+                           - p_hv.epi_inf_mult_art(t)
+                               * (1.0 - p_hv.rn_poc_cov(POC_VL, t) * p_hv.rn_poc_effect(POC_VL))
+                               * (1.0 - p_hv.long_act_treat_cov(t) * p_hv.long_act_treat_eff_vls))
+                        / (p_hv.epi_inf_mult_art(1) - 0.05));
     }
 
     i_hv.alpha_mult = std::clamp(i_hv.alpha_mult, 0.0, 1.0);
+
   }
 
   void calc_proportion_with_efficacy(int t, bool b_with_efficacy){
@@ -2239,24 +2240,30 @@ public:
           // Mortality
           // hiv-pos or hiv-art mortality rate
           real_type mort_hiv = 0.0;
+          real_type excess_mort = 0.0;
           if (CD4_PRIM <= hd && hd <= CD4_LT50) {
             mort_hiv = i_hv.hiv_mu(hd, s);
 
             //Mortality reductions off ART proportional to ART coverage
-            numer = n_hv.adults(VAC_ALL, RG_ALL, hd+hOnArt, s);
+            numer = n_hv.adults(VAC_ALL, RG_ALL, hd + hOnArt, s);
             denom = n_hv.adults(VAC_ALL, RG_ALL, hd, s) + numer;
             if( (hd >= CD4_GT500) && (denom > 0.0)){
               mort_hiv_fac = (1-numer/denom);
               mort_hiv_fac = std::clamp(mort_hiv_fac, 0.0, 1.0);
               mort_hiv *= mort_hiv_fac;
             }
-
+ 
           } else {
-            mort_hiv = i_hv.art_alpha(hd, s);
+            excess_mort = i_hv.art_alpha_excess(hd, s);
+            //remove excess mort, as the impact adjustments apply
+            //to the rate which excludes excess mortality
+            mort_hiv = std::max(i_hv.art_alpha(hd, s) - excess_mort, 0.0);
             //impacts on art mortality, by risk group: functional cure
             mort_hiv *= i_hv.func_cure_impact_mort_rg(rg, s);
             //impacts on art mortality: therapeutic_vaccine
             mort_hiv *= n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_MORT);
+            //add excess mort back in
+            mort_hiv += excess_mort;  
           };
 
           // Entrants 15 years from and DP and Aging out rate
