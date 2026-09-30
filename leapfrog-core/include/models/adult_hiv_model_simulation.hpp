@@ -492,6 +492,10 @@ struct AdultHivModelSimulation<Config> {
 
            //capture the impact of AHD treament on art mortality
            if constexpr (ModelVariant::run_goals) {
+              
+              //impact of viral supression
+              deaths_art *= intermediate.hv.alpha_mult;
+       
               //impact of AHD intervention
               if ( (t > pars.hv.goals_base_year_idx) && (hm>=4) ) { // index 4 is CD4_100_199
                 deaths_art *= intermediate.hv.AHD_Tx_Impact;

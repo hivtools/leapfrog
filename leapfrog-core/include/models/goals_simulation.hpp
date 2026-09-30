@@ -390,7 +390,7 @@ public:
 
     // set these rates to vars in goals
     calc_HIV_mort_adjustments(t);
-  
+
      // adjust coverage of cure interventons according to duration
     if (t > p_hv.goals_base_year_idx) {
       //new products, coverage with duration/waning and efficacy, for impact
@@ -522,9 +522,9 @@ public:
       }
     }
 
-    if( (t > p_hv.goals_base_year_idx) && (hiv_step == opts.hts_per_year - 1) ){
-       calc_HIV_cure_avg_cov_impact(t);//for use in dp/aim
-       calc_HIV_cure_avg_cov(t);//for use in dp/aim
+    if( (t > p_hv.goals_base_year_idx) && hiv_step == 0 ){
+      calc_HIV_cure_avg_cov_impact(t);//for use in dp/aim
+      calc_HIV_cure_avg_cov(t);//for use in dp/aim
     }
   }
 
@@ -693,10 +693,10 @@ public:
               << std::endl;
 
     std::cout << "average impact cure, M (%) t " << t << " " << 100*i_hv.cure_avg_cov_adults_impact(S_MALE) << " "
-              << std::endl;    
-              
+              << std::endl;
+
       std::cout << "average impact cure, F (%) t " << t << " " << 100*i_hv.cure_avg_cov_adults_impact(S_FEMALE) << " "
-              << std::endl;            
+              << std::endl;
 
 
     // plhiv = i_hv.pop_hivpos_adults + i_hv.total_pop_hivpos;
@@ -822,13 +822,13 @@ public:
     nda::fill(n_hv.prevalence, 0.0);  // prevalence for each rg,  t
 
     nda::fill(n_hv.new_inf_vrs, 0.0);  // new infections for each t, by v,r,s, for goals
-    
+
     nda::fill(i_hv.new_vaccinations, 0.0); //for each t, by v,r,s, for goals
     nda::fill(i_hv.vac_effect, 0.0);
 
     nda::fill(i_hv.cure_avg_cov_adults_impact, 0.0);
     nda::fill(i_hv.cure_avg_cov_adults, 0.0);
-    
+
   }
 
 
@@ -1502,22 +1502,23 @@ public:
       i_hv.AHD_Tx_Impact = std::clamp(i_hv.AHD_Tx_Impact, 0.0, 1.0);
     }
 
-    // Reduce mortality by ART by 50% as viral suppression increases to 95%
-    // Input is percent not virally suppressed, initial default is 0.25
-    // Fast-Track target is 0.05
-    i_hv.alpha_mult = 1 - std::min(0.5, 0.5 * (p_hv.epi_inf_mult_art(1)
-                          - p_hv.epi_inf_mult_art(t))
-                       / (p_hv.epi_inf_mult_art(1) - 0.05));
+    //Reduce mortality by ART by 50% as viral suppression increases to 95%
+    //Input is percent not virally suppressed, initial default is 0.25
+    //Fast-Track target is 0.05
+    i_hv.alpha_mult = 1.0 - std::min(0.5, 0.5 * (p_hv.epi_inf_mult_art(1)
+                           - p_hv.epi_inf_mult_art(t))
+                        / (p_hv.epi_inf_mult_art(1) - 0.05));
 
     if(t > p_hv.goals_base_year_idx){
-      i_hv.alpha_mult = 1 - std::min(0.5, 0.5 * (p_hv.epi_inf_mult_art(1)
-                          - p_hv.epi_inf_mult_art(t)
-                              * (1.0 - p_hv.rn_poc_cov(POC_VL, t) * p_hv.rn_poc_effect(POC_VL))
-                              * (1.0 - p_hv.long_act_treat_cov(t) * p_hv.long_act_treat_eff_vls))
-                       / (p_hv.epi_inf_mult_art(1) - 0.05));
+       i_hv.alpha_mult = 1.0 - std::min(0.5, 0.5 * (p_hv.epi_inf_mult_art(1)
+                           - p_hv.epi_inf_mult_art(t)
+                               * (1.0 - p_hv.rn_poc_cov(POC_VL, t) * p_hv.rn_poc_effect(POC_VL))
+                               * (1.0 - p_hv.long_act_treat_cov(t) * p_hv.long_act_treat_eff_vls))
+                        / (p_hv.epi_inf_mult_art(1) - 0.05));
     }
 
     i_hv.alpha_mult = std::clamp(i_hv.alpha_mult, 0.0, 1.0);
+
   }
 
   void calc_proportion_with_efficacy(int t, bool b_with_efficacy){
@@ -1550,7 +1551,7 @@ public:
     n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1.0;
 
     if( t > p_hv.goals_base_year_idx ){
-           
+
       //functional cure
       dur = std::floor(p_hv.func_cure_duration);
       dur_max = dur;
@@ -1613,12 +1614,12 @@ public:
 
         n_hv.prop_therapeutically_vaccinated(cov_type, IMP_INF) = 1.0 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_INF);
         n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1.0 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
-      
+
       }
 
       //mortality impact: use [1 - proportion protected] for art mortality adjustment
       n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT) = 1.0 - n_hv.prop_therapeutically_vaccinated(cov_type, IMP_MORT);
-      
+
     }
 
   }
@@ -1635,7 +1636,7 @@ public:
 
     i_hv.cure_avg_cov_adults_impact(S_MALE)   = p_hv.rn_cure_coverage_all(t) * p_hv.rn_cure_effect(VAC_EFF);
     i_hv.cure_avg_cov_adults_impact(S_FEMALE) = p_hv.rn_cure_coverage_all(t) * p_hv.rn_cure_effect(VAC_EFF);
-                                            
+
     if (p_hv.rn_cure_coverage_type != CURE_COV_ALLRISK) {
 
         i_hv.cure_avg_cov_adults_impact(S_MALE)  = 0.0;
@@ -1740,7 +1741,7 @@ public:
 
     for (int rg = RG_NONE; rg <= RG_MSM; ++rg) {
       for (int s = S_MALE; s <= S_FEMALE; ++s) {
-        
+
         for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) {
           if (!((s == S_FEMALE) && (rg >= RG_MSM)))
           {  // Exclude female MSM and higher risk groups
@@ -1749,7 +1750,7 @@ public:
           }
         }  // v
 
-  
+
         curePercent = p_hv.rn_cure_coverage_all(t);
         const int nr = (s == S_FEMALE) ? rg + RG_NONE_F3 : rg;
         if (p_hv.rn_cure_coverage_type != CURE_COV_ALLRISK) {
@@ -1761,20 +1762,20 @@ public:
         if (curePercent > 0.0) {
           for (int hd = CD4_GT500; hd <= CD4_LT50_ART; ++hd) {
             for (int v = VAC_UNV; v <= VAC_NO_PROT; ++v) {
-              
-              // for costing, no efficacy applied with coverage
-              cured = n_hv.adults(v, rg, hd, s) * curePercent; 
 
-              // do not remove more than 99 % of the current compartment 
+              // for costing, no efficacy applied with coverage
+              cured = n_hv.adults(v, rg, hd, s) * curePercent;
+
+              // do not remove more than 99 % of the current compartment
               cured = std::min(cured, 0.99 * n_hv.adults(v, rg, hd, s));
 
               n_hv.total_new_cures += cured;
 
               // for impact, apply efficacy
-              cured = n_hv.adults(v, rg, hd, s) * curePercent * 
-                      p_hv.rn_cure_effect(VAC_EFF); 
+              cured = n_hv.adults(v, rg, hd, s) * curePercent *
+                      p_hv.rn_cure_effect(VAC_EFF);
 
-              // do not remove more than 99 % of the current comparment 
+              // do not remove more than 99 % of the current comparment
               cured = std::min(cured, 0.99 * n_hv.adults(v, rg, hd, s));
 
               n_hv.cured_pop(rg, s) += cured;
@@ -1796,7 +1797,7 @@ public:
           n_hv.cured_pop(rg, s) = 0.0;
         }
 
-        cured_pop_all += n_hv.cured_pop(rg, s); 
+        cured_pop_all += n_hv.cured_pop(rg, s);
 
         /// Record the proportion of cured individuals among the HIV‑negative
         //  population (used later in force‑of‑infection calculations)
@@ -1820,7 +1821,7 @@ public:
     auto& i_hv = intermediate.hv;
     const auto& p_hv = pars.hv;
 
-  
+
     real_type plhiv_on_art[nNS] = {};
     real_type plhiv_on_art_rs[RG_MSM+1][nNS] = {};
 
@@ -2239,11 +2240,12 @@ public:
           // Mortality
           // hiv-pos or hiv-art mortality rate
           real_type mort_hiv = 0.0;
+          real_type excess_mort = 0.0;
           if (CD4_PRIM <= hd && hd <= CD4_LT50) {
             mort_hiv = i_hv.hiv_mu(hd, s);
 
             //Mortality reductions off ART proportional to ART coverage
-            numer = n_hv.adults(VAC_ALL, RG_ALL, hd+hOnArt, s);
+            numer = n_hv.adults(VAC_ALL, RG_ALL, hd + hOnArt, s);
             denom = n_hv.adults(VAC_ALL, RG_ALL, hd, s) + numer;
             if( (hd >= CD4_GT500) && (denom > 0.0)){
               mort_hiv_fac = (1-numer/denom);
@@ -2252,11 +2254,16 @@ public:
             }
 
           } else {
-            mort_hiv = i_hv.art_alpha(hd, s);
+            excess_mort = i_hv.art_alpha_excess(hd, s);
+            //remove excess mort, as the impact adjustments apply
+            //to the rate which excludes excess mortality
+            mort_hiv = std::max(i_hv.art_alpha(hd, s) - excess_mort, 0.0);
             //impacts on art mortality, by risk group: functional cure
             mort_hiv *= i_hv.func_cure_impact_mort_rg(rg, s);
             //impacts on art mortality: therapeutic_vaccine
             mort_hiv *= n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_MORT);
+            //add excess mort back in
+            mort_hiv += excess_mort;
           };
 
           // Entrants 15 years from and DP and Aging out rate
@@ -2464,16 +2471,16 @@ public:
 
         // on ART
         for (int hd = CD4_GT500_ART; hd <= CD4_LT50_ART; ++hd) {
-          rMultNumerator += n_hv.mult_art(hd-hOnArt) 
+          rMultNumerator += n_hv.mult_art(hd-hOnArt)
                             * (1.0 - n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_INF))
-                            * (1.0 - i_hv.func_cure_impact_inf(rg, s)) 
+                            * (1.0 - i_hv.func_cure_impact_inf(rg, s))
                             * n_hv.adults(VAC_ALL, rg, hd, s);
-                            
+
           rMultDenominator += n_hv.adults(VAC_ALL, rg, hd, s);
 
           rMultNumeratorAll += n_hv.mult_art(hd-hOnArt)
                                * (1.0 - n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_INF))
-                               * (1.0 - i_hv.func_cure_impact_inf(rg, s)) 
+                               * (1.0 - i_hv.func_cure_impact_inf(rg, s))
                                * n_hv.adults(VAC_ALL, rg, hd, s);
 
           rMultDenominatorAll += n_hv.adults(VAC_ALL, rg, hd, s);
@@ -2507,9 +2514,9 @@ public:
       for (int hd = CD4_GT500_ART; hd <= CD4_LT50_ART; ++hd) {
         rMultNumeratorAll += n_hv.mult_art(hd-hOnArt)
                              * (1.0 - n_hv.prop_therapeutically_vaccinated(PROP_FOR_IMPACT, IMP_INF))
-                             * (1.0 - i_hv.func_cure_impact_inf(rg, S_MALE)) 
+                             * (1.0 - i_hv.func_cure_impact_inf(rg, S_MALE))
                              * n_hv.adults(VAC_ALL, rg, hd, S_MALE);
-                             
+
         rMultDenominatorAll += n_hv.adults(VAC_ALL, rg, hd, S_MALE);
       }
 
@@ -3369,7 +3376,7 @@ public:
           start_art[v][rg][s] =
                 (not_receiving_art_vrs[v][rg][s] + receiving_art_vrs[v][rg][s])
                     * art_cov[rg][s] - receiving_art_vrs[v][rg][s];
-        
+
           // allocate new ART according to eligibility (Prop1) and mortality
           // (Prop2)
           for (int hd = CD4_GT500; hd <= CD4_LT50; ++hd) {
