@@ -964,6 +964,8 @@ procedure LeapfrogRunDp(const params: LeapfrogParams; const opts: LeapfrogOption
 procedure LeapfrogRunAim(const params: LeapfrogParams; const opts: LeapfrogOptions; const outputState: LeapfrogState; errorHandler: TCallbackFunction); safecall; external 'leapfrog.dll' name 'run_aim';
 procedure LeapfrogRunDpSingleYear(const params: LeapfrogParams; const opts: LeapfrogOptions; const initial_state: LeapfrogState; start_year: Integer; const state: LeapfrogState; errorHandler: TCallbackFunction); safecall; external 'leapfrog.dll' name 'run_dp_single_year';
 procedure LeapfrogRunAimSingleYear(const params: LeapfrogParams; const opts: LeapfrogOptions; const initial_state: LeapfrogState; start_year: Integer; const state: LeapfrogState; errorHandler: TCallbackFunction); safecall; external 'leapfrog.dll' name 'run_aim_single_year';
+procedure LeapfrogRunModelFromState(const params: LeapfrogParams; const opts: LeapfrogOptions; const initial_state: LeapfrogState; start_year: Integer; const state: LeapfrogState; errorHandler: TCallbackFunction); safecall; external 'leapfrog.dll' name 'run_model_from_state';
+procedure LeapfrogRunInitialYearCalculations(const params: LeapfrogParams; const options: LeapfrogOptions; const initial_state: LeapfrogState; errorHandler: TCallbackFunction); safecall; external 'leapfrog.dll' name 'run_initial_year_calculations';
 
 implementation
 
