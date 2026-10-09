@@ -138,7 +138,7 @@ struct AdultHivModelSimulation<Config> {
     run_wlhiv_births();
 
     if constexpr (ModelVariant::run_goals) {
-      if ((t > pars.hv.goals_base_year_idx) && (hiv_step == opts.hts_per_year - 1)) {
+      if ((t > pars.hv.goals_base_year_idx) && (hiv_step == 0)) {
         apply_goals_cure_adults();
       }
     }
@@ -492,6 +492,10 @@ struct AdultHivModelSimulation<Config> {
 
            //capture the impact of AHD treament on art mortality
            if constexpr (ModelVariant::run_goals) {
+              
+              //impact of viral supression
+              deaths_art *= intermediate.hv.alpha_mult;
+       
               //impact of AHD intervention
               if ( (t > pars.hv.goals_base_year_idx) && (hm>=4) ) { // index 4 is CD4_100_199
                 deaths_art *= intermediate.hv.AHD_Tx_Impact;
@@ -983,7 +987,6 @@ struct AdultHivModelSimulation<Config> {
       // cure cov includes adjustment for the proportion already received cured over period of duration
       const real_type cure_cov = intermediate.hv.cure_avg_cov_adults(s);
       const real_type cure_cov_impact = intermediate.hv.cure_avg_cov_adults_impact(s);
-      const real_type cure_eff = pars.hv.rn_cure_effect(0);
       real_type cured = 0.0;
 
       for (int ha = 0; ha < hAG; ++ha) {
@@ -992,14 +995,17 @@ struct AdultHivModelSimulation<Config> {
         // adults, PLHIV not on ART
         for (int hm = 0; hm < hDS; ++hm) {
 
-          // for costing, use proportion for costing, without efficacy applied
-          cured = cure_cov * n_ha.h_hivpop(hm, ha, s);
+          if(a >= SS::pIDX_15to49 + SS::pAG_15to49){
+            // 15-49 new_cures tracked in goals
+            // for costing, use proportion for costing, without efficacy applied
+            cured = cure_cov * n_ha.h_hivpop(hm, ha, s);
 
-          // do not remove more than 99 % of the current compartment
-          cured = std::min(cured, 0.99 * n_ha.h_hivpop(hm, ha, s));
+            // do not remove more than 99 % of the current compartment
+            cured = std::min(cured, 0.99 * n_ha.h_hivpop(hm, ha, s));
 
-          // add to total for costing
-          state_next.hv.total_new_cures += cured;
+            // add to total for costing
+            state_next.hv.total_new_cures += cured;
+           }
 
           //for impact, use proportion for costing, with efficacy applied
           cured = cure_cov_impact * n_ha.h_hivpop(hm, ha, s);
@@ -1016,14 +1022,17 @@ struct AdultHivModelSimulation<Config> {
         for (int hm = i_ha.everARTelig_idx; hm < hDS; ++hm) {
           for (int hu = 0; hu < hTS; ++hu) {
 
-          // for costing, use proportion for costing, without efficacy applied
-          cured = cure_cov * n_ha.h_artpop(hu, hm, ha, s);
+          if(a >= SS::pIDX_15to49 + SS::pAG_15to49){
+            // 15-49 new_cures tracked in goals
+            // for costing, use proportion for costing, without efficacy applied
+            cured = cure_cov * n_ha.h_artpop(hu, hm, ha, s);
 
-          // do not remove more than 99 % of the current compartment
-          cured = std::min(cured, 0.99 * n_ha.h_artpop(hu, hm, ha, s));
+            // do not remove more than 99 % of the current compartment
+            cured = std::min(cured, 0.99 * n_ha.h_artpop(hu, hm, ha, s));
 
-          // add to total for costing
-          state_next.hv.total_new_cures += cured;
+            // add to total for costing
+            state_next.hv.total_new_cures += cured;
+          }
 
           // for impact, use proportion for costing, with efficacy applied
           cured = cure_cov_impact * n_ha.h_artpop(hu, hm, ha, s);

@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from leapfrog_validate import build, git_utils, model_run, params
+from leapfrog_validate import build, classify, git_utils, model_run, params
 from leapfrog_validate.cli import app
 from leapfrog_validate.diff import diff_indicator
 from leapfrog_validate.indicators import INDICATORS
@@ -23,8 +23,12 @@ from leapfrog_validate.indicators import INDICATORS
 requires_r = pytest.mark.skipif(shutil.which("Rscript") is None, reason="R is not installed")
 
 REPO_ROOT = git_utils.find_repo_root(Path(__file__).parent)
-FIXTURE_PJNZ = REPO_ROOT / "leapfrogr" / "inst" / "pjnz" / "france_default.PJNZ"
-SECOND_FIXTURE_PJNZ = REPO_ROOT / "leapfrogr" / "inst" / "pjnz" / "bwa_aim-no-special-elig-numpmtct.PJNZ"
+_PJNZ_DIR = REPO_ROOT / "leapfrogr" / "inst" / "pjnz"
+FIXTURE_PJNZ = _PJNZ_DIR / "france_default.PJNZ"
+SECOND_FIXTURE_PJNZ = _PJNZ_DIR / "bwa_aim-no-special-elig-numpmtct.PJNZ"
+BWA_ADULT_FIXTURE = _PJNZ_DIR / "bwa_aim-adult-art-no-special-elig_v6.13_2022-04-18.PJNZ"
+BWA_NUMPMTCT_FIXTURE = SECOND_FIXTURE_PJNZ
+GOALS_FIXTURE = REPO_ROOT / "goals" / "tests" / "resources" / "SouthAfrica.PJNZ"
 
 runner = CliRunner()
 
@@ -179,3 +183,29 @@ def test_compare_working_tree_matches_head_and_second_run_skips_build(head_works
     second = runner.invoke(app, args)
     assert second.exit_code == 0, second.output
     assert marker.stat().st_mtime_ns == marker_mtime_after_first_run, "second compare run rebuilt instead of skipping"
+
+
+@requires_r
+@pytest.mark.parametrize("pjnz", [FIXTURE_PJNZ, BWA_ADULT_FIXTURE, BWA_NUMPMTCT_FIXTURE])
+def test_domain_tags_for_aim_only_fixtures(head_workspace, pjnz):
+    """Ground truth verified empirically: all three AIM-only fixtures carry non-zero PMTCT/cotrim inputs."""
+    assert classify.domain_tags(head_workspace, pjnz) == frozenset({"has_pmtct", "has_cotrim"})
+
+
+@requires_r
+def test_domain_tags_raises_for_goals_fixture_with_current_process_pjnz_limitation(head_workspace):
+    """Regression-locking, not a desired outcome.
+
+    `leapfrog::process_pjnz()` currently errors on this Goals-enabled PJNZ
+    inside `process_pjnz_ha` (unrelated to this classifier -- see ticket
+    16's comments). `domain_tags` surfaces that as `ClassifyError` rather
+    than guessing tags, which is the correct behaviour either way; this
+    pins down that it fails loudly instead of silently.
+    """
+    with pytest.raises(classify.ClassifyError):
+        classify.domain_tags(head_workspace, GOALS_FIXTURE)
+
+
+@requires_r
+def test_classify_combines_shape_and_domain_tags_for_a_real_fixture(head_workspace):
+    assert classify.classify(head_workspace, FIXTURE_PJNZ) == frozenset({"aim_only", "has_pmtct", "has_cotrim"})

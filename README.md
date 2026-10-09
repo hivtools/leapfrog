@@ -1,4 +1,4 @@
-# leapfrog
+# leapfrog <img src="images/leapfrog_hex.png" align="right" height="139" alt="Leapfrog logo" />
 
 <!-- badges: start -->
 
