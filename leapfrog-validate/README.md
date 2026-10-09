@@ -3,9 +3,11 @@
 Compare leapfrog model output across git refs, and (eventually) against
 Spectrum. See `.scratch/leapfrog-validation/PRD.md` for the full design;
 this package currently implements the walking skeleton
-(`.scratch/leapfrog-validation/issues/15-walking-skeleton-single-indicator-diff.md`)
-plus the full five-indicator registry and exclusion mechanism
-(`.scratch/leapfrog-validation/issues/17-full-indicator-registry-tolerance-rollup.md`).
+(`.scratch/leapfrog-validation/issues/15-walking-skeleton-single-indicator-diff.md`),
+the full five-indicator registry and exclusion mechanism
+(`.scratch/leapfrog-validation/issues/17-full-indicator-registry-tolerance-rollup.md`),
+and the `compare` directory wrapper plus working-tree support
+(`.scratch/leapfrog-validation/issues/19-compare-wrapper-working-tree.md`).
 
 ## Usage
 
@@ -13,13 +15,34 @@ plus the full five-indicator registry and exclusion mechanism
 uv run leapfrog-validate build-params <ref> <pjnz> -o params.h5
 uv run leapfrog-validate run <ref> params.h5 -o output.h5
 uv run leapfrog-validate diff output-a.h5 output-b.h5
+uv run leapfrog-validate compare <ref> <candidate> --pjnz-dir <dir>
 ```
 
 Each command independently builds `leapfrogr` (and regenerates the C++
 headers it depends on) at the given git ref, in an isolated git worktree
-cached under `--cache-dir` (default `~/.cache/leapfrog-validate`). `<ref>`
-must be a committed ref or SHA -- uncommitted working-tree support is a
-separate, later ticket.
+cached under `--cache-dir` (default `~/.cache/leapfrog-validate`; note this
+is a global option and must come *before* the subcommand, e.g.
+`leapfrog-validate --cache-dir /tmp/cache compare ...`).
+
+`<ref>` accepts a committed git ref/SHA, or the literal value `working-tree`
+for your own current uncommitted checkout -- so you can check "how does my
+in-progress change compare to main" without committing first. A working-tree
+build is cached by a content hash of `leapfrog-core/`, `codegen/`, and
+`leapfrogr/` (the directories that actually feed the build) rather than a
+git SHA, so re-running against the same uncommitted state reuses the cached
+build instead of rebuilding.
+
+### `compare`: running the full pipeline across a directory of PJNZ files
+
+```sh
+uv run leapfrog-validate compare main working-tree --pjnz-dir ./pjnz-corpus
+```
+
+Builds `<ref>` and `<candidate>` once each, then runs `build-params` → `run`
+→ `diff` (all five indicators, `--pjnz <filename-without-extension>` so
+exclusions apply) for every `*.PJNZ` file in `--pjnz-dir`, printing a
+per-indicator verdict and a per-file PASS/FAIL line, plus a summary at the
+end. Exits non-zero if any file fails any indicator.
 
 `diff` applies a hybrid `atol + rtol*|ref|` per-cell tolerance (strict-max
 rollup: any single over-tolerance cell fails that indicator) and, by

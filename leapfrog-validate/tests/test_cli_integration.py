@@ -13,19 +13,24 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner
 
 from leapfrog_validate import build, classify, git_utils, model_run, params
+from leapfrog_validate.cli import app
 from leapfrog_validate.diff import diff_indicator
 from leapfrog_validate.indicators import INDICATORS
 
 requires_r = pytest.mark.skipif(shutil.which("Rscript") is None, reason="R is not installed")
 
 REPO_ROOT = git_utils.find_repo_root(Path(__file__).parent)
-FIXTURE_PJNZ = REPO_ROOT / "leapfrogr" / "inst" / "pjnz" / "france_default.PJNZ"
 _PJNZ_DIR = REPO_ROOT / "leapfrogr" / "inst" / "pjnz"
+FIXTURE_PJNZ = _PJNZ_DIR / "france_default.PJNZ"
+SECOND_FIXTURE_PJNZ = _PJNZ_DIR / "bwa_aim-no-special-elig-numpmtct.PJNZ"
 BWA_ADULT_FIXTURE = _PJNZ_DIR / "bwa_aim-adult-art-no-special-elig_v6.13_2022-04-18.PJNZ"
-BWA_NUMPMTCT_FIXTURE = _PJNZ_DIR / "bwa_aim-no-special-elig-numpmtct.PJNZ"
+BWA_NUMPMTCT_FIXTURE = SECOND_FIXTURE_PJNZ
 GOALS_FIXTURE = REPO_ROOT / "goals" / "tests" / "resources" / "SouthAfrica.PJNZ"
+
+runner = CliRunner()
 
 
 @pytest.fixture(scope="module")
@@ -34,8 +39,12 @@ def head_sha():
 
 
 @pytest.fixture(scope="module")
-def head_worktree(head_sha, tmp_path_factory):
-    cache_dir = tmp_path_factory.mktemp("leapfrog-validate-cache")
+def cache_dir(tmp_path_factory):
+    return tmp_path_factory.mktemp("leapfrog-validate-cache")
+
+
+@pytest.fixture(scope="module")
+def head_worktree(head_sha, cache_dir):
     worktree = git_utils.ensure_worktree(REPO_ROOT, head_sha, cache_dir)
     yield worktree
     subprocess.run(
@@ -108,6 +117,72 @@ def test_run_then_diff_of_a_ref_against_itself_passes(head_workspace, tmp_path):
 
     assert verdict.passed, verdict.summary()
     assert verdict.max_abs_diff == 0.0
+
+
+@requires_r
+def test_compare_same_ref_across_pjnz_directory_all_pass(head_workspace, head_sha, cache_dir, tmp_path):
+    """Ticket 19's acceptance case: `compare` across a directory, same ref both sides, all PASS.
+
+    Reuses `head_workspace`'s already-built cache (`cache_dir`) for both the
+    `ref` and `candidate` side of `compare`, so this doesn't trigger a second
+    build.
+    """
+    del head_workspace  # ensures the module-scoped build has already happened
+    pjnz_dir = tmp_path / "corpus"
+    pjnz_dir.mkdir()
+    shutil.copy(FIXTURE_PJNZ, pjnz_dir / FIXTURE_PJNZ.name)
+    shutil.copy(SECOND_FIXTURE_PJNZ, pjnz_dir / SECOND_FIXTURE_PJNZ.name)
+
+    result = runner.invoke(
+        app,
+        ["--cache-dir", str(cache_dir), "compare", head_sha, head_sha, "--pjnz-dir", str(pjnz_dir)],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert f"PASS  {FIXTURE_PJNZ.name}" in result.output
+    assert f"PASS  {SECOND_FIXTURE_PJNZ.name}" in result.output
+
+
+@requires_r
+def test_compare_working_tree_matches_head_and_second_run_skips_build(head_workspace, head_sha, cache_dir, tmp_path):
+    """Ticket 19's other two acceptance cases, together since both need a real working-tree build.
+
+    1. Working-tree support: `working-tree` compares equal to `HEAD` (no
+       uncommitted changes exist under the hashed source dirs here), proving
+       `<ref>` really does accept a pointer to the uncommitted checkout, not
+       just committed refs.
+    2. Build-skip caching: calling `compare` a second time with no relevant
+       source change reuses the exact same materialized worktree and never
+       re-touches its install marker -- i.e. the build/codegen/compile step
+       is skipped.
+    """
+    del head_workspace
+    pjnz_dir = tmp_path / "corpus"
+    pjnz_dir.mkdir()
+    shutil.copy(FIXTURE_PJNZ, pjnz_dir / FIXTURE_PJNZ.name)
+
+    args = [
+        "--cache-dir",
+        str(cache_dir),
+        "compare",
+        git_utils.WORKING_TREE,
+        head_sha,
+        "--pjnz-dir",
+        str(pjnz_dir),
+    ]
+
+    first = runner.invoke(app, args)
+    assert first.exit_code == 0, first.output
+    assert f"PASS  {FIXTURE_PJNZ.name}" in first.output
+
+    worktree = git_utils.materialize_working_tree(REPO_ROOT, cache_dir)
+    marker = worktree / ".leapfrog-validate" / "r-library" / ".install-complete"
+    assert marker.exists()
+    marker_mtime_after_first_run = marker.stat().st_mtime_ns
+
+    second = runner.invoke(app, args)
+    assert second.exit_code == 0, second.output
+    assert marker.stat().st_mtime_ns == marker_mtime_after_first_run, "second compare run rebuilt instead of skipping"
 
 
 @requires_r
