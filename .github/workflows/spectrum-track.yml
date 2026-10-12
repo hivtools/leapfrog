@@ -111,7 +111,7 @@ jobs:
           uv sync
           uv run python -m leapfrog_validate.spectrum_track run \
             "${{ github.event.pull_request.head.sha }}" \
-            --comment-out spectrum-comment.md
+            --comment-out spectrum-comment.md 2> >(tee spectrum-debug-stderr.log >&2)
         # Deliberately no --azure-container/--azure-account flags: both
         # fall back to the AZURE_STORAGE_CONTAINER/AZURE_STORAGE_ACCOUNT env
         # vars above (same names ticket 16's infra/deploy.sh publishes as
@@ -122,6 +122,22 @@ jobs:
         # its log -- see `spectrum_track.py`'s and `report_spectrum.py`'s
         # module docstrings for how that's enforced structurally, not just
         # by convention.
+
+      - name: TEMP DEBUG - post first build/run errors as a plain comment
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        working-directory: leapfrog-validate
+        run: |
+          {
+            echo "<!-- temp-debug-401 -->"
+            echo "### TEMP DEBUG: first build/run errors"
+            echo '```'
+            grep -A3 "could not build/run leapfrog" spectrum-debug-stderr.log | head -80
+            echo '```'
+          } > /tmp/debug-comment.md
+          gh pr comment 401 --repo hivtools/leapfrog --body-file /tmp/debug-comment.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Find the rendered comment
         if: always() && github.event.pull_request.head.repo.full_name == github.repository
