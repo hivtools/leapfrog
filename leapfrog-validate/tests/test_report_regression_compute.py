@@ -246,6 +246,100 @@ class TestComputeRegressionReportClassifyErrorHandling:
         assert report.overall_passed is False
 
 
+class TestComputeRegressionReportBuildRunErrorHandling:
+    """A build/run failure on one PJNZ must not abort the whole batch.
+
+    Found live against the real private corpus during this ticket's
+    build: a real file hits a pre-existing leapfrogr limitation inside
+    `params.build_params` (unrelated to this ticket, same shape as ticket
+    16's documented `process_pjnz_ha` issue) and, before this fix, crashed
+    the whole `compute_regression_report` call with an uncaught
+    `ParamsBuildError` -- losing every other file's already-computed
+    result. Same fix shape as ticket 20's own `ClassifyError` handling.
+    """
+
+    def test_params_build_error_on_one_file_does_not_abort_the_whole_batch(
+        self, fake_build_and_run, tmp_path, monkeypatch
+    ):
+        fake_build_and_run["good"] = (1.0, 1.0)
+        pjnz_dir = _make_corpus(tmp_path, "good.PJNZ", "bad.PJNZ")
+
+        real_build_params = cli.params.build_params
+
+        def flaky_build_params(workspace, pjnz, output):
+            if pjnz.stem == "bad":
+                msg = "synthetic ParamsBuildError"
+                raise cli.params.ParamsBuildError(msg)
+            real_build_params(workspace, pjnz, output)
+
+        monkeypatch.setattr(cli.params, "build_params", flaky_build_params)
+        report = compute_regression_report(
+            repo_root=tmp_path,
+            cache_dir=tmp_path / "cache",
+            ref="pr-head",
+            candidate="main",
+            pjnz_dir=pjnz_dir,
+        )
+
+        labels = {r.label: r for r in report.results}
+        assert labels["good.PJNZ"].passed is True
+        assert labels["bad.PJNZ"].passed is False
+        assert report.overall_passed is False
+
+    def test_model_run_error_on_one_file_does_not_abort_the_whole_batch(
+        self, fake_build_and_run, tmp_path, monkeypatch
+    ):
+        fake_build_and_run["good"] = (1.0, 1.0)
+        pjnz_dir = _make_corpus(tmp_path, "good.PJNZ", "bad.PJNZ")
+
+        real_run_model = cli.model_run.run_model
+
+        def flaky_run_model(workspace, params_path, output, configuration):
+            if params_path.stem.removesuffix("-ref-params").removesuffix("-candidate-params") == "bad":
+                msg = "synthetic ModelRunError"
+                raise cli.model_run.ModelRunError(msg)
+            real_run_model(workspace, params_path, output, configuration)
+
+        monkeypatch.setattr(cli.model_run, "run_model", flaky_run_model)
+        report = compute_regression_report(
+            repo_root=tmp_path,
+            cache_dir=tmp_path / "cache",
+            ref="pr-head",
+            candidate="main",
+            pjnz_dir=pjnz_dir,
+        )
+
+        labels = {r.label: r for r in report.results}
+        assert labels["good.PJNZ"].passed is True
+        assert labels["bad.PJNZ"].passed is False
+        assert report.overall_passed is False
+
+    def test_build_run_error_log_line_never_includes_the_exception_message(
+        self, fake_build_and_run, tmp_path, monkeypatch
+    ):
+        del fake_build_and_run  # only needed for its _prepare_ref mocking side effect
+        pjnz_dir = _make_corpus(tmp_path, "bad.PJNZ")
+
+        def always_fails(workspace, pjnz, output):
+            del workspace, pjnz, output
+            msg = "--- stderr ---\nsome subprocess output that must never be logged"
+            raise cli.params.ParamsBuildError(msg)
+
+        monkeypatch.setattr(cli.params, "build_params", always_fails)
+        log_lines: list[str] = []
+        compute_regression_report(
+            repo_root=tmp_path,
+            cache_dir=tmp_path / "cache",
+            ref="pr-head",
+            candidate="main",
+            pjnz_dir=pjnz_dir,
+            log=log_lines.append,
+        )
+
+        assert any("ERROR" in line and "bad.PJNZ" in line for line in log_lines)
+        assert not any("stderr" in line for line in log_lines)
+
+
 class TestComputeRegressionReportLogging:
     """The `log` callable stands in for CI's own job log -- assert nothing number-shaped leaks through."""
 

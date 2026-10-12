@@ -346,7 +346,20 @@ def compute_regression_report(  # noqa: PLR0913
 
             applicable = cli._applicable_indicator_names(pjnz_tags)
             scoped = cli._ScopedPjnz(path=pjnz, label=label, indicator_names=applicable)
-            verdicts = cli._compare_one_pjnz(workspaces, scoped, configuration, tmp_path)
+            try:
+                verdicts = cli._compare_one_pjnz(workspaces, scoped, configuration, tmp_path)
+            except (cli.params.ParamsBuildError, cli.model_run.ModelRunError) as e:
+                # A real corpus file can hit a pre-existing leapfrogr
+                # limitation unrelated to this ticket (e.g. ticket 16's
+                # documented `process_pjnz_ha` issue, confirmed live
+                # against the real corpus during this ticket's build --
+                # see Comments) -- same shape as ticket 20's own fix for
+                # `classify.ClassifyError` not aborting the whole batch.
+                # Logs only the exception's type, never its message (which
+                # can embed the subprocess's captured stdout/stderr).
+                log(f"ERROR {label}: could not build/run ({type(e).__name__})")
+                results.append(PjnzRegressionResult(label=label, n_passed=0, n_applicable=1))
+                continue
             n_passed = sum(1 for v in verdicts if v.passed)
             results.append(PjnzRegressionResult(label=label, n_passed=n_passed, n_applicable=len(verdicts)))
             log(f"{'PASS' if n_passed == len(verdicts) else 'FAIL'} {label}")
