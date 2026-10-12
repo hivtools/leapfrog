@@ -81,6 +81,18 @@ jobs:
         working-directory: leapfrog-validate
         run: uv sync --all-extras --dev
 
+      - name: Resolve sticky-comment header
+        id: header
+        shell: bash
+        working-directory: leapfrog-validate
+        run: |
+          value=$(uv run python -m leapfrog_validate.report_regression --print-header)
+          echo "value=$value" >> "$GITHUB_OUTPUT"
+        # Reads STICKY_COMMENT_HEADER straight from report_regression.py
+        # rather than hardcoding a second, independently-typed copy of the
+        # same string here -- the two would otherwise be free to drift
+        # apart silently (code review finding, ticket 21).
+
       - name: Azure login
         uses: azure/login@v2
         with:
@@ -113,7 +125,7 @@ jobs:
         if: always()
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          header: leapfrog-vs-leapfrog-regression
+          header: ${{ steps.header.outputs.value }}
           path: regression-comment.md
 
       - name: Fail the job if the regression check failed

@@ -42,7 +42,10 @@ from leapfrog_validate import classify, cli, git_utils, manifest
 # Spectrum-comparison track's separate sticky comment (ticket 22, built in
 # parallel on a different branch/workflow file). Not embedded in the
 # rendered markdown itself -- the Action manages its own hidden marker at
-# a layer above this module (ticket 06's research).
+# a layer above this module (ticket 06's research). The workflow reads this
+# value via `--print-header` (see `main`) rather than hardcoding a second,
+# independently-typed copy of the same string in the YAML -- code review
+# flagged that drift risk during ticket 21's build.
 STICKY_COMMENT_HEADER = "leapfrog-vs-leapfrog-regression"
 
 # How many leading hex characters of a full commit SHA to show in
@@ -226,16 +229,7 @@ def render_comment(report: RegressionReport) -> str:
 
 @dataclass(frozen=True)
 class _CorpusSource:
-    """Resolved PJNZ files plus the root they're relative to (see `cli._resolve_corpus_files`).
-
-    A thin, non-`typer` stand-in for `cli._resolve_corpus_files` -- that
-    function raises `typer.Exit`, which has no meaning outside a Click
-    command dispatch and would surface as a bare, unhandled exception if
-    called from this plain script. Built from the same underlying helpers
-    (`cli._azure_blob_service_client`, `cli._download_azure_pjnz_corpus`,
-    `cli._list_pjnz_files`) so the two never disagree about *how* a corpus
-    is resolved, only about what they do when it's empty.
-    """
+    """Resolved PJNZ files plus the root they're relative to."""
 
     files: list[Path]
     root: Path
@@ -251,33 +245,22 @@ def _resolve_corpus(
 ) -> _CorpusSource:
     """Resolve the PJNZ source (local dir or Azure Blob) to its files + corpus root.
 
-    Raises `RegressionTrackError` if the resolved corpus is empty, or if
-    the Azure download hits an unsafe blob path (`cli.CorpusError`) --
-    both reported as a clean message, not a raw traceback.
+    Delegates to `cli._resolve_corpus_files_core` -- the plain,
+    `typer`-independent core `cli._resolve_corpus_files` itself wraps for
+    `compare`'s own CLI error handling -- rather than re-deriving the same
+    Azure-download/empty-check logic a second time (split out of this
+    module during ticket 21's build after code review flagged the
+    near-duplicate). Translates `cli.CorpusError` (an unsafe blob path, or
+    an empty corpus) into this module's own `RegressionTrackError`, so
+    callers of this module only ever need to catch one exception type.
     """
-    if azure_container is not None:
-        corpus_root = tmp_path / "azure-corpus"
-        corpus_root.mkdir()
-        blob_service_client = cli._azure_blob_service_client(azure_account)
-        try:
-            pjnz_files = cli._download_azure_pjnz_corpus(
-                blob_service_client, azure_container, azure_prefix, corpus_root
-            )
-        except cli.CorpusError as e:
-            msg = str(e)
-            raise RegressionTrackError(msg) from e
-        finally:
-            cli._close_quietly(blob_service_client)
-            cli._close_quietly(getattr(blob_service_client, "credential", None))
-        description = f"Azure container '{azure_container}' (prefix '{azure_prefix}')"
-    else:
-        corpus_root = pjnz_dir
-        pjnz_files = cli._list_pjnz_files(corpus_root)
-        description = str(corpus_root)
-
-    if not pjnz_files:
-        msg = f"No PJNZ files found in {description}"
-        raise RegressionTrackError(msg)
+    try:
+        pjnz_files, corpus_root = cli._resolve_corpus_files_core(
+            pjnz_dir, azure_container, azure_account, azure_prefix, tmp_path
+        )
+    except cli.CorpusError as e:
+        msg = str(e)
+        raise RegressionTrackError(msg) from e
     return _CorpusSource(files=pjnz_files, root=corpus_root)
 
 
@@ -381,8 +364,17 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         description="Compute the leapfrog-vs-leapfrog regression track and render a PR-comment markdown file."
     )
     parser.add_argument(
-        "--ref", required=True, help="Git ref/SHA to treat as the PR's own side (usually the PR head SHA)."
+        "--print-header",
+        action="store_true",
+        help=(
+            "Print the STICKY_COMMENT_HEADER constant and exit immediately -- lets the "
+            "workflow read the sticky-comment `header:` value from this module's own "
+            "constant instead of a second, independently-typed copy in the YAML."
+        ),
     )
+    # Not `required=True`: `--print-header` is a standalone early-exit mode (see `main`)
+    # that needs none of the options below.
+    parser.add_argument("--ref", help="Git ref/SHA to treat as the PR's own side (usually the PR head SHA).")
     parser.add_argument(
         "--candidate", default="origin/main", help="Git ref/SHA to compare against (default: origin/main)."
     )
@@ -415,7 +407,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         default="Spectrum",
         help="Model configuration to run (ticket 21: the regression track always uses Spectrum).",
     )
-    parser.add_argument("--out", type=Path, required=True, help="Where to write the rendered comment markdown.")
+    parser.add_argument("--out", type=Path, help="Where to write the rendered comment markdown.")
     return parser
 
 
@@ -431,6 +423,15 @@ def main(argv: list[str] | None = None) -> int:
     non-diff error detail); the comment stays short and numberless.
     """
     args = _build_arg_parser().parse_args(argv)
+
+    if args.print_header:
+        sys.stdout.write(f"{STICKY_COMMENT_HEADER}\n")
+        return 0
+
+    if not args.ref or not args.out:
+        sys.stderr.write("--ref and --out are required unless --print-header is given.\n")
+        return 2
+
     repo_root = args.repo_root or git_utils.find_repo_root()
 
     try:

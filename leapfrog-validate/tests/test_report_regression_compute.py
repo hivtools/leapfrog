@@ -27,8 +27,10 @@ import pytest
 from leapfrog_validate import classify, cli, git_utils
 from leapfrog_validate.build import BuildWorkspace
 from leapfrog_validate.report_regression import (
+    STICKY_COMMENT_HEADER,
     RegressionTrackError,
     compute_regression_report,
+    main,
 )
 
 
@@ -284,3 +286,31 @@ class TestComputeRegressionReportLogging:
 
         assert any("a.PJNZ" in line for line in log_lines)
         assert any(line.startswith(("PASS", "FAIL")) for line in log_lines)
+
+
+class TestMainCliPrintHeader:
+    """`--print-header` is a standalone early-exit mode.
+
+    Code review: avoid a second, independently-typed copy of the
+    sticky-comment header string in the workflow YAML.
+    """
+
+    def test_print_header_prints_the_constant_and_exits_zero(self, capsys):
+        exit_code = main(["--print-header"])
+
+        assert exit_code == 0
+        assert capsys.readouterr().out.strip() == STICKY_COMMENT_HEADER
+
+    def test_print_header_needs_no_other_argument(self, capsys):
+        # Deliberately not passing --ref/--candidate/--out -- would be a
+        # required-argument error for a normal run, but --print-header
+        # short-circuits before any of those are consulted.
+        exit_code = main(["--print-header"])
+        assert exit_code == 0
+        capsys.readouterr()
+
+    def test_missing_ref_and_out_without_print_header_is_a_clean_error(self, capsys):
+        exit_code = main([])
+
+        assert exit_code == 2
+        assert "--ref" in capsys.readouterr().err
