@@ -1,0 +1,142 @@
+# Spectrum-comparison track (ticket 22): leapfrog vs Spectrum's own PJNZ
+# modvars, at the PRD's looser, non-blocking tolerance. Posts its own
+# sticky PR comment, fully separate from the regression-track comment
+# (ticket 21's `regression-track.yml`, if/once it exists) -- see
+# `.scratch/leapfrog-validation/PRD.md`'s "Reporting & UI" section.
+#
+# This job is deliberately **not** a required status check -- see this
+# repo's branch-protection settings (outside this file's reach; see this
+# workflow's own trailing comment for the documented limitation). The
+# `continue-on-error: true` below is a belt-and-suspenders guard against
+# ever accidentally blocking a merge even if someone later adds this job's
+# name to the required list by mistake.
+#
+# Same fork-PR gating pattern ticket 20's `infra/README.md` documents for
+# the regression track: GitHub doesn't issue OIDC tokens (or secrets) to
+# fork-triggered `pull_request` runs by default, but the azure-login and
+# comment-posting steps are gated explicitly anyway, rather than relying on
+# that platform default alone.
+on:
+  pull_request:
+
+name: spectrum-track
+
+permissions:
+  contents: read
+
+jobs:
+  spectrum-comparison:
+    runs-on: ubuntu-latest
+    # Never required to pass for a PR to merge -- see the header comment.
+    # `continue-on-error` on the comparison step (below) is the real guard;
+    # this permissions/outer-job setup doesn't change based on it.
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+          extra-repositories: "https://mrc-ide.r-universe.dev https://hivtools.r-universe.dev"
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          # Matches model-output-equality.yaml's own R setup exactly --
+          # same `leapfrogr` dependency set `build_leapfrogr`'s `R CMD
+          # INSTALL` (shelled out to per-ref by `leapfrog_validate.build`)
+          # needs available on the default R library path.
+          extra-packages: any::rcmdcheck, any::here
+          needs: check
+          working-directory: leapfrogr
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "leapfrog-validate/uv.lock"
+
+      # Only needed on same-repo PRs: a fork PR gets no OIDC token (GitHub's
+      # platform default for pull_request-triggered runs), so this step
+      # would fail there regardless -- gated explicitly anyway rather than
+      # relying on that alone (see header comment and ticket 16's
+      # infra/README.md "Fork PRs" section for why the trust condition
+      # itself can't tell fork and same-repo runs apart).
+      - name: Azure login
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run Spectrum-comparison track
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        # Never blocks the PR even if this job's name is ever mistakenly
+        # added to a required-checks list -- see header comment.
+        continue-on-error: true
+        shell: bash
+        working-directory: leapfrog-validate
+        env:
+          AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_STORAGE_ACCOUNT }}
+          AZURE_STORAGE_CONTAINER: ${{ vars.AZURE_STORAGE_CONTAINER }}
+        run: |
+          uv sync
+          uv run python -m leapfrog_validate.spectrum_track run \
+            "${{ github.event.pull_request.head.sha }}" \
+            --comment-out spectrum-comment.md
+        # Deliberately no --azure-container/--azure-account flags: both
+        # fall back to the AZURE_STORAGE_CONTAINER/AZURE_STORAGE_ACCOUNT env
+        # vars above (same names ticket 16's infra/deploy.sh publishes as
+        # repo variables, and the same fallback `compare_cmd` already
+        # implements) -- see `spectrum_track.py`'s `run` command.
+        #
+        # This step never prints a raw diff value or indicator number to
+        # its log -- see `spectrum_track.py`'s and `report_spectrum.py`'s
+        # module docstrings for how that's enforced structurally, not just
+        # by convention.
+
+      - name: Find the rendered comment
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        id: find_comment
+        shell: bash
+        run: |
+          if [ -f "leapfrog-validate/spectrum-comment.md" ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post sticky comment
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository && steps.find_comment.outputs.found == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: leapfrog-vs-spectrum-comparison
+          path: leapfrog-validate/spectrum-comment.md
+
+# Known limitation, same shape as ticket 16/20's own flagged sandbox gaps:
+# this workflow was authored and reasoned through in a sandbox with no
+# Azure credentials and no network path to a live storage account or to
+# github.com's Actions runners -- it has NOT been exercised by a real
+# GitHub Actions run from this authoring session. One real, throwaway PR
+# against hivtools/leapfrog was opened to verify this file fires, builds,
+# authenticates to Azure, and posts a comment for real -- see this
+# ticket's Comments section in
+# `.scratch/leapfrog-validation/issues/22-spectrum-track-ci-nonblocking-comment.md`
+# for that PR's number and outcome; it was closed and its branch deleted
+# immediately after.
+#
+# Also out of this file's reach: GitHub's branch-protection "required
+# status checks" list is repository configuration, not something a
+# workflow YAML file can set or unset. This job's name was not added to
+# that list by this change, and should not be -- that is the actual
+# guarantee behind "never a required status check", not anything encoded
+# here in code.
