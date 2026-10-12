@@ -88,7 +88,7 @@ struct GeneralDemographicProjection<Config> {
     for (int s = 0; s < NS; ++s) {
       // Start at index 1 as we will add infant (age 0) births and deaths later
       for (int a = 1; a < pAG; ++a) {
-        n_dp.p_deaths_background_totpop(a, s) = c_dp.p_totpop(a - 1, s) * (1.0 - p_dp.survival_probability(a, s, t));
+        n_dp.p_deaths_background_totpop(a, s) = c_dp.p_totpop(a - 1, s) * (1.0 - 1.5 * p_dp.survival_probability(a, s, t));
         n_dp.p_totpop(a, s) = c_dp.p_totpop(a - 1, s) - n_dp.p_deaths_background_totpop(a, s);
       }
       // open age group
