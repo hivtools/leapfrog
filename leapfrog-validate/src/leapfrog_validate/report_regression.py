@@ -112,6 +112,11 @@ class RegressionReport:
     ref: ResolvedRef
     candidate: ResolvedRef
     results: tuple[PjnzRegressionResult, ...]
+    # Threaded through into the reproduce command (see `_reproduce_command_lines`)
+    # so it stays correct even if a caller ever passes a non-default
+    # configuration -- never assumed to match `run_cmd`'s own CLI default,
+    # which could drift independently of this track's actual choice.
+    configuration: str = "Spectrum"
 
     @property
     def overall_passed(self) -> bool:
@@ -137,7 +142,7 @@ class RegressionReport:
         return tuple(r for r in self.results if not r.passed)
 
 
-def _reproduce_command_lines(ref_sha: str, candidate_sha: str, label: str) -> list[str]:
+def _reproduce_command_lines(ref_sha: str, candidate_sha: str, label: str, configuration: str) -> list[str]:
     """Build the copy-pasteable local-reproduce command for one failed PJNZ.
 
     Uses the full, already-resolved commit SHAs for both sides -- never a
@@ -145,15 +150,22 @@ def _reproduce_command_lines(ref_sha: str, candidate_sha: str, label: str) -> li
     requirement. `<label>` doubles as the expected local relative path to
     the file: a developer who downloads it from the private corpus
     (`leapfrog-validate/infra/README.md`) preserving its corpus-relative
-    path gets a command that works unmodified.
+    path gets a command that works unmodified. `configuration` is spelled
+    out explicitly on the `run` steps rather than relying on it happening
+    to match `run_cmd`'s own CLI default -- this track's actual choice
+    could drift from that default independently.
     """
+    run_candidate = (
+        f"leapfrog-validate run {candidate_sha} candidate-params.h5 "
+        f"-o candidate-output.h5 --configuration {configuration} && \\"
+    )
     return [
         f'# First, get "{label}" from the private corpus.',
         "# See leapfrog-validate/infra/README.md for how.",
         f'leapfrog-validate build-params {ref_sha} "{label}" -o ref-params.h5 && \\',
         f'leapfrog-validate build-params {candidate_sha} "{label}" -o candidate-params.h5 && \\',
-        f"leapfrog-validate run {ref_sha} ref-params.h5 -o ref-output.h5 && \\",
-        f"leapfrog-validate run {candidate_sha} candidate-params.h5 -o candidate-output.h5 && \\",
+        f"leapfrog-validate run {ref_sha} ref-params.h5 -o ref-output.h5 --configuration {configuration} && \\",
+        run_candidate,
         f'leapfrog-validate diff ref-output.h5 candidate-output.h5 --pjnz "{label}"',
     ]
 
@@ -198,7 +210,9 @@ def render_comment(report: RegressionReport) -> str:
             lines.append("  <summary>Reproduce this</summary>")
             lines.append("")
             lines.append("  ```bash")
-            for command_line in _reproduce_command_lines(report.ref.sha, report.candidate.sha, result.label):
+            for command_line in _reproduce_command_lines(
+                report.ref.sha, report.candidate.sha, result.label, report.configuration
+            ):
                 lines.append(f"  {command_line}")
             lines.append("  ```")
             lines.append("  </details>")
@@ -358,6 +372,7 @@ def compute_regression_report(  # noqa: PLR0913
         ref=ResolvedRef(given=ref, sha=ref_sha),
         candidate=ResolvedRef(given=candidate, sha=candidate_sha),
         results=tuple(results),
+        configuration=configuration,
     )
 
 
