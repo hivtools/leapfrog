@@ -12,11 +12,12 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from leapfrog_validate import git_utils, spectrum_track
 from leapfrog_validate import model_run as model_run_module
 from leapfrog_validate import params as params_module
-from leapfrog_validate import spectrum_track
 from leapfrog_validate.build import BuildWorkspace
-from leapfrog_validate.diff import Verdict
+from leapfrog_validate.diff import Tolerance, Verdict
+from leapfrog_validate.indicators import tag
 from leapfrog_validate.spectrum_track import app
 
 runner = CliRunner()
@@ -237,3 +238,65 @@ def test_run_catches_a_build_failure_for_one_file_without_aborting_the_batch(mon
     assert "ERROR" in result.output
     assert "PASS  fine.PJNZ" in result.output
     assert result.exit_code == 1
+
+
+def test_run_accepts_the_working_tree_sentinel_without_crashing(monkeypatch, tmp_path):
+    """Pin that `run_cmd` special-cases the WORKING_TREE sentinel.
+
+    `git_utils.resolve_ref` has no SHA to resolve `WORKING_TREE` to --
+    `run_cmd` must special-case it (same sentinel `_prepare_ref`/
+    `prepare_source` already handle) rather than calling `resolve_ref`
+    unconditionally.
+    """
+
+    def fake_diff(name, output_h5, pjnz, pjnz_label=None):  # noqa: ARG001
+        return Verdict(indicator=name, passed=True, max_abs_diff=0.0, n_cells=10, n_failed=0)
+
+    monkeypatch.setattr(spectrum_track, "diff_spectrum_indicator", fake_diff)
+
+    pjnz_dir = tmp_path / "corpus"
+    pjnz_dir.mkdir()
+    (pjnz_dir / "a.PJNZ").touch()
+    comment_path = tmp_path / "comment.md"
+
+    result = runner.invoke(
+        app, ["run", git_utils.WORKING_TREE, "--pjnz-dir", str(pjnz_dir), "--comment-out", str(comment_path)]
+    )
+
+    assert result.exit_code == 0, result.output
+    assert git_utils.WORKING_TREE in comment_path.read_text()
+
+
+def test_run_skips_a_tag_scoped_indicator_for_an_untagged_pjnz(monkeypatch, tmp_path):
+    """Confirm a tag-scoped indicator is skipped, not run, for an untagged PJNZ.
+
+    A `tag(...)`-scoped Spectrum-track indicator (ticket 23's future
+    territory) must be skipped, not spuriously run/failed, for a PJNZ
+    whose tags don't satisfy it.
+    """
+    synthetic = dict(spectrum_track.SPECTRUM_INDICATORS)
+    synthetic["custom_need"] = {
+        "extract_leapfrog": lambda output_h5: None,  # noqa: ARG005
+        "extract_spectrum": lambda pjnz: None,  # noqa: ARG005
+        "tolerance": Tolerance(atol=1.0, rtol=0.01),
+        "exclusions": (),
+        "scope": tag("has_custom"),
+    }
+    monkeypatch.setattr(spectrum_track, "SPECTRUM_INDICATORS", synthetic)
+    monkeypatch.setattr(spectrum_track.classify, "classify", lambda workspace, pjnz: frozenset())  # noqa: ARG005
+
+    def fake_diff(name, output_h5, pjnz, pjnz_label=None):  # noqa: ARG001
+        return Verdict(indicator=name, passed=True, max_abs_diff=0.0, n_cells=10, n_failed=0)
+
+    monkeypatch.setattr(spectrum_track, "diff_spectrum_indicator", fake_diff)
+
+    pjnz_dir = tmp_path / "corpus"
+    pjnz_dir.mkdir()
+    (pjnz_dir / "untagged.PJNZ").touch()
+    comment_path = tmp_path / "comment.md"
+
+    result = runner.invoke(app, ["run", "main", "--pjnz-dir", str(pjnz_dir), "--comment-out", str(comment_path)])
+
+    assert result.exit_code == 0, result.output
+    assert "SKIP  custom_need" in result.output
+    assert "PASS  custom_need" not in result.output

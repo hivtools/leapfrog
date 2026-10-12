@@ -64,6 +64,7 @@ ever need to line up cell-for-cell.
 
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -80,23 +81,47 @@ class SpectrumExtractError(RuntimeError):
     """Raised when a PJNZ's Spectrum modvars can't be read or aligned."""
 
 
+@lru_cache(maxsize=2)
+def _import_modvars_cached(resolved_pjnz: str) -> dict:
+    """Do the real import work, cached -- `_import_modvars` is the public wrapper.
+
+    Keyed on a resolved-path *string* (not a `Path`) since `lru_cache`
+    needs a hashable key and this is called only through `_import_modvars`
+    below, never directly. `maxsize=2` is deliberately small: each of the
+    5 `extract_spectrum_*` calls for one PJNZ (`diff_spectrum_indicator`
+    runs one per blessed indicator) hits this with the *same* resolved
+    path, so a cache of 1 would already amortize that -- 2 gives a little
+    slack without letting a large multi-PJNZ corpus walk hold more than a
+    couple of full modvars dicts in memory at once. A failed import
+    (`SpectrumExtractError`) is never cached -- `functools.lru_cache`
+    doesn't memoize an exception, so a transient failure is retried on the
+    next call rather than "stuck" failing forever.
+    """
+    from SpectrumCommon.Util.ConvertNumpy import modvars_to_numpy  # noqa: PLC0415
+    from Tools.ImportPJNZ.Importer import GB_ImportProjectionFromFile  # noqa: PLC0415
+
+    try:
+        raw_modvars, _unused_params, _unused_sheet, _unused_projection = GB_ImportProjectionFromFile(resolved_pjnz)
+    except Exception as e:
+        msg = f"Could not import Spectrum modvars from {resolved_pjnz}: {e}"
+        raise SpectrumExtractError(msg) from e
+    return modvars_to_numpy(raw_modvars)
+
+
 def _import_modvars(pjnz: Path) -> dict:
     """Import `pjnz` and return its modvars dict (list values as numpy arrays).
 
     Lazy-imports the avenir packages (same pattern as `cli.py`'s
     `_azure_blob_service_client` for `azure-identity`/`azure-storage-blob`)
     so importing this module doesn't hard-require them for a caller that
-    never touches the Spectrum track.
+    never touches the Spectrum track. Cached (see `_import_modvars_cached`)
+    because every one of the five `extract_spectrum_*` functions calls
+    this independently -- without caching, `diff_spectrum_indicator`
+    re-parses the same PJNZ via the proprietary importer once per
+    indicator (5x) instead of once per file, for every PJNZ in a corpus
+    walk (`spectrum_track.py`'s `run` command).
     """
-    from SpectrumCommon.Util.ConvertNumpy import modvars_to_numpy  # noqa: PLC0415
-    from Tools.ImportPJNZ.Importer import GB_ImportProjectionFromFile  # noqa: PLC0415
-
-    try:
-        raw_modvars, _unused_params, _unused_sheet, _unused_projection = GB_ImportProjectionFromFile(str(pjnz))
-    except Exception as e:
-        msg = f"Could not import Spectrum modvars from {pjnz}: {e}"
-        raise SpectrumExtractError(msg) from e
-    return modvars_to_numpy(raw_modvars)
+    return _import_modvars_cached(str(pjnz.resolve()))
 
 
 def _year_window(modvars: dict, pjnz: Path) -> tuple[int, int]:

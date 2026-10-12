@@ -4,12 +4,19 @@
 # (ticket 21's `regression-track.yml`, if/once it exists) -- see
 # `.scratch/leapfrog-validation/PRD.md`'s "Reporting & UI" section.
 #
-# This job is deliberately **not** a required status check -- see this
-# repo's branch-protection settings (outside this file's reach; see this
-# workflow's own trailing comment for the documented limitation). The
-# `continue-on-error: true` below is a belt-and-suspenders guard against
-# ever accidentally blocking a merge even if someone later adds this job's
-# name to the required list by mistake.
+# This job is deliberately **not** a required status check. That's the
+# entire mechanism -- a GitHub Actions check that is never added to a
+# repo's branch-protection "required status checks" list cannot block a
+# merge, full stop, regardless of whether it reports pass or fail. There
+# is deliberately no `continue-on-error: true` anywhere below forcing this
+# job green: doing that would hide a real crash behind an all-green,
+# comment-less silence, which defeats the entire point of an informational
+# check (confirmed live, PR #401's first throwaway run: a real crash
+# -- see the fetch-depth comment below -- reported job conclusion
+# "success" with zero comment posted, because an earlier draft of this
+# file had `continue-on-error: true` on the comparison step). This job's
+# name was not added to this repo's required-checks list by this change,
+# and should not be -- see this file's trailing comment.
 #
 # Same fork-PR gating pattern ticket 20's `infra/README.md` documents for
 # the regression track: GitHub doesn't issue OIDC tokens (or secrets) to
@@ -28,8 +35,9 @@ jobs:
   spectrum-comparison:
     runs-on: ubuntu-latest
     # Never required to pass for a PR to merge -- see the header comment.
-    # `continue-on-error` on the comparison step (below) is the real guard;
-    # this permissions/outer-job setup doesn't change based on it.
+    # This job's conclusion is left to reflect reality (pass/fail/error);
+    # non-blocking comes from branch-protection config, not from forcing
+    # the step/job status green.
     permissions:
       contents: read
       pull-requests: write
@@ -40,6 +48,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Full history, not the default shallow fetch-depth=1: this job
+          # resolves/checks out the PR's own head SHA a second time, inside
+          # the job, via `git_utils.resolve_ref`/`ensure_worktree`
+          # (`leapfrog_validate.build`'s per-ref worktree). A depth-1
+          # checkout of the pull_request merge commit does not fetch the
+          # head commit object itself -- confirmed live (PR #401's
+          # throwaway verification run): `git rev-parse --verify <head-sha>`
+          # failed with "fatal: Needed a single revision" even though that
+          # exact SHA is `github.event.pull_request.head.sha`. Any future
+          # job using the same `leapfrog_validate` ref-resolution machinery
+          # (e.g. ticket 21's regression track, which needs *two* refs)
+          # will hit the identical issue without this.
+          fetch-depth: 0
 
       - uses: r-lib/actions/setup-pandoc@v2
 
@@ -80,9 +102,6 @@ jobs:
 
       - name: Run Spectrum-comparison track
         if: github.event.pull_request.head.repo.full_name == github.repository
-        # Never blocks the PR even if this job's name is ever mistakenly
-        # added to a required-checks list -- see header comment.
-        continue-on-error: true
         shell: bash
         working-directory: leapfrog-validate
         env:
@@ -122,17 +141,20 @@ jobs:
           header: leapfrog-vs-spectrum-comparison
           path: leapfrog-validate/spectrum-comment.md
 
-# Known limitation, same shape as ticket 16/20's own flagged sandbox gaps:
-# this workflow was authored and reasoned through in a sandbox with no
-# Azure credentials and no network path to a live storage account or to
-# github.com's Actions runners -- it has NOT been exercised by a real
-# GitHub Actions run from this authoring session. One real, throwaway PR
-# against hivtools/leapfrog was opened to verify this file fires, builds,
-# authenticates to Azure, and posts a comment for real -- see this
-# ticket's Comments section in
-# `.scratch/leapfrog-validation/issues/22-spectrum-track-ci-nonblocking-comment.md`
-# for that PR's number and outcome; it was closed and its branch deleted
-# immediately after.
+# Live-verified, not just authored in a sandbox with no Azure credentials
+# and no real GitHub Actions access: a throwaway PR against
+# hivtools/leapfrog exercised this file for real (checkout, build, Azure
+# OIDC login, the comparison run, and posting the sticky comment). Two
+# real bugs were only found this way, not by local review: (1) the
+# default actions/checkout shallow fetch doesn't include the PR head
+# commit object `git_utils.resolve_ref` needs -- fixed by `fetch-depth: 0`
+# above; (2) an earlier draft had `continue-on-error: true` on the
+# comparison step, which silently turned a real crash into a green,
+# comment-less job -- removed, see the header comment. Full before/after
+# run links and the throwaway PR's number are recorded in this ticket's
+# Comments section:
+# `.scratch/leapfrog-validation/issues/22-spectrum-track-ci-nonblocking-comment.md`.
+# That PR was closed and its branch deleted once verification was done.
 #
 # Also out of this file's reach: GitHub's branch-protection "required
 # status checks" list is repository configuration, not something a

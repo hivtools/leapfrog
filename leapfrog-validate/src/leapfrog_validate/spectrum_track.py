@@ -49,8 +49,8 @@ from typing import Annotated
 
 import typer
 
-from leapfrog_validate import build, git_utils, model_run, params
-from leapfrog_validate.cli import AZURE_CORPUS_PREFIX_DEFAULT, _pjnz_label, _resolve_corpus_files
+from leapfrog_validate import build, classify, git_utils, model_run, params
+from leapfrog_validate.cli import AZURE_CORPUS_PREFIX_DEFAULT, _pjnz_label, _prepare_ref, _resolve_corpus_files
 from leapfrog_validate.model_run import ModelRunError
 from leapfrog_validate.params import ParamsBuildError
 from leapfrog_validate.report_spectrum import IndicatorResult, PjnzResult, format_comment
@@ -60,14 +60,44 @@ from leapfrog_validate.spectrum_indicators import SPECTRUM_INDICATORS, diff_spec
 app = typer.Typer(help="Spectrum-comparison track: leapfrog output vs Spectrum's own PJNZ modvars.")
 
 DEFAULT_CACHE_DIR = Path.home() / ".cache" / "leapfrog-validate"
-REF_HELP = "Git ref/SHA to build leapfrogr at."
+REF_HELP = f"Git ref/SHA to build leapfrogr at, or '{git_utils.WORKING_TREE}' for your own uncommitted checkout."
 CACHE_DIR_HELP = "Where per-ref build workspaces (git worktrees, installed R libraries) are cached."
 
+# `_prepare_ref` itself is reused directly from `cli.py` (read-only import,
+# not redefined here) -- it's a plain `git_utils.prepare_source` +
+# `build.build_leapfrogr` wrapper with no CLI-specific logic, so
+# duplicating its body here would just be a second copy to keep in sync.
 
-def _prepare_ref(repo_root: Path, cache_dir: Path, ref: str) -> build.BuildWorkspace:
-    worktree = git_utils.prepare_source(repo_root, cache_dir, ref)
-    typer.echo(f"Building leapfrogr at {worktree} ...")
-    return build.build_leapfrogr(worktree)
+
+def _needs_tags() -> bool:
+    """Return whether any `SPECTRUM_INDICATORS` entry has a non-`ALL` `Scope`.
+
+    Mirrors `cli.py`'s `compare_cmd` exactly: today's five blessed
+    indicators are all `ALL`-scoped, so this is `False` and no `classify`
+    call (which shells out to Rscript) is ever paid for -- but a future
+    tag-scoped Spectrum-track indicator (ticket 23's territory) becomes
+    eligible for scope filtering with no further code change here.
+    """
+    return any(spec["scope"].tags is not None for spec in SPECTRUM_INDICATORS.values())
+
+
+def _applicable_indicator_names(pjnz_tags: frozenset[str]) -> list[str]:
+    """Return `SPECTRUM_INDICATORS` names whose `Scope` accepts `pjnz_tags`, sorted."""
+    return sorted(name for name, spec in SPECTRUM_INDICATORS.items() if spec["scope"].applies_to(pjnz_tags))
+
+
+def _classify_tags(workspace: build.BuildWorkspace, pjnz: Path) -> frozenset[str]:
+    """`classify.classify(...)`, skipped entirely when no indicator needs tags (see `_needs_tags`).
+
+    No `--manifest` support here (unlike `cli.py`'s `compare`/`classify`
+    commands) -- out of this ticket's scope, since none of the five
+    blessed Spectrum-track indicators need a non-derivable tag today;
+    add it here the same way `compare_cmd` did if a future tag-scoped
+    Spectrum indicator needs one.
+    """
+    if not _needs_tags():
+        return frozenset()
+    return classify.classify(workspace, pjnz)
 
 
 @app.command("diff-one")
@@ -88,16 +118,33 @@ def diff_one_cmd(
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
         workspace = _prepare_ref(repo_root, cache_dir, ref)
+
+        try:
+            pjnz_tags = _classify_tags(workspace, pjnz)
+        except classify.ClassifyError as e:
+            typer.echo(f"ERROR  could not classify: {e}", err=True)
+            raise typer.Exit(1) from e
+
+        applicable = _applicable_indicator_names(pjnz_tags)
+        skipped = sorted(set(SPECTRUM_INDICATORS) - set(applicable))
+
         params_path = tmp_path / "params.h5"
         output_path = tmp_path / "output.h5"
         params.build_params(workspace, pjnz, params_path)
         model_run.run_model(workspace, params_path, output_path, configuration)
 
         all_passed = True
-        for name in sorted(SPECTRUM_INDICATORS):
-            verdict = diff_spectrum_indicator(name, output_path, pjnz)
+        for name in applicable:
+            try:
+                verdict = diff_spectrum_indicator(name, output_path, pjnz)
+            except SpectrumExtractError as e:
+                typer.echo(f"ERROR  {name}: could not extract Spectrum modvars: {e}", err=True)
+                all_passed = False
+                continue
             typer.echo(f"{'PASS' if verdict.passed else 'FAIL'}  {name}")
             all_passed = all_passed and verdict.passed
+        for name in skipped:
+            typer.echo(f"SKIP  {name}: pjnz tags {sorted(pjnz_tags)!r} don't satisfy its scope")
 
     raise typer.Exit(0 if all_passed else 1)
 
@@ -118,6 +165,17 @@ def _compare_one_pjnz_against_spectrum(
     whole corpus walk.
     """
     typer.echo(f"\n== {label} ==")
+    try:
+        pjnz_tags = _classify_tags(workspace, pjnz)
+    except classify.ClassifyError as e:
+        typer.echo(f"  ERROR  could not classify: {e}", err=True)
+        return PjnzResult(label=label, error="could not classify this PJNZ")
+
+    applicable = _applicable_indicator_names(pjnz_tags)
+    skipped = sorted(set(SPECTRUM_INDICATORS) - set(applicable))
+    if pjnz_tags:
+        typer.echo(f"  tags: {', '.join(sorted(pjnz_tags))}")
+
     safe_base = label.removesuffix(pjnz.suffix).replace("/", "__")
     params_path = tmp_dir / f"{safe_base}-params.h5"
     output_path = tmp_dir / f"{safe_base}-output.h5"
@@ -129,7 +187,7 @@ def _compare_one_pjnz_against_spectrum(
         return PjnzResult(label=label, error="could not build/run leapfrog for this PJNZ")
 
     indicator_results = []
-    for name in sorted(SPECTRUM_INDICATORS):
+    for name in applicable:
         try:
             verdict = diff_spectrum_indicator(name, output_path, pjnz, pjnz_label=label)
         except SpectrumExtractError as e:
@@ -138,6 +196,8 @@ def _compare_one_pjnz_against_spectrum(
             continue
         typer.echo(f"  {'PASS' if verdict.passed else 'FAIL'}  {name}")
         indicator_results.append(IndicatorResult(name=name, passed=verdict.passed))
+    for name in skipped:
+        typer.echo(f"  SKIP  {name}: pjnz tags {sorted(pjnz_tags)!r} don't satisfy its scope")
 
     result = PjnzResult(label=label, indicators=tuple(indicator_results))
     typer.echo(f"  {label}: {'PASS' if result.passed else 'FAIL'}")
@@ -193,7 +253,15 @@ def run_cmd(  # noqa: PLR0913, PLR0917 - mirrors cli.py's compare_cmd's similarl
     exit here does not block a merge.
     """
     repo_root = git_utils.find_repo_root()
-    ref_sha = git_utils.resolve_ref(repo_root, ref)
+    # `git_utils.resolve_ref` only supports a committed ref/SHA -- it has no
+    # SHA to resolve `WORKING_TREE` to (ticket 19's Answer, same sentinel
+    # `_prepare_ref`/`prepare_source` already special-case). There's no
+    # frozen commit to bake into a reproduce command for an uncommitted
+    # checkout either, so the sentinel itself is the most honest "ref_sha"
+    # to display/reproduce with -- a developer re-running the baked
+    # reproduce command against their own working tree gets the same
+    # sentinel back, not a stale SHA from whenever this ran.
+    ref_sha = ref if ref == git_utils.WORKING_TREE else git_utils.resolve_ref(repo_root, ref)
 
     # Same deliberate ordering as `cli.py`'s `compare_cmd` (ticket 20's
     # fixed real bug): consult the env-var fallback only when *neither*
