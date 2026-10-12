@@ -139,7 +139,7 @@ jobs:
             echo "log file exists: $(test -f spectrum-debug-stderr.log && echo yes || echo no)"
             echo "log file size: $(wc -c < spectrum-debug-stderr.log 2>/dev/null || echo n/a)"
             echo '```'
-            grep -A5 "could not build/run leapfrog" spectrum-debug-stderr.log | head -120
+            awk '/could not build\/run leapfrog/{c++} c==1' spectrum-debug-stderr.log | head -200
             echo '```'
           } > /tmp/debug-comment.md
           cat /tmp/debug-comment.md
