@@ -109,9 +109,13 @@ jobs:
           AZURE_STORAGE_CONTAINER: ${{ vars.AZURE_STORAGE_CONTAINER }}
         run: |
           uv sync
+          set +e
           uv run python -m leapfrog_validate.spectrum_track run \
             "${{ github.event.pull_request.head.sha }}" \
-            --comment-out spectrum-comment.md 2> >(tee spectrum-debug-stderr.log >&2)
+            --comment-out spectrum-comment.md 2>&1 | tee spectrum-debug-stderr.log
+          status=${PIPESTATUS[0]}
+          set -e
+          exit "$status"
         # Deliberately no --azure-container/--azure-account flags: both
         # fall back to the AZURE_STORAGE_CONTAINER/AZURE_STORAGE_ACCOUNT env
         # vars above (same names ticket 16's infra/deploy.sh publishes as
@@ -128,14 +132,19 @@ jobs:
         shell: bash
         working-directory: leapfrog-validate
         run: |
+          set +e
           {
             echo "<!-- temp-debug-401 -->"
             echo "### TEMP DEBUG: first build/run errors"
+            echo "log file exists: $(test -f spectrum-debug-stderr.log && echo yes || echo no)"
+            echo "log file size: $(wc -c < spectrum-debug-stderr.log 2>/dev/null || echo n/a)"
             echo '```'
-            grep -A3 "could not build/run leapfrog" spectrum-debug-stderr.log | head -80
+            grep -A5 "could not build/run leapfrog" spectrum-debug-stderr.log | head -120
             echo '```'
           } > /tmp/debug-comment.md
+          cat /tmp/debug-comment.md
           gh pr comment 401 --repo hivtools/leapfrog --body-file /tmp/debug-comment.md
+          set -e
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
