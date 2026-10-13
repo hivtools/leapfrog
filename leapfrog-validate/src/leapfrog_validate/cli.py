@@ -49,6 +49,12 @@ ARCHIVE_ROOT_HELP = (
 ARCHIVE_REMOTE_HELP = "Orderly location the archive pulls missing packets from and pushes new packets to."
 ARCHIVE_REMOTE_PATH_HELP = "Directory to register --archive-remote at, as a path location, if it is not registered yet."
 
+PJNZ_LABEL_FLAG = "--pjnz-label"
+PJNZ_LABEL_HELP = (
+    "Name this PJNZ in the archive key. Defaults to the file name; `compare` and the CI drivers use the "
+    "corpus-relative path (for example `ETH/foo.PJNZ`), so pass that to share their packets."
+)
+
 # Shared by this module's global options and `spectrum_track run`'s own.
 ArchiveRootOption = Annotated[Path | None, typer.Option(envvar=archive_module.ENV_ROOT, help=ARCHIVE_ROOT_HELP)]
 ArchiveRemoteOption = Annotated[str | None, typer.Option(envvar=archive_module.ENV_REMOTE, help=ARCHIVE_REMOTE_HELP)]
@@ -140,8 +146,13 @@ def run_cmd(  # noqa: PLR0913, PLR0917 - a CLI command's flat option surface; ty
             exists=True,
             dir_okay=False,
             help="The PJNZ file PARAMS was built from. Names the archive key, so it is required "
-            "when an archive is configured and ignored otherwise.",
+            "when an archive is configured and ignored otherwise. Not checked against PARAMS: "
+            "naming the wrong file archives the output under the wrong key.",
         ),
+    ] = None,
+    pjnz_label: Annotated[
+        str | None,
+        typer.Option(PJNZ_LABEL_FLAG, help=PJNZ_LABEL_HELP),
     ] = None,
 ) -> None:
     """Build leapfrogr at REF and run the model against PARAMS, producing output.h5.
@@ -167,7 +178,7 @@ def run_cmd(  # noqa: PLR0913, PLR0917 - a CLI command's flat option surface; ty
             archive=archive,
             ref=identity,
             pjnz=pjnz,
-            pjnz_label=pjnz.name,
+            pjnz_label=pjnz_label or pjnz.name,
             output_path=output,
             configuration=configuration,
             compute=lambda: model_run.run_model(workspace, params_path, output, configuration),
@@ -183,6 +194,7 @@ def extract_cmd(
     output: Annotated[Path, typer.Option("--output", "-o", help="Where to write the extract artifact.")] = Path(
         "extract.h5"
     ),
+    pjnz_label: Annotated[str | None, typer.Option(PJNZ_LABEL_FLAG, help=PJNZ_LABEL_HELP)] = None,
 ) -> None:
     """Read PJNZ's Spectrum modvars (no live Spectrum.exe) into an extract.h5 artifact.
 
@@ -194,7 +206,11 @@ def extract_cmd(
     """
     with tempfile.TemporaryDirectory() as tmp:
         modvars = spectrum_archive.obtain_modvars(
-            archive=ctx.obj["archive"], pjnz=pjnz, pjnz_label=pjnz.name, work_dir=Path(tmp), log=typer.echo
+            archive=ctx.obj["archive"],
+            pjnz=pjnz,
+            pjnz_label=pjnz_label or pjnz.name,
+            work_dir=Path(tmp),
+            log=typer.echo,
         )
     tags = spectrum_archive.blessed_modvar_tags()
     spectrum_archive.write_extract_h5({tag: modvars[tag] for tag in tags}, output)

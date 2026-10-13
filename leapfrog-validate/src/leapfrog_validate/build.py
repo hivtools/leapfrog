@@ -40,6 +40,7 @@ class LazyWorkspace:
         self._workspace: BuildWorkspace | None = None
 
     def _get(self) -> BuildWorkspace:
+        """Return the built workspace, running `prepare` the first time."""
         if self._workspace is None:
             self._workspace = self._prepare()
         return self._workspace

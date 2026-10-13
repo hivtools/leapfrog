@@ -29,8 +29,7 @@ import h5py
 import numpy as np
 
 from leapfrog_validate import spectrum_extract
-from leapfrog_validate.archive import Archive, ArchiveError
-from leapfrog_validate.archived_run import file_sha256
+from leapfrog_validate.archive import Archive, ArchiveError, file_sha256
 from leapfrog_validate.subprocess_utils import summarize_error_reason
 
 EXTRACT_REPORT = "spectrum_extract"

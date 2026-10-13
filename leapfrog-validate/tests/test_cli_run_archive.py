@@ -83,3 +83,13 @@ def test_run_without_an_archive_ignores_pjnz_and_always_runs(world, tmp_path):
     _invoke(tmp_path, archived=False)
 
     assert world.model_runs == 2
+
+
+def test_pjnz_label_names_the_key_so_run_can_share_compares_packets(world, tmp_path):
+    pjnz = str(tmp_path / "a.PJNZ")
+
+    result, _ = _invoke(tmp_path, "--pjnz", pjnz, "--pjnz-label", "ETH/a.PJNZ")
+
+    assert result.exit_code == 0, result.output
+    assert world.archive.stores[0][1]["pjnz"] == "ETH/a.PJNZ"
+    assert "archive stored: leapfrog_run ETH/a.PJNZ" in result.output

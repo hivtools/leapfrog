@@ -138,9 +138,20 @@ Two kinds of packet, and nothing else:
 | `leapfrog_run` | raw `output.h5` | PJNZ label, PJNZ content hash, resolved ref SHA, model configuration | the ref as given (`ref_given`), for `latest(parameter:ref_given == "main")` lookups |
 | `spectrum_extract` | the raw Spectrum modvars the blessed indicators read (`extract.h5`) | PJNZ label, PJNZ content hash (no git ref) | importer version |
 
+The key uses a hash of the PJNZ file contents, not only its name, so an edited
+file under the same name never reuses an old packet. (The ticket text named
+the corpus submodule SHA; the corpus now lives in Azure Blob, which has no
+such SHA, and a content hash covers the same need.) `run` and `extract`
+label the PJNZ with its file name unless you pass `--pjnz-label`; `compare`
+and the CI drivers use the corpus-relative path, so pass that label to share
+their packets. A packet keeps the `ref_given` of the run that stored it: the
+same commit reached later under another ref name reuses the packet and adds
+no new `ref_given` entry.
+
 Before computing, `compare`, `run`, `extract`, and both CI drivers look for a
 packet at the exact key and reuse it. With an archive configured the
-leapfrogr build is lazy: a fully cached run builds nothing. An uncommitted
+leapfrogr build is lazy: a fully cached run builds nothing (except where a
+tag-scoped indicator needs PJNZ tags, which come from a live R call). An uncommitted
 `working-tree` is never archived.
 
 Indicator extraction and the pass/fail `diff` are **never** archived. They

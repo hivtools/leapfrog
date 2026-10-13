@@ -15,7 +15,6 @@ from fake_archive import requires_orderly
 
 from leapfrog_validate.archive import ArchiveError, OrderlyArchive
 
-
 REPORT = "leapfrog_run"
 KEY = {"pjnz": "a.PJNZ", "pjnz_sha256": "abc", "ref_sha": "d" * 40, "configuration": "Spectrum"}
 EXTRA = {"ref_given": "main"}

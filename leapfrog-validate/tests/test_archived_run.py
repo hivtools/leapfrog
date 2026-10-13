@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 from fake_archive import FakeArchive
 
-from leapfrog_validate.archive import ArchiveError
-from leapfrog_validate.archived_run import Origin, RefIdentity, file_sha256, obtain_output
+from leapfrog_validate.archive import ArchiveError, file_sha256
+from leapfrog_validate.archived_run import Origin, RefIdentity, obtain_output
 
 SHA = "a" * 40
 MAIN = RefIdentity(given="main", sha=SHA)

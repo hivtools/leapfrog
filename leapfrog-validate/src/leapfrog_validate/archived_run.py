@@ -22,13 +22,12 @@ output. A reused packet keeps the `ref_given` of whoever stored it first.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from leapfrog_validate.archive import Archive, ArchiveError
+from leapfrog_validate.archive import Archive, ArchiveError, file_sha256
 from leapfrog_validate.subprocess_utils import summarize_error_reason
 
 RUN_REPORT = "leapfrog_run"
@@ -48,15 +47,6 @@ class RefIdentity:
 
     given: str
     sha: str
-
-
-def file_sha256(path: Path) -> str:
-    """SHA-256 hex digest of `path`'s contents."""
-    digest = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(1 << 20), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def run_key(ref: RefIdentity, pjnz: Path, pjnz_label: str, configuration: str) -> dict[str, str]:
@@ -93,31 +83,32 @@ def obtain_output(  # noqa: PLR0913 - one seam, every input explicit; callers pa
     is that a broken archive degrades quietly to "everything recomputes",
     so the warning line is the signal to watch for in CI logs.
     """
-    use_archive = archive is not None and ref is not None
-    key: dict[str, str] = {}
-    if use_archive:
-        key = run_key(ref, pjnz, pjnz_label, configuration)
-        try:
-            if archive.fetch(RUN_REPORT, key, OUTPUT_ARTEFACT, output_path):
-                log(f"archive hit: {RUN_REPORT} {pjnz_label}")
-                return Origin.ARCHIVE
-        except ArchiveError as e:
-            log(
-                f"archive WARNING: could not read {RUN_REPORT} {pjnz_label}; "
-                f"computing instead ({summarize_error_reason(e)})"
-            )
-        else:
-            log(f"archive miss: {RUN_REPORT} {pjnz_label}")
+    if archive is None or ref is None:
+        # No archive configured, or an uncommitted working tree (no SHA to key on): plain compute.
+        compute()
+        return Origin.COMPUTED
+
+    key = run_key(ref, pjnz, pjnz_label, configuration)
+    try:
+        if archive.fetch(RUN_REPORT, key, OUTPUT_ARTEFACT, output_path):
+            log(f"archive hit: {RUN_REPORT} {pjnz_label}")
+            return Origin.ARCHIVE
+    except ArchiveError as e:
+        log(
+            f"archive WARNING: could not read {RUN_REPORT} {pjnz_label}; "
+            f"computing instead ({summarize_error_reason(e)})"
+        )
+    else:
+        log(f"archive miss: {RUN_REPORT} {pjnz_label}")
 
     compute()
 
-    if use_archive:
-        try:
-            archive.store(RUN_REPORT, key, {"ref_given": ref.given}, OUTPUT_ARTEFACT, output_path)
-            log(f"archive stored: {RUN_REPORT} {pjnz_label}")
-        except ArchiveError as e:
-            log(
-                f"archive WARNING: could not write {RUN_REPORT} {pjnz_label}; "
-                f"result not archived ({summarize_error_reason(e)})"
-            )
+    try:
+        archive.store(RUN_REPORT, key, {"ref_given": ref.given}, OUTPUT_ARTEFACT, output_path)
+        log(f"archive stored: {RUN_REPORT} {pjnz_label}")
+    except ArchiveError as e:
+        log(
+            f"archive WARNING: could not write {RUN_REPORT} {pjnz_label}; "
+            f"result not archived ({summarize_error_reason(e)})"
+        )
     return Origin.COMPUTED

@@ -19,8 +19,8 @@ from fake_archive import FakeArchive, requires_orderly
 from typer.testing import CliRunner
 
 from leapfrog_validate import archive as archive_module
-from leapfrog_validate.archive import OrderlyArchive
 from leapfrog_validate import cli, git_utils, indicators
+from leapfrog_validate.archive import OrderlyArchive
 from leapfrog_validate.build import BuildWorkspace
 from leapfrog_validate.cli import app
 

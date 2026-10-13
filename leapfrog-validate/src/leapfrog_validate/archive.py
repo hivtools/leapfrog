@@ -19,6 +19,7 @@ machines share one history.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from collections.abc import Mapping
@@ -72,6 +73,7 @@ class OrderlyArchive:
     remote_path: Path | None = None
 
     def _run(self, *args: str) -> str:
+        """Run `archive.R <command> ...` against this root (and remote); return its stdout."""
         cmd = ["Rscript", str(_SCRIPT), args[0], str(_PROJECT), str(self.root.resolve()), *args[1:]]
         if self.remote is not None:
             cmd.append(f"--remote={self.remote}")
@@ -92,7 +94,17 @@ class OrderlyArchive:
         self._run("store", report, _json(key), _json(extra), str(source.resolve()))
 
 
+def file_sha256(path: Path) -> str:
+    """SHA-256 hex digest of `path`'s contents: the content half of a PJNZ's archive identity."""
+    digest = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def _json(mapping: Mapping[str, str]) -> str:
+    """Encode a key/extra mapping as the JSON object `archive.R` expects."""
     return json.dumps(dict(mapping))
 
 

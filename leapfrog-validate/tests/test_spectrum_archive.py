@@ -12,8 +12,7 @@ import pytest
 from fake_archive import FakeArchive
 
 from leapfrog_validate import spectrum_extract
-from leapfrog_validate.archive import ArchiveError
-from leapfrog_validate.archived_run import file_sha256
+from leapfrog_validate.archive import ArchiveError, file_sha256
 from leapfrog_validate.spectrum_archive import (
     EXTRACT_REPORT,
     obtain_modvars,
