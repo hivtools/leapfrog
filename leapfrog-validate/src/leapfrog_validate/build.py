@@ -6,6 +6,7 @@ ref is cheap.
 """
 
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -22,6 +23,36 @@ class BuildWorkspace:
 
     worktree: Path
     r_library: Path
+
+
+class LazyWorkspace:
+    """A `BuildWorkspace` stand-in that runs `prepare` on first use, not on creation.
+
+    Quacks like `BuildWorkspace` (`worktree`, `r_library`), so `params`,
+    `model_run`, and `classify` accept it unchanged. Exists for ticket 24's
+    archive: a cache hit never touches the workspace, so a fully cached run
+    never pays for checkout + codegen + the leapfrogr compile.
+    """
+
+    def __init__(self, prepare: Callable[[], BuildWorkspace]) -> None:
+        """Remember `prepare`; call nothing yet."""
+        self._prepare = prepare
+        self._workspace: BuildWorkspace | None = None
+
+    def _get(self) -> BuildWorkspace:
+        if self._workspace is None:
+            self._workspace = self._prepare()
+        return self._workspace
+
+    @property
+    def worktree(self) -> Path:
+        """The checked-out source tree (builds on first access)."""
+        return self._get().worktree
+
+    @property
+    def r_library(self) -> Path:
+        """The R library leapfrogr was installed into (builds on first access)."""
+        return self._get().r_library
 
 
 def build_leapfrogr(worktree: Path) -> BuildWorkspace:

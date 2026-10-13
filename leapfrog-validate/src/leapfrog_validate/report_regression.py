@@ -41,7 +41,11 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from leapfrog_validate import archive as archive_module
 from leapfrog_validate import classify, cli, git_utils, manifest
+from leapfrog_validate.archive import Archive
+from leapfrog_validate.archived_run import RefIdentity
+from leapfrog_validate.build import LazyWorkspace
 from leapfrog_validate.subprocess_utils import summarize_error_reason
 
 _PASS_MARK = "✅"
@@ -444,6 +448,7 @@ def compute_regression_report(  # noqa: PLR0913
     azure_prefix: str = cli.AZURE_CORPUS_PREFIX_DEFAULT,
     manifest_path: Path | None = None,
     configuration: str = "Spectrum",
+    archive: Archive | None = None,
     log: Callable[[str], None] = print,
 ) -> RegressionReport:
     """Run the regression track (`ref` vs. `candidate`, every PJNZ in the corpus) and roll it up.
@@ -460,6 +465,13 @@ def compute_regression_report(  # noqa: PLR0913
     requirement. Defaults to `print`; the workflow script below passes it
     straight through to stdout, so CI's own job log is exactly as
     restricted as a human reading it live.
+
+    `archive` (ticket 24), if given, is looked up for each side's raw
+    `output.h5` before any compute and filled on a miss. In CI this is what
+    makes the usually-unchanged base ref (`main`) nearly free on every PR
+    push after the first. Verdicts are never archived: the diff below is
+    always computed live from the archived bytes. Its log lines carry only
+    packet names and file labels, so the "no numbers in CI logs" rule holds.
 
     Exactly one of `pjnz_dir`/`azure_container` must be given, same
     mutual-exclusivity rule as `compare`'s own CLI (not re-validated by a
@@ -492,18 +504,29 @@ def compute_regression_report(  # noqa: PLR0913
             tmp_path=tmp_path,
         )
 
-        log(f"Building ref workspace ({ref_sha[:SHORT_SHA_LEN]}) ...")
-        ref_workspace = cli._prepare_ref(repo_root, cache_dir, ref_sha)
-        log(f"Building candidate workspace ({candidate_sha[:SHORT_SHA_LEN]}) ...")
-        candidate_workspace = cli._prepare_ref(repo_root, cache_dir, candidate_sha)
-        workspaces = cli._RefPair(ref=ref_workspace, candidate=candidate_workspace)
+        if archive is None:
+            log(f"Building ref workspace ({ref_sha[:SHORT_SHA_LEN]}) ...")
+            ref_workspace = cli._prepare_ref(repo_root, cache_dir, ref_sha)
+            log(f"Building candidate workspace ({candidate_sha[:SHORT_SHA_LEN]}) ...")
+            candidate_workspace = cli._prepare_ref(repo_root, cache_dir, candidate_sha)
+            workspaces = cli._RefPair(ref=ref_workspace, candidate=candidate_workspace)
+        else:
+            # Lazy: an archive hit never touches the workspace, so a fully
+            # cached run builds nothing.
+            workspaces = cli._RefPair(
+                ref=LazyWorkspace(lambda: cli._prepare_ref(repo_root, cache_dir, ref_sha)),
+                candidate=LazyWorkspace(lambda: cli._prepare_ref(repo_root, cache_dir, candidate_sha)),
+                archive=archive,
+                ref_identity=RefIdentity(given=ref, sha=ref_sha),
+                candidate_identity=RefIdentity(given=candidate, sha=candidate_sha),
+            )
 
         for pjnz in corpus.files:
             label = cli._pjnz_label(pjnz, corpus.root)
             log(f"Comparing {label} ...")
             try:
                 pjnz_tags = (
-                    classify.classify(ref_workspace, pjnz, manifest_data, corpus_root=corpus.root)
+                    classify.classify(workspaces.ref, pjnz, manifest_data, corpus_root=corpus.root)
                     if needs_tags
                     else frozenset()
                 )
@@ -518,7 +541,7 @@ def compute_regression_report(  # noqa: PLR0913
             applicable = cli._applicable_indicator_names(pjnz_tags)
             scoped = cli._ScopedPjnz(path=pjnz, label=label, indicator_names=applicable)
             try:
-                verdicts = cli._compare_one_pjnz(workspaces, scoped, configuration, tmp_path)
+                verdicts = cli._compare_one_pjnz(workspaces, scoped, configuration, tmp_path, log)
             except (cli.params.ParamsBuildError, cli.model_run.ModelRunError) as e:
                 # A real corpus file can hit a pre-existing leapfrogr
                 # limitation unrelated to this ticket (e.g. ticket 16's
@@ -604,6 +627,12 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         help="Model configuration to run (ticket 21: the regression track always uses Spectrum).",
     )
     parser.add_argument("--out", type=Path, help="Where to write the rendered comment markdown.")
+    env_root, env_remote, env_remote_path = archive_module.settings_from_env()
+    parser.add_argument("--archive-root", type=Path, default=env_root, help=cli.ARCHIVE_ROOT_HELP)
+    parser.add_argument("--archive-remote", default=env_remote, help=cli.ARCHIVE_REMOTE_HELP)
+    parser.add_argument(
+        "--archive-remote-path", type=Path, default=env_remote_path, help=cli.ARCHIVE_REMOTE_PATH_HELP
+    )
     return parser
 
 
@@ -642,6 +671,9 @@ def main(argv: list[str] | None = None) -> int:
             azure_prefix=args.azure_prefix,
             manifest_path=args.manifest_path,
             configuration=args.configuration,
+            archive=archive_module.archive_from_settings(
+                args.archive_root, args.archive_remote, args.archive_remote_path
+            ),
         )
     except (RegressionTrackError, git_utils.GitError) as e:
         sys.stderr.write(f"leapfrog-validate regression track could not run: {e}\n")

@@ -98,4 +98,4 @@ ban-relative-imports = "all"
 [tool.ruff.lint.per-file-ignores]
 # Tests can use magic values, assertions, relative imports, and skip
 # docstrings on individual test functions (the test name says what it does).
-"tests/**/*" = ["PLR2004", "S101", "TID252", "D100", "D101", "D102", "D103"]
+"tests/**/*" = ["PLR2004", "S101", "TID252", "D100", "D101", "D102", "D103", "D107"]

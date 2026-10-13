@@ -51,7 +51,7 @@ def fake_build_and_run(monkeypatch):
 
 
 def test_diff_one_passes_when_every_indicator_passes(monkeypatch, tmp_path):
-    def fake_diff(name, output_h5, pjnz, pjnz_label=None):  # noqa: ARG001
+    def fake_diff(name, output_h5, pjnz, pjnz_label=None, modvars=None):  # noqa: ARG001
         return Verdict(indicator=name, passed=True, max_abs_diff=0.0, n_cells=10, n_failed=0)
 
     monkeypatch.setattr(spectrum_track, "diff_spectrum_indicator", fake_diff)
@@ -66,7 +66,7 @@ def test_diff_one_passes_when_every_indicator_passes(monkeypatch, tmp_path):
 
 
 def test_diff_one_fails_when_any_indicator_fails(monkeypatch, tmp_path):
-    def fake_diff(name, output_h5, pjnz, pjnz_label=None):  # noqa: ARG001
+    def fake_diff(name, output_h5, pjnz, pjnz_label=None, modvars=None):  # noqa: ARG001
         passed = name != "hiv_population"
         return Verdict(indicator=name, passed=passed, max_abs_diff=0.0, n_cells=10, n_failed=0 if passed else 3)
 
@@ -87,7 +87,7 @@ def test_diff_one_never_prints_a_raw_diff_magnitude(monkeypatch, tmp_path):
     must never show it.
     """
 
-    def fake_diff(name, output_h5, pjnz, pjnz_label=None):  # noqa: ARG001
+    def fake_diff(name, output_h5, pjnz, pjnz_label=None, modvars=None):  # noqa: ARG001
         return Verdict(indicator=name, passed=False, max_abs_diff=123456.789, n_cells=10, n_failed=3)
 
     monkeypatch.setattr(spectrum_track, "diff_spectrum_indicator", fake_diff)
@@ -117,7 +117,7 @@ def test_run_pjnz_dir_is_not_broken_by_ambient_azure_env_vars(monkeypatch, tmp_p
     monkeypatch.setenv("AZURE_STORAGE_CONTAINER", "pjnz-archive")
     monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "someaccount")
 
-    def fake_diff(name, output_h5, pjnz, pjnz_label=None):  # noqa: ARG001
+    def fake_diff(name, output_h5, pjnz, pjnz_label=None, modvars=None):  # noqa: ARG001
         return Verdict(indicator=name, passed=True, max_abs_diff=0.0, n_cells=10, n_failed=0)
 
     monkeypatch.setattr(spectrum_track, "diff_spectrum_indicator", fake_diff)
@@ -173,7 +173,7 @@ def test_run_rejects_both_corpus_sources_given_together(tmp_path):
 
 
 def test_run_writes_a_comment_file_and_reports_per_file_pass_fail(monkeypatch, tmp_path):
-    def fake_diff(name, output_h5, pjnz, pjnz_label=None):  # noqa: ARG001
+    def fake_diff(name, output_h5, pjnz, pjnz_label=None, modvars=None):  # noqa: ARG001
         passed = pjnz_label != "bad.PJNZ"
         return Verdict(indicator=name, passed=passed, max_abs_diff=0.0, n_cells=10, n_failed=0 if passed else 1)
 
@@ -198,7 +198,7 @@ def test_run_writes_a_comment_file_and_reports_per_file_pass_fail(monkeypatch, t
 
 
 def test_run_never_prints_a_raw_diff_magnitude(monkeypatch, tmp_path):
-    def fake_diff(name, output_h5, pjnz, pjnz_label=None):  # noqa: ARG001
+    def fake_diff(name, output_h5, pjnz, pjnz_label=None, modvars=None):  # noqa: ARG001
         return Verdict(indicator=name, passed=False, max_abs_diff=98765.4321, n_cells=10, n_failed=5)
 
     monkeypatch.setattr(spectrum_track, "diff_spectrum_indicator", fake_diff)
@@ -221,7 +221,7 @@ def test_run_catches_a_build_failure_for_one_file_without_aborting_the_batch(mon
             msg = "simulated build failure"
             raise params_module.ParamsBuildError(msg)
 
-    def fake_diff(name, output_h5, pjnz, pjnz_label=None):  # noqa: ARG001
+    def fake_diff(name, output_h5, pjnz, pjnz_label=None, modvars=None):  # noqa: ARG001
         return Verdict(indicator=name, passed=True, max_abs_diff=0.0, n_cells=10, n_failed=0)
 
     monkeypatch.setattr(params_module, "build_params", flaky_build_params)
@@ -249,7 +249,7 @@ def test_run_accepts_the_working_tree_sentinel_without_crashing(monkeypatch, tmp
     unconditionally.
     """
 
-    def fake_diff(name, output_h5, pjnz, pjnz_label=None):  # noqa: ARG001
+    def fake_diff(name, output_h5, pjnz, pjnz_label=None, modvars=None):  # noqa: ARG001
         return Verdict(indicator=name, passed=True, max_abs_diff=0.0, n_cells=10, n_failed=0)
 
     monkeypatch.setattr(spectrum_track, "diff_spectrum_indicator", fake_diff)
@@ -277,7 +277,7 @@ def test_run_skips_a_tag_scoped_indicator_for_an_untagged_pjnz(monkeypatch, tmp_
     synthetic = dict(spectrum_track.SPECTRUM_INDICATORS)
     synthetic["custom_need"] = {
         "extract_leapfrog": lambda output_h5: None,  # noqa: ARG005
-        "extract_spectrum": lambda pjnz: None,  # noqa: ARG005
+        "extract_spectrum": lambda pjnz, modvars=None: None,  # noqa: ARG005
         "tolerance": Tolerance(atol=1.0, rtol=0.01),
         "exclusions": (),
         "scope": tag("has_custom"),
@@ -285,7 +285,7 @@ def test_run_skips_a_tag_scoped_indicator_for_an_untagged_pjnz(monkeypatch, tmp_
     monkeypatch.setattr(spectrum_track, "SPECTRUM_INDICATORS", synthetic)
     monkeypatch.setattr(spectrum_track.classify, "classify", lambda workspace, pjnz: frozenset())  # noqa: ARG005
 
-    def fake_diff(name, output_h5, pjnz, pjnz_label=None):  # noqa: ARG001
+    def fake_diff(name, output_h5, pjnz, pjnz_label=None, modvars=None):  # noqa: ARG001
         return Verdict(indicator=name, passed=True, max_abs_diff=0.0, n_cells=10, n_failed=0)
 
     monkeypatch.setattr(spectrum_track, "diff_spectrum_indicator", fake_diff)

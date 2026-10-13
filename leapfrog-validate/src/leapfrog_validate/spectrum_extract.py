@@ -124,6 +124,11 @@ def _import_modvars(pjnz: Path) -> dict:
     return _import_modvars_cached(str(pjnz.resolve()))
 
 
+def import_modvars(pjnz: Path) -> dict:
+    """Public name for the live PJNZ import, for callers that archive its result (ticket 24)."""
+    return _import_modvars(pjnz)
+
+
 def _year_window(modvars: dict, pjnz: Path) -> tuple[int, int]:
     """Return `(first_year, final_year)`, inclusive, declared by `pjnz`'s own modvars."""
     from SpectrumCommon.Const.PJ.PJNTags import PJN_FinalYearTag, PJN_FirstYearTag  # noqa: PLC0415
@@ -178,25 +183,25 @@ def _read_modvar(modvars: dict, tag: object, pjnz: Path, first_year: int, final_
     return _modvar_to_leapfrog_shape(aligned)
 
 
-def extract_spectrum_total_population(pjnz: Path) -> np.ndarray:
+def extract_spectrum_total_population(pjnz: Path, modvars: dict | None = None) -> np.ndarray:
     """DP_BigPop_V1 -> (year, sex=2, age=81), aligned to leapfrog's 1970-2030 window."""
     from SpectrumCommon.Const.DP.DPTags import DP_BigPopTag  # noqa: PLC0415
 
-    modvars = _import_modvars(pjnz)
+    modvars = _import_modvars(pjnz) if modvars is None else modvars
     first_year, final_year = _year_window(modvars, pjnz)
     return _read_modvar(modvars, DP_BigPopTag, pjnz, first_year, final_year)
 
 
-def extract_spectrum_hiv_population(pjnz: Path) -> np.ndarray:
+def extract_spectrum_hiv_population(pjnz: Path, modvars: dict | None = None) -> np.ndarray:
     """AM_HIVBySingleAge_V1 -> (year, sex=2, age=81). Covers adult and pediatric ages."""
     from SpectrumCommon.Const.AM.AMTags import AM_HIVBySingleAgeTag  # noqa: PLC0415
 
-    modvars = _import_modvars(pjnz)
+    modvars = _import_modvars(pjnz) if modvars is None else modvars
     first_year, final_year = _year_window(modvars, pjnz)
     return _read_modvar(modvars, AM_HIVBySingleAgeTag, pjnz, first_year, final_year)
 
 
-def extract_spectrum_treatment_population(pjnz: Path) -> np.ndarray:
+def extract_spectrum_treatment_population(pjnz: Path, modvars: dict | None = None) -> np.ndarray:
     """AM_OnARTBySingleAge_V1 -> (year, sex=2, age=81).
 
     Confirmed by ticket 13's research to cover children at single-year
@@ -207,26 +212,26 @@ def extract_spectrum_treatment_population(pjnz: Path) -> np.ndarray:
     """
     from SpectrumCommon.Const.AM.AMTags import AM_OnARTBySingleAgeTag  # noqa: PLC0415
 
-    modvars = _import_modvars(pjnz)
+    modvars = _import_modvars(pjnz) if modvars is None else modvars
     first_year, final_year = _year_window(modvars, pjnz)
     return _read_modvar(modvars, AM_OnARTBySingleAgeTag, pjnz, first_year, final_year)
 
 
-def extract_spectrum_aids_deaths_single_age(pjnz: Path) -> np.ndarray:
+def extract_spectrum_aids_deaths_single_age(pjnz: Path, modvars: dict | None = None) -> np.ndarray:
     """AM_AIDSDeathsARTSingleAge_V1 + AM_AIDSDeathsNoARTSingleAge_V1 -> (year, sex=2, age=81)."""
     from SpectrumCommon.Const.AM.AMTags import (  # noqa: PLC0415
         AM_AIDSDeathsARTSingleAgeTag,
         AM_AIDSDeathsNoARTSingleAgeTag,
     )
 
-    modvars = _import_modvars(pjnz)
+    modvars = _import_modvars(pjnz) if modvars is None else modvars
     first_year, final_year = _year_window(modvars, pjnz)
     art = _read_modvar(modvars, AM_AIDSDeathsARTSingleAgeTag, pjnz, first_year, final_year)
     no_art = _read_modvar(modvars, AM_AIDSDeathsNoARTSingleAgeTag, pjnz, first_year, final_year)
     return art + no_art
 
 
-def extract_spectrum_aids_deaths_on_treatment(pjnz: Path) -> np.ndarray:
+def extract_spectrum_aids_deaths_on_treatment(pjnz: Path, modvars: dict | None = None) -> np.ndarray:
     """AM_AIDSDeathsARTSingleAge_V1 alone -> (year, sex=2, age=81).
 
     Per the PRD's mapping table: the same modvar `aids_deaths_single_age`
@@ -237,6 +242,6 @@ def extract_spectrum_aids_deaths_on_treatment(pjnz: Path) -> np.ndarray:
     """
     from SpectrumCommon.Const.AM.AMTags import AM_AIDSDeathsARTSingleAgeTag  # noqa: PLC0415
 
-    modvars = _import_modvars(pjnz)
+    modvars = _import_modvars(pjnz) if modvars is None else modvars
     first_year, final_year = _year_window(modvars, pjnz)
     return _read_modvar(modvars, AM_AIDSDeathsARTSingleAgeTag, pjnz, first_year, final_year)

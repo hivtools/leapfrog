@@ -108,3 +108,59 @@ the pass/fail rollup -- visible in the summary line as `N excluded` --
 without loosening tolerance for any other PJNZ. Every `Exclusion` requires
 both a `reason` and a `link` to the underlying explanation; constructing
 one without either raises `ValueError`.
+
+### The run archive (Orderly2, ticket 24)
+
+Raw results can be archived as [Orderly2](https://mrc-ide.github.io/orderly/)
+packets, so the same ref and PJNZ file are not computed twice, and every
+run stays on record after its PR closes. It is off by default. Turn it on
+with a root directory:
+
+```sh
+uv run leapfrog-validate --archive-root ./archive compare main working-tree --pjnz-dir ./corpus
+uv run leapfrog-validate --archive-root ./archive run <ref> params.h5 --pjnz <pjnz> -o output.h5
+uv run leapfrog-validate --archive-root ./archive extract <pjnz> -o extract.h5
+python -m leapfrog_validate.spectrum_track run <ref> --pjnz-dir ./corpus --archive-root ./archive
+python -m leapfrog_validate.report_regression --ref <sha> --archive-root ./archive --out comment.md ...
+```
+
+Each option also reads an environment variable (`LEAPFROG_VALIDATE_ARCHIVE_ROOT`,
+`..._REMOTE`, `..._REMOTE_PATH`); empty or unset means "no archive".
+
+It needs R and the `orderly` R package (`install.packages("orderly")`; the
+CRAN name of Orderly2 since 2.0). The archive root is created and its report
+sources are synced into it on first use.
+
+Two kinds of packet, and nothing else:
+
+| Report | Holds | Exact key | Also stored |
+|---|---|---|---|
+| `leapfrog_run` | raw `output.h5` | PJNZ label, PJNZ content hash, resolved ref SHA, model configuration | the ref as given (`ref_given`), for `latest(parameter:ref_given == "main")` lookups |
+| `spectrum_extract` | the raw Spectrum modvars the blessed indicators read (`extract.h5`) | PJNZ label, PJNZ content hash (no git ref) | importer version |
+
+Before computing, `compare`, `run`, `extract`, and both CI drivers look for a
+packet at the exact key and reuse it. With an archive configured the
+leapfrogr build is lazy: a fully cached run builds nothing. An uncommitted
+`working-tree` is never archived.
+
+Indicator extraction and the pass/fail `diff` are **never** archived. They
+always run live on the archived raw bytes, so changing a tolerance or adding
+an indicator re-judges old runs without re-running any model.
+
+If the archive cannot be read or written, the run prints an
+`archive WARNING` line and carries on without it. Archive log lines name the
+packet and file only, never an indicator value.
+
+**Sharing history through a remote.** `--archive-remote NAME` makes the archive
+pull missing packets from, and push new packets to, that Orderly location.
+`--archive-remote-path DIR` registers `NAME` as a path location at `DIR` (for
+example a mounted or synced shared drive) if it is not registered yet. Any
+other Orderly location type (an HTTP outpack server, Packit, a custom driver
+for cloud storage) must be registered in the archive root by whoever sets it
+up (`orderly::orderly_location_add_*`); then `--archive-remote NAME` is enough.
+To use the archive in the GitHub Actions jobs, install the `orderly` R package
+in the job, set the three variables, and give the job credentials for the
+remote. Those steps are not part of the checked-in workflows yet.
+
+Not covered: two jobs writing to one local root at the same time, and
+retention (the decision is to keep every packet).
