@@ -44,13 +44,27 @@ from __future__ import annotations
 
 import os
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
-from leapfrog_validate import build, classify, git_utils, model_run, params
-from leapfrog_validate.cli import AZURE_CORPUS_PREFIX_DEFAULT, _pjnz_label, _prepare_ref, _resolve_corpus_files
+from leapfrog_validate import archive as archive_module
+from leapfrog_validate import archived_run, build, classify, git_utils, model_run, params, spectrum_archive
+from leapfrog_validate.archive import Archive
+from leapfrog_validate.archived_run import RefIdentity
+from leapfrog_validate.build import LazyWorkspace
+from leapfrog_validate.cli import (
+    AZURE_CORPUS_PREFIX_DEFAULT,
+    ArchiveRemoteOption,
+    ArchiveRemotePathOption,
+    ArchiveRootOption,
+    _build_and_run,
+    _pjnz_label,
+    _prepare_ref,
+    _resolve_corpus_files,
+)
 from leapfrog_validate.model_run import ModelRunError
 from leapfrog_validate.params import ParamsBuildError
 from leapfrog_validate.report_spectrum import IndicatorResult, PjnzResult, format_comment
@@ -150,14 +164,31 @@ def diff_one_cmd(
     raise typer.Exit(0 if all_passed else 1)
 
 
-def _compare_one_pjnz_against_spectrum(
+@dataclass(frozen=True)
+class _Archiving:
+    """The archive (ticket 24) plus the identity of the ref being run, for one Spectrum-track run.
+
+    `ref` is `None` for an uncommitted working tree, which is never archived
+    on the leapfrog side (Spectrum's PJNZ-keyed packets still are).
+    """
+
+    archive: Archive
+    ref: RefIdentity | None
+
+
+def _compare_one_pjnz_against_spectrum(  # noqa: PLR0913, PLR0917 - `archiving` is the one optional extra on top of the original five
     workspace: build.BuildWorkspace,
     pjnz: Path,
     label: str,
     configuration: str,
     tmp_dir: Path,
+    archiving: _Archiving | None = None,
 ) -> PjnzResult:
     """Build+run leapfrog for one PJNZ, then diff every blessed indicator against Spectrum.
+
+    With `archiving` (ticket 24), leapfrog's raw output and Spectrum's raw
+    modvars are each looked up in the archive first and only computed on a
+    miss; the indicator extraction and the diff below are always live.
 
     Mirrors `cli.py`'s `_process_one_pjnz_in_compare`: errors for one file
     (a build failure, or a PJNZ the avenir importer can't parse -- see
@@ -181,17 +212,38 @@ def _compare_one_pjnz_against_spectrum(
     params_path = tmp_dir / f"{safe_base}-params.h5"
     output_path = tmp_dir / f"{safe_base}-output.h5"
     try:
-        params.build_params(workspace, pjnz, params_path)
-        model_run.run_model(workspace, params_path, output_path, configuration)
+        archived_run.obtain_output(
+            archive=archiving.archive if archiving else None,
+            ref=archiving.ref if archiving else None,
+            pjnz=pjnz,
+            pjnz_label=label,
+            output_path=output_path,
+            configuration=configuration,
+            compute=lambda: _build_and_run(workspace, pjnz, params_path, output_path, configuration),
+            log=typer.echo,
+        )
     except (ParamsBuildError, ModelRunError) as e:
         typer.echo(f"  ERROR  could not build/run leapfrog for this PJNZ: {e}", err=True)
         reason = summarize_error_reason(e)
         return PjnzResult(label=label, error=f"could not build/run leapfrog for this PJNZ ({reason})")
 
+    modvars = None
+    modvars_error: SpectrumExtractError | None = None
+    if archiving is not None:
+        try:
+            modvars = spectrum_archive.obtain_modvars(
+                archive=archiving.archive, pjnz=pjnz, pjnz_label=label, work_dir=tmp_dir / f"{safe_base}-extract",
+                log=typer.echo,
+            )
+        except SpectrumExtractError as e:
+            modvars_error = e
+
     indicator_results = []
     for name in applicable:
         try:
-            verdict = diff_spectrum_indicator(name, output_path, pjnz, pjnz_label=label)
+            if modvars_error is not None:
+                raise modvars_error
+            verdict = diff_spectrum_indicator(name, output_path, pjnz, pjnz_label=label, modvars=modvars)
         except SpectrumExtractError as e:
             typer.echo(f"  ERROR  {name}: could not extract Spectrum modvars: {e}", err=True)
             indicator_results.append(IndicatorResult(name=name, passed=False))
@@ -238,8 +290,16 @@ def run_cmd(  # noqa: PLR0913, PLR0917 - mirrors cli.py's compare_cmd's similarl
     cache_dir: Annotated[
         Path, typer.Option("--cache-dir", envvar="LEAPFROG_VALIDATE_CACHE_DIR", help=CACHE_DIR_HELP)
     ] = DEFAULT_CACHE_DIR,
+    archive_root: ArchiveRootOption = None,
+    archive_remote: ArchiveRemoteOption = None,
+    archive_remote_path: ArchiveRemotePathOption = None,
 ) -> None:
     """Run the Spectrum-comparison track against every PJNZ in the corpus.
+
+    With an archive (`--archive-root`, ticket 24), leapfrog's raw output
+    (keyed by PJNZ + resolved REF SHA) and Spectrum's extracted modvars
+    (keyed by PJNZ alone) are reused when archived and stored when not.
+    Indicators and verdicts are never archived: they are recomputed live.
 
     Writes a rendered sticky-comment markdown file for a CI step to hand to
     `marocchino/sticky-pull-request-comment`. Prints only PASS/FAIL lines
@@ -289,11 +349,21 @@ def run_cmd(  # noqa: PLR0913, PLR0917 - mirrors cli.py's compare_cmd's similarl
         pjnz_files, corpus_root = _resolve_corpus_files(
             pjnz_dir, azure_container, azure_account, azure_prefix, tmp_path
         )
-        workspace = _prepare_ref(repo_root, cache_dir, ref)
+        archive = archive_module.archive_from_settings(archive_root, archive_remote, archive_remote_path)
+        if archive is None:
+            workspace = _prepare_ref(repo_root, cache_dir, ref)
+            archiving = None
+        else:
+            # Build only if some PJNZ misses the archive; build the exact SHA the key names.
+            workspace = LazyWorkspace(lambda: _prepare_ref(repo_root, cache_dir, ref_sha))
+            identity = None if ref == git_utils.WORKING_TREE else RefIdentity(given=ref, sha=ref_sha)
+            archiving = _Archiving(archive=archive, ref=identity)
 
         for pjnz in pjnz_files:
             label = _pjnz_label(pjnz, corpus_root)
-            results.append(_compare_one_pjnz_against_spectrum(workspace, pjnz, label, configuration, tmp_path))
+            results.append(
+                _compare_one_pjnz_against_spectrum(workspace, pjnz, label, configuration, tmp_path, archiving)
+            )
 
     typer.echo("\n== Summary ==")
     for result in results:

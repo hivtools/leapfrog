@@ -4,16 +4,31 @@ Composable primitives, independently invokable: build-params, run, diff.
 See `.scratch/leapfrog-validation/issues/15-walking-skeleton-single-indicator-diff.md`.
 """
 
+import functools
 import os
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Annotated
 
 import typer
 
-from leapfrog_validate import build, classify, git_utils, indicators, manifest, model_run, params
-from leapfrog_validate.build import BuildWorkspace
+from leapfrog_validate import archive as archive_module
+from leapfrog_validate import (
+    archived_run,
+    build,
+    classify,
+    git_utils,
+    indicators,
+    manifest,
+    model_run,
+    params,
+    spectrum_archive,
+)
+from leapfrog_validate.archive import Archive
+from leapfrog_validate.archived_run import RefIdentity
+from leapfrog_validate.build import BuildWorkspace, LazyWorkspace
 from leapfrog_validate.diff import Verdict, diff_indicator
 from leapfrog_validate.exclusions import exclusion_mask
 
@@ -26,6 +41,45 @@ class CorpusError(RuntimeError):
 DEFAULT_CACHE_DIR = Path.home() / ".cache" / "leapfrog-validate"
 
 REF_HELP = f"Git ref/SHA to build leapfrogr at, or '{git_utils.WORKING_TREE}' for your own uncommitted checkout."
+
+ARCHIVE_ROOT_HELP = (
+    "Orderly2 root that archives raw run outputs and Spectrum extracts (ticket 24). "
+    "Unset: nothing is archived or reused. Needs R with the `orderly` package."
+)
+ARCHIVE_REMOTE_HELP = "Orderly location the archive pulls missing packets from and pushes new packets to."
+ARCHIVE_REMOTE_PATH_HELP = "Directory to register --archive-remote at, as a path location, if it is not registered yet."
+
+PJNZ_LABEL_FLAG = "--pjnz-label"
+PJNZ_LABEL_HELP = (
+    "Name this PJNZ in the archive key. Defaults to the file name; `compare` and the CI drivers use the "
+    "corpus-relative path (for example `ETH/foo.PJNZ`), so pass that to share their packets."
+)
+
+# Shared by this module's global options and `spectrum_track run`'s own.
+ArchiveRootOption = Annotated[Path | None, typer.Option(envvar=archive_module.ENV_ROOT, help=ARCHIVE_ROOT_HELP)]
+ArchiveRemoteOption = Annotated[str | None, typer.Option(envvar=archive_module.ENV_REMOTE, help=ARCHIVE_REMOTE_HELP)]
+ArchiveRemotePathOption = Annotated[
+    Path | None, typer.Option(envvar=archive_module.ENV_REMOTE_PATH, help=ARCHIVE_REMOTE_PATH_HELP)
+]
+
+
+def _ref_identity(repo_root: Path, ref: str) -> RefIdentity | None:
+    """`ref` as given plus its resolved commit SHA; `None` for the uncommitted working tree (never archived)."""
+    if ref == git_utils.WORKING_TREE:
+        return None
+    return RefIdentity(given=ref, sha=git_utils.resolve_ref(repo_root, ref))
+
+
+def _workspace_for(repo_root: Path, cache_dir: Path, ref: str, *, archive: Archive | None) -> BuildWorkspace:
+    """Build `ref` now, or -- with an archive -- only when something first needs it.
+
+    With an archive configured every run is looked up before any compute,
+    so a fully cached comparison never builds leapfrogr. Without one the
+    build stays eager and up front, exactly as before ticket 24.
+    """
+    if archive is None:
+        return _prepare_ref(repo_root, cache_dir, ref)
+    return LazyWorkspace(lambda: _prepare_ref(repo_root, cache_dir, ref))
 
 
 def _prepare_ref(repo_root: Path, cache_dir: Path, ref: str) -> BuildWorkspace:
@@ -44,9 +98,16 @@ def set_cache_dir(
             help="Where per-ref build workspaces (git worktrees, installed R libraries) are cached.",
         ),
     ] = DEFAULT_CACHE_DIR,
+    archive_root: ArchiveRootOption = None,
+    archive_remote: ArchiveRemoteOption = None,
+    archive_remote_path: ArchiveRemotePathOption = None,
 ) -> None:
-    """Stash --cache-dir and the current repo root for every subcommand to read."""
-    ctx.obj = {"cache_dir": cache_dir, "repo_root": git_utils.find_repo_root()}
+    """Stash --cache-dir, the repo root, and the (optional) run archive for every subcommand to read."""
+    ctx.obj = {
+        "cache_dir": cache_dir,
+        "repo_root": git_utils.find_repo_root(),
+        "archive": archive_module.archive_from_settings(archive_root, archive_remote, archive_remote_path),
+    }
 
 
 @app.command("build-params")
@@ -65,7 +126,7 @@ def build_params_cmd(
 
 
 @app.command("run")
-def run_cmd(
+def run_cmd(  # noqa: PLR0913, PLR0917 - a CLI command's flat option surface; typer has no option-group dataclass
     ctx: typer.Context,
     ref: Annotated[str, typer.Argument(help=REF_HELP)],
     params_path: Annotated[
@@ -78,10 +139,81 @@ def run_cmd(
         str,
         typer.Option(help="Model configuration to run, see leapfrogr::list_model_configurations()."),
     ] = "Spectrum",
+    pjnz: Annotated[
+        Path | None,
+        typer.Option(
+            "--pjnz",
+            exists=True,
+            dir_okay=False,
+            help="The PJNZ file PARAMS was built from. Names the archive key, so it is required "
+            "when an archive is configured and ignored otherwise. Not checked against PARAMS: "
+            "naming the wrong file archives the output under the wrong key.",
+        ),
+    ] = None,
+    pjnz_label: Annotated[
+        str | None,
+        typer.Option(PJNZ_LABEL_FLAG, help=PJNZ_LABEL_HELP),
+    ] = None,
 ) -> None:
-    """Build leapfrogr at REF and run the model against PARAMS, producing output.h5."""
-    workspace = _prepare_ref(ctx.obj["repo_root"], ctx.obj["cache_dir"], ref)
-    model_run.run_model(workspace, params_path, output, configuration)
+    """Build leapfrogr at REF and run the model against PARAMS, producing output.h5.
+
+    With an archive configured (`--archive-root`), a packet already stored for
+    the same PJNZ, resolved REF SHA, and configuration is reused instead of
+    running the model, and a freshly computed output is archived.
+    """
+    archive = ctx.obj["archive"]
+    if archive is not None and pjnz is None:
+        typer.echo("--pjnz is required with an archive: it names the PJNZ that PARAMS came from.", err=True)
+        raise typer.Exit(2)
+
+    repo_root = ctx.obj["repo_root"]
+    identity = _ref_identity(repo_root, ref) if archive is not None else None
+    workspace = _workspace_for(
+        repo_root, ctx.obj["cache_dir"], identity.sha if identity else ref, archive=archive
+    )
+    if archive is None:
+        model_run.run_model(workspace, params_path, output, configuration)
+    else:
+        archived_run.obtain_output(
+            archive=archive,
+            ref=identity,
+            pjnz=pjnz,
+            pjnz_label=pjnz_label or pjnz.name,
+            output_path=output,
+            configuration=configuration,
+            compute=lambda: model_run.run_model(workspace, params_path, output, configuration),
+            log=typer.echo,
+        )
+    typer.echo(f"Wrote {output}")
+
+
+@app.command("extract")
+def extract_cmd(
+    ctx: typer.Context,
+    pjnz: Annotated[Path, typer.Argument(exists=True, dir_okay=False, help="PJNZ file to read Spectrum modvars from.")],
+    output: Annotated[Path, typer.Option("--output", "-o", help="Where to write the extract artifact.")] = Path(
+        "extract.h5"
+    ),
+    pjnz_label: Annotated[str | None, typer.Option(PJNZ_LABEL_FLAG, help=PJNZ_LABEL_HELP)] = None,
+) -> None:
+    """Read PJNZ's Spectrum modvars (no live Spectrum.exe) into an extract.h5 artifact.
+
+    The artifact holds the raw modvars the blessed Spectrum indicators read,
+    not indicators. With an archive configured (`--archive-root`), a packet
+    already stored for the same PJNZ (file name + content hash; no git ref
+    involved) is reused instead of running the importer, and a fresh
+    extract is archived.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        modvars = spectrum_archive.obtain_modvars(
+            archive=ctx.obj["archive"],
+            pjnz=pjnz,
+            pjnz_label=pjnz_label or pjnz.name,
+            work_dir=Path(tmp),
+            log=typer.echo,
+        )
+    tags = spectrum_archive.blessed_modvar_tags()
+    spectrum_archive.write_extract_h5({tag: modvars[tag] for tag in tags}, output)
     typer.echo(f"Wrote {output}")
 
 
@@ -191,10 +323,28 @@ def _applicable_indicator_names(pjnz_tags: frozenset[str]) -> list[str]:
 
 @dataclass(frozen=True)
 class _RefPair:
-    """The two built workspaces one `compare` run diffs against each other."""
+    """The two workspaces one `compare` run diffs against each other.
+
+    The optional fields switch the run archive on (ticket 24): `archive` is
+    where raw outputs are looked up and stored, and each `*_identity` is the
+    side's ref plus resolved SHA (`None` for an uncommitted working tree,
+    which is never archived). With all three left at their defaults every
+    output is computed live, as before.
+    """
 
     ref: BuildWorkspace
     candidate: BuildWorkspace
+    archive: Archive | None = None
+    ref_identity: RefIdentity | None = None
+    candidate_identity: RefIdentity | None = None
+
+
+def _build_and_run(
+    workspace: BuildWorkspace, pjnz: Path, params_path: Path, output_path: Path, configuration: str
+) -> None:
+    """Process `pjnz`, then run the model on the result: the compute behind `archived_run.obtain_output`."""
+    params.build_params(workspace, pjnz, params_path)
+    model_run.run_model(workspace, params_path, output_path, configuration)
 
 
 @dataclass(frozen=True)
@@ -211,8 +361,13 @@ def _compare_one_pjnz(
     scoped: _ScopedPjnz,
     configuration: str,
     tmp_dir: Path,
+    log: Callable[[str], None] = typer.echo,
 ) -> list[Verdict]:
     """Run build-params/run/diff for one PJNZ file, against both workspaces.
+
+    Each side's `output.h5` comes from `archived_run.obtain_output`: reused
+    from the archive when `workspaces.archive` has a packet at the exact
+    key, computed (and archived) otherwise. The diff itself is always live.
 
     `scoped.indicator_names` is the already scope-filtered subset of
     `indicators.INDICATORS` applicable to this PJNZ (`compare_cmd` computes
@@ -224,15 +379,24 @@ def _compare_one_pjnz(
     for a flat corpus.
     """
     safe_base = scoped.label.removesuffix(scoped.path.suffix).replace("/", "__")
-    params_ref = tmp_dir / f"{safe_base}-ref-params.h5"
-    params_candidate = tmp_dir / f"{safe_base}-candidate-params.h5"
-    params.build_params(workspaces.ref, scoped.path, params_ref)
-    params.build_params(workspaces.candidate, scoped.path, params_candidate)
-
     output_ref = tmp_dir / f"{safe_base}-ref-output.h5"
     output_candidate = tmp_dir / f"{safe_base}-candidate-output.h5"
-    model_run.run_model(workspaces.ref, params_ref, output_ref, configuration)
-    model_run.run_model(workspaces.candidate, params_candidate, output_candidate, configuration)
+    sides = (
+        ("ref", workspaces.ref, workspaces.ref_identity, output_ref),
+        ("candidate", workspaces.candidate, workspaces.candidate_identity, output_candidate),
+    )
+    for side, workspace, identity, output_path in sides:
+        params_path = tmp_dir / f"{safe_base}-{side}-params.h5"
+        archived_run.obtain_output(
+            archive=workspaces.archive,
+            ref=identity,
+            pjnz=scoped.path,
+            pjnz_label=scoped.label,
+            output_path=output_path,
+            configuration=configuration,
+            compute=functools.partial(_build_and_run, workspace, scoped.path, params_path, output_path, configuration),
+            log=log,
+        )
 
     return [_diff_one(name, output_ref, output_candidate, safe_base) for name in sorted(scoped.indicator_names)]
 
@@ -550,10 +714,21 @@ def compare_cmd(  # noqa: PLR0913, PLR0917 - a CLI command's flat option surface
         # Corpus resolved and non-empty before paying for the (multi-minute)
         # leapfrogr build, same fail-fast ordering as the single-directory
         # case this replaces.
+        # With an archive, each committed ref is resolved to its SHA once and
+        # that SHA is what gets built, so the archive key and the build can
+        # never disagree even if a moving branch advances mid-run.
+        repo_root, cache_dir, archive = ctx.obj["repo_root"], ctx.obj["cache_dir"], ctx.obj["archive"]
+        ref_identity = _ref_identity(repo_root, ref) if archive is not None else None
+        candidate_identity = _ref_identity(repo_root, candidate) if archive is not None else None
         run_ctx = _CompareRunContext(
             workspaces=_RefPair(
-                ref=_prepare_ref(ctx.obj["repo_root"], ctx.obj["cache_dir"], ref),
-                candidate=_prepare_ref(ctx.obj["repo_root"], ctx.obj["cache_dir"], candidate),
+                ref=_workspace_for(repo_root, cache_dir, ref_identity.sha if ref_identity else ref, archive=archive),
+                candidate=_workspace_for(
+                    repo_root, cache_dir, candidate_identity.sha if candidate_identity else candidate, archive=archive
+                ),
+                archive=archive,
+                ref_identity=ref_identity,
+                candidate_identity=candidate_identity,
             ),
             corpus_root=corpus_root,
             manifest_data=manifest_data,

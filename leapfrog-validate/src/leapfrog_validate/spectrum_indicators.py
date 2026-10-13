@@ -70,7 +70,7 @@ class SpectrumIndicatorSpec(TypedDict):
     """One blessed indicator's leapfrog + Spectrum extractors and this track's tolerance."""
 
     extract_leapfrog: Callable[[Path], np.ndarray]
-    extract_spectrum: Callable[[Path], np.ndarray]
+    extract_spectrum: Callable[..., np.ndarray]  # (pjnz, modvars=None); see spectrum_extract
     tolerance: Tolerance
     exclusions: tuple[Exclusion, ...]
     scope: Scope
@@ -115,7 +115,9 @@ SPECTRUM_INDICATORS: dict[str, SpectrumIndicatorSpec] = {
 }
 
 
-def diff_spectrum_indicator(name: str, output_h5: Path, pjnz: Path, pjnz_label: str | None = None) -> Verdict:
+def diff_spectrum_indicator(
+    name: str, output_h5: Path, pjnz: Path, pjnz_label: str | None = None, modvars: dict | None = None
+) -> Verdict:
     """Diff one indicator's leapfrog `output_h5` against `pjnz`'s own Spectrum modvars.
 
     `pjnz_label`, if given, is matched against the indicator's exclusion
@@ -123,9 +125,14 @@ def diff_spectrum_indicator(name: str, output_h5: Path, pjnz: Path, pjnz_label: 
     (no exclusions applied), since no real `Exclusion` entry exists yet for
     this track (same "mechanism built, not yet populated" state ticket 20
     left the regression track's list in).
+
+    `modvars`, if given, are the PJNZ's Spectrum modvars already in hand
+    (ticket 24: read back from the archive), so the avenir importer is not
+    run again; the indicator extraction and the diff itself are the same
+    live code either way.
     """
     spec = SPECTRUM_INDICATORS[name]
     arr_leapfrog = spec["extract_leapfrog"](output_h5)
-    arr_spectrum = spec["extract_spectrum"](pjnz)
+    arr_spectrum = spec["extract_spectrum"](pjnz, modvars=modvars)
     exclude = exclusion_mask(arr_leapfrog.shape, spec["exclusions"], pjnz_label) if pjnz_label is not None else None
     return diff_indicator(arr_leapfrog, arr_spectrum, name, spec["tolerance"], exclude=exclude)
