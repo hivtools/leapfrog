@@ -396,7 +396,7 @@ struct AdultHivModelSimulation<Config> {
       }
 
       for (int a = SS::p_idx_hiv_first_adult; a < pAG; ++a) {
-        i_ha.p_infections_ts(a, s) = i_ha.hiv_negative_pop(a, s) *
+        i_ha.p_infections_ts(a, s) = 1.01 * i_ha.hiv_negative_pop(a, s) *
                                      i_ha.incidence_rate_sex(s) *
                                      p_ha.incidence_rate_ratio_age(a - p_idx_hiv_first_adult, s, t) *
                                      i_ha.hiv_neg_aggregate(s) /
